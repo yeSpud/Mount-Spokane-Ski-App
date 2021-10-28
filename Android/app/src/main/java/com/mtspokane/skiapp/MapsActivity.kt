@@ -4,10 +4,12 @@ import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.GoogleMap
 import android.os.Bundle
+import android.util.Log
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLngBounds
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback {
@@ -39,8 +41,17 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		mMap = googleMap
 
 		// Add a marker in Sydney and move the camera
-		val sydney = LatLng(-34.0, 151.0)
-		mMap!!.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-		mMap!!.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+		val cameraPosition = CameraPosition.Builder().target(LatLng(47.924006680198424, -117.10511684417725))
+			.tilt(45F)
+			.bearing(317.50552F)
+			.zoom(14F)
+			.build()
+		mMap!!.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+		mMap!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
+		mMap!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402), LatLng(47.943674, -117.092470)))
+		mMap!!.setOnCameraIdleListener {
+			val position = mMap!!.cameraPosition
+			Log.i("Camera Positions", "Location: ${position.target.latitude}, ${position.target.longitude}; Tilt: ${position.tilt}; Bearing: ${position.bearing}; Zoom: ${position.zoom}")
+		}
 	}
 }
