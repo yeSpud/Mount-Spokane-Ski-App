@@ -11,8 +11,10 @@ android {
         applicationId "com.mtspokane.skiapp"
         minSdk 21
         targetSdk 31
+
+        def date = new Date().format('yyyy.MM.dd.HH.mm')
         versionCode 1
-        versionName "1.0"
+        versionName "$date"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         targetSdkVersion 31
@@ -21,8 +23,31 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+
+            // Enables code shrinking, obfuscation, and optimization for only
+            // your project's release build type.
+            shrinkResources true
+
+            // Enables resource shrinking, which is performed by the
+            // Android Gradle plugin.
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+        }
+        debug {
+
+            // Enables code shrinking, obfuscation, and optimization for only
+            // your project's release build type.
+            shrinkResources true
+
+            // Enables resource shrinking, which is performed by the
+            // Android Gradle plugin.
+            minifyEnabled true
+            debuggable true
+            jniDebuggable true
+            renderscriptDebuggable true
         }
     }
     compileOptions {
