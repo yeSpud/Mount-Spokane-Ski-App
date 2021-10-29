@@ -14,6 +14,10 @@ class MapsViewModel: ViewModel() {
 
 	private val easyRuns: Array<Polyline?> = arrayOfNulls(12)
 
+	private val moderateRuns: Array<Polyline?> = arrayOfNulls(0) // TODO Determine size
+
+	private val difficultRuns: Array<Polyline?> = arrayOfNulls(0) // TODO Determine size
+
 	fun createChairLifts(map: GoogleMap) {
 
 		this.chairlifts[0] = addChairLift(47.91606715553383, -117.099266845541,
@@ -37,9 +41,15 @@ class MapsViewModel: ViewModel() {
 	}
 
 	fun createEasyRuns(map: GoogleMap) {
-
 		// TODO
+	}
 
+	fun createModerateRuns(map: GoogleMap) {
+		// TODO
+	}
+
+	fun createDifficultRuns(map: GoogleMap) {
+		// TODO
 	}
 
 	private fun addChairLift(startLatitude: Double, startLongitude: Double, endLatitude: Double,
@@ -52,7 +62,16 @@ class MapsViewModel: ViewModel() {
 		return createPolyline(*coordinates, color = Color.GREEN, zIndex = 3, name = name, map = map)
 	}
 
-	private fun createPolyline(vararg coordinates: LatLng, color: Int, zIndex: Short, name: String, map: GoogleMap): Polyline {
+	private fun addModerateRun(vararg coordinates: LatLng, name: String, map: GoogleMap): Polyline {
+		return createPolyline(*coordinates, color = Color.BLUE, zIndex = 2, name = name, map = map)
+	}
+
+	private fun addDifficultRun(vararg coordinates: LatLng, name: String, map: GoogleMap): Polyline {
+		return createPolyline(*coordinates, color = Color.BLACK, zIndex = 1, name = name, map = map)
+	}
+
+	private fun createPolyline(vararg coordinates: LatLng, color: Int, zIndex: Short, name: String,
+	                           map: GoogleMap): Polyline {
 		val polyline = map.addPolyline(PolylineOptions()
 			.add(*coordinates)
 			.color(color)

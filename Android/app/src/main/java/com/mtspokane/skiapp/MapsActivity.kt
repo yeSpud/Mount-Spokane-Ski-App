@@ -65,6 +65,12 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		// Add the easy runs to the map.
 		this.viewModel.createEasyRuns(googleMap)
 
+		// Add the moderate runs to the map.
+		this.viewModel.createModerateRuns(googleMap)
+
+		// Add the difficult runs to the map.
+		this.viewModel.createDifficultRuns(googleMap)
+
 		// Request location permission, so that we can get the location of the device.
 		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
 		// If this permission isn't granted then that's fine too.
@@ -98,7 +104,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-				0F, SkierLocation(this.map!!))
+				2F, SkierLocation(this.map!!, this.resources))
 		}
 
 	}

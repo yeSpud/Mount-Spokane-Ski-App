@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Mt Spokane Ski App</string>
-    <string name="title_activity_maps">MapsActivity</string>
+
+    <!-- Marker text -->
+    <string name="your_location">You are here</string>
+    <string name="more_info">Tap for additional stats</string>
 </resources>
