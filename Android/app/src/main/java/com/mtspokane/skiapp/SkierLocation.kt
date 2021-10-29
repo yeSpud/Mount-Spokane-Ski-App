@@ -3,6 +3,7 @@ package com.mtspokane.skiapp
 import android.content.res.Resources
 import android.location.Location
 import android.location.LocationListener
+import android.os.Bundle
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
@@ -28,5 +29,9 @@ class SkierLocation(private val map: GoogleMap, private val resources: Resources
 
 		// Set the marker tag to the location object.
 		this.locationMarker!!.tag = location
+	}
+
+	override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+		// ignore
 	}
 }

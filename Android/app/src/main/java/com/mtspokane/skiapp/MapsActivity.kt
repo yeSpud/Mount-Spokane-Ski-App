@@ -48,13 +48,13 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
 		// Move the camera.
 		val cameraPosition = CameraPosition.Builder().target(LatLng(47.924006680198424, -117.10511684417725))
-			.tilt(45F)
-			.bearing(317.50552F)
-			.zoom(14F)
-			.build()
+				.tilt(45F)
+				.bearing(317.50552F)
+				.zoom(14F)
+				.build()
 		this.map!!.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 		this.map!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
-			LatLng(47.943674, -117.092470)))
+				LatLng(47.943674, -117.092470)))
 
 		// Change the map type to satellite.
 		this.map!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
@@ -75,11 +75,11 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
 		// If this permission isn't granted then that's fine too.
 		if (this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
-				Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
+						Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
 			showLocation()
 		} else {
 			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-				PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION)
+					PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION)
 		}
 	}
 
@@ -104,7 +104,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-				2F, SkierLocation(this.map!!, this.resources))
+					2F, SkierLocation(this.map!!, this.resources))
 		}
 
 	}
