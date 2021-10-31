@@ -37,14 +37,6 @@ android {
             renderscriptDebuggable false
         }
         debug {
-
-            // Enables code shrinking, obfuscation, and optimization for only
-            // your project's release build type.
-            shrinkResources true
-
-            // Enables resource shrinking, which is performed by the
-            // Android Gradle plugin.
-            minifyEnabled true
             debuggable true
             jniDebuggable true
             renderscriptDebuggable true
@@ -72,4 +64,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     implementation "androidx.core:core-ktx:1.7.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.google.maps.android:android-maps-utils:2.3.0'
 }

@@ -60,7 +60,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		this.map!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
 		// Add the chairlifts to the map.
-		this.viewModel.createChairLifts(googleMap)
+		this.viewModel.createChairLifts(googleMap, this)
 
 		// Add the easy runs to the map.
 		this.viewModel.createEasyRuns(googleMap)

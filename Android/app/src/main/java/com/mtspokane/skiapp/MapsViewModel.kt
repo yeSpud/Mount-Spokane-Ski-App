@@ -1,5 +1,6 @@
 package com.mtspokane.skiapp
 
+import android.content.Context
 import android.graphics.Color
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.maps.GoogleMap
@@ -7,37 +8,41 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.maps.model.RoundCap
+import com.google.maps.android.data.kml.KmlLayer
+import com.google.maps.android.data.kml.KmlLineString
+import com.google.maps.android.data.kml.KmlPlacemark
 
 class MapsViewModel: ViewModel() {
 
-	private val chairlifts: Array<Polyline?> = arrayOfNulls(6)
+	private lateinit var chairlifts: Array<Polyline>
 
-	private val easyRuns: Array<Polyline?> = arrayOfNulls(12)
+	private val easyRuns: Array<Polyline?> = arrayOfNulls(12) // TODO Determine actual size
 
 	private val moderateRuns: Array<Polyline?> = arrayOfNulls(0) // TODO Determine size
 
 	private val difficultRuns: Array<Polyline?> = arrayOfNulls(0) // TODO Determine size
 
-	fun createChairLifts(map: GoogleMap) {
+	fun createChairLifts(map: GoogleMap, context: Context) {
 
-		this.chairlifts[0] = addChairLift(47.91606715553383, -117.099266845541,
-			47.92294353366535, -117.1126129810919, "Chair 1", map)
+		// Load in the chairlift kml file
+		val kml = KmlLayer(map, R.raw.lifts, context)
 
-		this.chairlifts[1] = addChairLift(47.92221929989261, -117.098637384573,
-			47.9250541084338, -117.1119355485026, "Chair 2", map)
+		// Iterate though all the chairlift placemarks and populate the chairlifts array.
+		val placemarks: MutableIterator<KmlPlacemark> = kml.placemarks.iterator()
+		this.chairlifts = Array(6) {
+			val placemark: KmlPlacemark = placemarks.next()
 
-		this.chairlifts[2] = addChairLift(47.92301666633388, -117.0966530617209,
-			47.93080242968863, -117.1039234488206, "Chair 3", map)
+			// Get the name if the chairlift.
+			val nameValuePair: Map.Entry<String, String> = placemark.properties.iterator().next()
+					as Map.Entry<String, String>
+			val name = nameValuePair.value
 
-		this.chairlifts[3] = addChairLift(47.94163035979481, -117.1005550502552,
-			47.9323389155571, -117.1067590655054, "Chair 4", map)
+			// Get what will be the chairlift polyline.
+			val line: KmlLineString = placemark.geometry as KmlLineString
 
-		this.chairlifts[4] = addChairLift(47.92175256734555, -117.0954266523773,
-			47.92292940522836, -117.0989319661659, "Chair 5", map)
-
-		this.chairlifts[5] = addChairLift(47.92891149682423, -117.1299404320796,
-			47.92339173840757, -117.112973282171, "Chair 6", map)
-
+			// Create a new chairlift object using the geometry objects (the start and end LatLng objects).
+			addChairLift(line.geometryObject[0], line.geometryObject[1], name, map)
+		}
 	}
 
 	fun createEasyRuns(map: GoogleMap) {
@@ -52,10 +57,8 @@ class MapsViewModel: ViewModel() {
 		// TODO
 	}
 
-	private fun addChairLift(startLatitude: Double, startLongitude: Double, endLatitude: Double,
-	                         endLongitude: Double, name: String, map: GoogleMap): Polyline {
-		return createPolyline(LatLng(startLatitude, startLongitude), LatLng(endLatitude, endLongitude),
-			color = Color.RED, zIndex = 4, name = name, map = map)
+	private fun addChairLift(startLocation: LatLng, endLocation: LatLng, name: String, map: GoogleMap): Polyline {
+		return createPolyline(startLocation, endLocation, color = Color.RED, zIndex = 4, name = name, map = map)
 	}
 
 	private fun addEasyRun(vararg coordinates: LatLng, name: String, map: GoogleMap): Polyline {
