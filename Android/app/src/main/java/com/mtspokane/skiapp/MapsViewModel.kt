@@ -16,61 +16,86 @@ class MapsViewModel: ViewModel() {
 
 	private lateinit var chairlifts: Array<Polyline>
 
-	private val easyRuns: Array<Polyline?> = arrayOfNulls(12) // TODO Determine actual size
+	private lateinit var easyRuns: Array<Polyline>
 
-	private val moderateRuns: Array<Polyline?> = arrayOfNulls(0) // TODO Determine size
+	private lateinit var moderateRuns: Array<Polyline>
 
-	private val difficultRuns: Array<Polyline?> = arrayOfNulls(0) // TODO Determine size
+	private lateinit var difficultRuns: Array<Polyline>
+
+	private val nightRuns: Array<Polyline?> = arrayOfNulls(0) // TODO Determine size and content
 
 	fun createChairLifts(map: GoogleMap, context: Context) {
 
-		// Load in the chairlift kml file
+		// Load in the chairlift kml file.
 		val kml = KmlLayer(map, R.raw.lifts, context)
 
 		// Iterate though all the chairlift placemarks and populate the chairlifts array.
 		val placemarks: MutableIterator<KmlPlacemark> = kml.placemarks.iterator()
 		this.chairlifts = Array(6) {
-			val placemark: KmlPlacemark = placemarks.next()
 
-			// Get the name if the chairlift.
-			val nameValuePair: Map.Entry<String, String> = placemark.properties.iterator().next()
-					as Map.Entry<String, String>
-			val name = nameValuePair.value
+			// Get the name of the chairlift and its start and end coordinates as a pair.
+			val nameAndCordPair: Pair<String, Array<LatLng>> = getCoordinates(placemarks.next())
 
-			// Get what will be the chairlift polyline.
-			val line: KmlLineString = placemark.geometry as KmlLineString
-
-			// Create a new chairlift object using the geometry objects (the start and end LatLng objects).
-			addChairLift(line.geometryObject[0], line.geometryObject[1], name, map)
+			// TODO Comments
+			createPolyline(*nameAndCordPair.second, color = Color.RED, zIndex = 4,
+				name = nameAndCordPair.first, map = map)
 		}
 	}
 
-	fun createEasyRuns(map: GoogleMap) {
-		// TODO
+	fun createEasyRuns(map: GoogleMap, context: Context) {
+
+		// Load in the easy runs kml file.
+		val kml = KmlLayer(map, R.raw.easy, context)
+
+		// Iterate though all the moderate run placemarks and populate the moderate run array.
+		val placemarks: MutableIterator<KmlPlacemark> = kml.placemarks.iterator()
+		this.easyRuns = Array(23) {
+
+			// Get the name of the run and its coordinates as a pair.
+			val nameAndCordPair: Pair<String, Array<LatLng>> = getCoordinates(placemarks.next())
+
+			// Add the moderate run polyline to the map.
+			createPolyline(*nameAndCordPair.second, color = Color.GREEN, zIndex = 3,
+				name = nameAndCordPair.first, map = map)
+		}
 	}
 
-	fun createModerateRuns(map: GoogleMap) {
-		// TODO
+	fun createModerateRuns(map: GoogleMap, context: Context) {
+
+		/*
+		// Load in the moderate runs kml file.
+		val kml = KmlLayer(map, R.raw.moderate, context) // TODO File
+
+		// Iterate though all the moderate run placemarks and populate the moderate run array.
+		val placemarks: MutableIterator<KmlPlacemark> = kml.placemarks.iterator()
+		this.moderateRuns = Array(0) {  // TODO Determine actual size
+
+			// Get the name of the run and its coordinates as a pair.
+			val nameAndCordPair: Pair<String, Array<LatLng>> = getCoordinates(placemarks.next())
+
+			// Add the moderate run polyline to the map.
+			createPolyline(*nameAndCordPair.second, color = Color.BLUE, zIndex = 2,
+				name = nameAndCordPair.first, map = map)
+		} */
 	}
 
-	fun createDifficultRuns(map: GoogleMap) {
-		// TODO
-	}
+	fun createDifficultRuns(map: GoogleMap, context: Context) {
 
-	private fun addChairLift(startLocation: LatLng, endLocation: LatLng, name: String, map: GoogleMap): Polyline {
-		return createPolyline(startLocation, endLocation, color = Color.RED, zIndex = 4, name = name, map = map)
-	}
+		/*
+		// Load in the difficult runs kml file.
+		val kml = KmlLayer(map, R.raw.difficult, context) // TODO File
 
-	private fun addEasyRun(vararg coordinates: LatLng, name: String, map: GoogleMap): Polyline {
-		return createPolyline(*coordinates, color = Color.GREEN, zIndex = 3, name = name, map = map)
-	}
+		// Iterate though all the difficult run placemarks and populate the difficult run array.
+		val placemarks: MutableIterator<KmlPlacemark> = kml.placemarks.iterator()
+		this.difficultRuns = Array(0) {  // TODO Determine actual size
 
-	private fun addModerateRun(vararg coordinates: LatLng, name: String, map: GoogleMap): Polyline {
-		return createPolyline(*coordinates, color = Color.BLUE, zIndex = 2, name = name, map = map)
-	}
+			// Get the name of the run and its coordinates as a pair.
+			val nameAndCordPair: Pair<String, Array<LatLng>> = getCoordinates(placemarks.next())
 
-	private fun addDifficultRun(vararg coordinates: LatLng, name: String, map: GoogleMap): Polyline {
-		return createPolyline(*coordinates, color = Color.BLACK, zIndex = 1, name = name, map = map)
+			// Add the difficult run polyline to the map.
+			createPolyline(*nameAndCordPair.second, color = Color.BLACK, zIndex = 1,
+				name = nameAndCordPair.first, map = map)
+		} */
 	}
 
 	private fun createPolyline(vararg coordinates: LatLng, color: Int, zIndex: Short, name: String,
@@ -87,5 +112,22 @@ class MapsViewModel: ViewModel() {
 			.visible(true))
 		polyline.tag = name
 		return polyline
+	}
+
+	private fun getCoordinates(placemark: KmlPlacemark): Pair<String, Array<LatLng>> {
+
+		// Get the name of the run.
+		@Suppress("UNCHECKED_CAST")
+		val nameValuePair: Map.Entry<String, String> = placemark.properties.iterator().next()
+				as Map.Entry<String, String>
+		val name = nameValuePair.value
+
+		// Get what will be the run polyline.
+		val line: KmlLineString = placemark.geometry as KmlLineString
+
+		// Create a new array of latlng coords for the run location.
+		val coordinates: Array<LatLng> = Array(line.geometryObject.size) { line.geometryObject[it] }
+
+		return Pair(name, coordinates)
 	}
 }

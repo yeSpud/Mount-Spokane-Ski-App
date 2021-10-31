@@ -63,13 +63,13 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		this.viewModel.createChairLifts(googleMap, this)
 
 		// Add the easy runs to the map.
-		this.viewModel.createEasyRuns(googleMap)
+		this.viewModel.createEasyRuns(googleMap, this)
 
 		// Add the moderate runs to the map.
-		this.viewModel.createModerateRuns(googleMap)
+		this.viewModel.createModerateRuns(googleMap, this)
 
 		// Add the difficult runs to the map.
-		this.viewModel.createDifficultRuns(googleMap)
+		this.viewModel.createDifficultRuns(googleMap, this)
 
 		// Request location permission, so that we can get the location of the device.
 		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
