@@ -10,6 +10,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.GoogleMap
 import android.os.Bundle
 import android.os.Process
+import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -18,13 +19,14 @@ import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
-	private val viewModel: MapsViewModel = MapsViewModel()
+	private val viewModel: MapsViewModel by viewModels()
 
-	private var map: GoogleMap? = null
+	private lateinit var map: GoogleMap
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
+		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
@@ -44,42 +46,41 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 	 */
 	override fun onMapReady(googleMap: GoogleMap) {
 
-		this.map = googleMap
-
 		// Move the camera.
-		val cameraPosition = CameraPosition.Builder().target(LatLng(47.924006680198424, -117.10511684417725))
-				.tilt(45F)
-				.bearing(317.50552F)
-				.zoom(14F)
-				.build()
-		this.map!!.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-		this.map!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
+		val cameraPosition = CameraPosition.Builder()
+			.target(LatLng(47.924006680198424, -117.10511684417725))
+			.tilt(45F)
+			.bearing(317.50552F)
+			.zoom(14F)
+			.build()
+		this.map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+		this.map.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
 				LatLng(47.943674, -117.092470)))
 
-		// Change the map type to satellite.
-		this.map!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
-
 		// Add the chairlifts to the map.
-		this.viewModel.createChairLifts(googleMap, this)
+		this.viewModel.createChairLifts(googleMap)
 
 		// Add the easy runs to the map.
-		this.viewModel.createEasyRuns(googleMap, this)
+		this.viewModel.createEasyRuns(googleMap)
 
 		// Add the moderate runs to the map.
-		this.viewModel.createModerateRuns(googleMap, this)
+		this.viewModel.createModerateRuns(googleMap)
 
 		// Add the difficult runs to the map.
-		this.viewModel.createDifficultRuns(googleMap, this)
+		this.viewModel.createDifficultRuns(googleMap)
 
 		// Request location permission, so that we can get the location of the device.
 		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
 		// If this permission isn't granted then that's fine too.
-		if (this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
-						Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
+		if (this.checkPermission(
+				Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
+				Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
 			showLocation()
 		} else {
-			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-					PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION)
+			ActivityCompat.requestPermissions(
+				this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+				PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+			)
 		}
 	}
 
@@ -104,7 +105,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-					2F, SkierLocation(this.map!!, this.resources))
+				2F, SkierLocation(this.map, this.resources))
 		}
 
 	}
