@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Mt Spokane Ski App</string>
 
+    <!-- Mapbox token -->
+    <string name="mapbox_access_token">${PUBLIC_KEY}</string>
+
     <!-- Marker text -->
     <string name="your_location">You are here</string>
     <string name="more_info">Tap for additional stats</string>
