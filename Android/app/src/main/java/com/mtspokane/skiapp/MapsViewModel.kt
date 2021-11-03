@@ -1,7 +1,9 @@
 package com.mtspokane.skiapp
 
 import android.app.Application
+import android.os.Build
 import androidx.annotation.ColorRes
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.AndroidViewModel
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
@@ -99,9 +101,18 @@ class MapsViewModel(activity: MapsActivity): AndroidViewModel(activity.applicati
 
 	private fun createPolyline(vararg coordinates: LatLng, @ColorRes color: Int, zIndex: Short,
 	                           name: String, map: GoogleMap): Polyline {
+
+		val application: Application = this.getApplication<Application>()
+
+		val argb = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			application.getColor(color)
+		} else {
+			ResourcesCompat.getColor(application.resources, color, null)
+		}
+
 		val polyline = map.addPolyline(PolylineOptions()
 			.add(*coordinates)
-			.color(color)
+			.color(argb)
 			.geodesic(true)
 			.startCap(RoundCap())
 			.endCap(RoundCap())

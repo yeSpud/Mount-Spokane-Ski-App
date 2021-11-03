@@ -10,7 +10,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.GoogleMap
 import android.os.Bundle
 import android.os.Process
-import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -19,12 +18,14 @@ import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
-	private val viewModel: MapsViewModel by viewModels()
+	private lateinit var viewModel: MapsViewModel
 
 	private lateinit var map: GoogleMap
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+
+		this.viewModel = MapsViewModel(this)
 
 		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
@@ -46,6 +47,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 	 */
 	override fun onMapReady(googleMap: GoogleMap) {
 
+		this.map = googleMap
+
 		// Move the camera.
 		val cameraPosition = CameraPosition.Builder()
 			.target(LatLng(47.924006680198424, -117.10511684417725))
@@ -56,6 +59,9 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		this.map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 		this.map.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
 				LatLng(47.943674, -117.092470)))
+
+		// Set the map to use satellite view.
+		this.map.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
 		// Add the chairlifts to the map.
 		this.viewModel.createChairLifts(googleMap)
@@ -72,8 +78,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		// Request location permission, so that we can get the location of the device.
 		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
 		// If this permission isn't granted then that's fine too.
-		if (this.checkPermission(
-				Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
+		if (this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
 				Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
 			showLocation()
 		} else {
