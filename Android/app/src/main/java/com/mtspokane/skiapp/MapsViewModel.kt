@@ -22,7 +22,7 @@ class MapsViewModel(activity: MapsActivity): AndroidViewModel(activity.applicati
 
 	private lateinit var difficultRuns: Array<Polyline>
 
-	private val nightRuns: Array<Polyline?> = arrayOfNulls(0) // TODO Determine size and content
+	private val nightRuns: Array<Polyline?> = arrayOfNulls(16) // TODO Determine size and content
 
 	fun createChairLifts(map: GoogleMap) {
 
@@ -62,13 +62,12 @@ class MapsViewModel(activity: MapsActivity): AndroidViewModel(activity.applicati
 
 	fun createModerateRuns(map: GoogleMap) {
 
-		/*
 		// Load in the moderate runs kml file.
-		val kml = KmlLayer(map, R.raw.moderate, this.getApplication<Application>().applicationContext) // TODO File
+		val kml = KmlLayer(map, R.raw.moderate, this.getApplication<Application>().applicationContext)
 
 		// Iterate though all the moderate run placemarks and populate the moderate run array.
 		val placemarks: MutableIterator<KmlPlacemark> = kml.placemarks.iterator()
-		this.moderateRuns = Array(33) {  // TODO Determine actual size
+		this.moderateRuns = Array(18) {
 
 			// Get the name of the run and its coordinates as a pair.
 			val nameAndCordPair: Pair<String, Array<LatLng>> = getCoordinates(placemarks.next())
@@ -76,18 +75,18 @@ class MapsViewModel(activity: MapsActivity): AndroidViewModel(activity.applicati
 			// Add the moderate run polyline to the map.
 			createPolyline(*nameAndCordPair.second, color = R.color.moderate, zIndex = 2,
 				name = nameAndCordPair.first, map = map)
-		} */
+		}
 	}
 
 	fun createDifficultRuns(map: GoogleMap) {
 
 		/*
 		// Load in the difficult runs kml file.
-		val kml = KmlLayer(map, R.raw.difficult, this.getApplication<Application>().applicationContext) // TODO File
+		val kml = KmlLayer(map, R.raw.difficult, this.getApplication<Application>().applicationContext)
 
 		// Iterate though all the difficult run placemarks and populate the difficult run array.
 		val placemarks: MutableIterator<KmlPlacemark> = kml.placemarks.iterator()
-		this.difficultRuns = Array(0) {  // TODO Determine actual size
+		this.difficultRuns = Array(28) {  // TODO Determine actual size
 
 			// Get the name of the run and its coordinates as a pair.
 			val nameAndCordPair: Pair<String, Array<LatLng>> = getCoordinates(placemarks.next())
