@@ -10,4 +10,5 @@
     <string name="show_beginner">Show Beginner Runs</string>
     <string name="show_intermediate">Show Intermediate Runs</string>
     <string name="show_advanced">Show Advanced Runs</string>
+    <string name="night_runs">Only Show Night Runs</string>
 </resources>

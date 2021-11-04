@@ -32,4 +32,12 @@
         android:enabled="true"
         android:orderInCategory="3"
         android:title="@string/show_advanced" />
+
+    <item
+        android:id="@+id/night"
+        android:checkable="true"
+        android:checked="false"
+        android:enabled="true"
+        android:orderInCategory="4"
+        android:title="@string/night_runs" />
 </menu>

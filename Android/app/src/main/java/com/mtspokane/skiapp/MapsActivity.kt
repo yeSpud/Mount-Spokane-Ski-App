@@ -56,6 +56,12 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 			R.id.easy -> this.viewModel.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
 			R.id.moderate -> this.viewModel.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
 			R.id.difficult -> this.viewModel.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.night -> {
+				this.viewModel.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.viewModel.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.viewModel.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.viewModel.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+			}
 		}
 
 		return super.onOptionsItemSelected(item)
