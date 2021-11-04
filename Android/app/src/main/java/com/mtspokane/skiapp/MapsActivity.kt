@@ -1,16 +1,16 @@
 package com.mtspokane.skiapp
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
-import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.maps.MapView
-import com.mapbox.mapboxsdk.maps.Style
+import com.mapbox.maps.MapView
+import com.mapbox.maps.Style
+import com.mapbox.maps.extension.style.sources.generated.rasterDemSource
+import com.mapbox.maps.extension.style.terrain.generated.terrain
+import com.mapbox.maps.extension.style.style
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 
 class MapsActivity : FragmentActivity() {
@@ -22,23 +22,19 @@ class MapsActivity : FragmentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		// Startup mapbox.
-		Mapbox.getInstance(this.applicationContext, this.getString(R.string.mapbox_access_token))
-
 		// Setup the viewmodel.
 		this.viewModel = MapsViewModel(this)
 
 		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
-		setContentView(binding.root)
+		this.setContentView(binding.root)
 
 		// Setup the mapview.
 		this.mapView = binding.mapView
-		this.mapView.getMapAsync {
-			it.setStyle(Style.SATELLITE)
-		}
-
-		this.mapView.onCreate(savedInstanceState)
+		this.mapView.getMapboxMap().loadStyle(styleExtension = style(Style.SATELLITE) {
+				+rasterDemSource("TERRAIN_SOURCE") { url("mapbox://mapbox.mapbox-terrain-dem-v1") }
+				+terrain("TERRAIN_SOURCE") { exaggeration(1.0) }
+		})
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -141,7 +137,7 @@ class MapsActivity : FragmentActivity() {
 	@SuppressLint("MissingPermission")
 	private fun showLocation() {
 
-		val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		//val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
 		/*
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {

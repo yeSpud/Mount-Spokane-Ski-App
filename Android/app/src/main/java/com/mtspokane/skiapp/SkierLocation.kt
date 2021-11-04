@@ -4,7 +4,7 @@ import android.content.res.Resources
 import android.location.Location
 import android.location.LocationListener
 import android.os.Bundle
-import com.mapbox.mapboxsdk.maps.MapView
+import com.mapbox.maps.MapView
 
 class SkierLocation(private val map: MapView, private val resources: Resources) : LocationListener {
 
