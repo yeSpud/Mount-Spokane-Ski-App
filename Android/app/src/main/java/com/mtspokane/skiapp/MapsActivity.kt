@@ -8,6 +8,8 @@ import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
 import android.os.Process
+import android.view.Menu
+import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import com.mapbox.maps.MapView
@@ -18,14 +20,18 @@ import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 
 class MapsActivity : FragmentActivity() {
 
-	private val viewModel: MapsViewModel = MapsViewModel()
+	private lateinit var viewModel: MapsViewModel
 
-	private var map: GoogleMap? = null
 	private lateinit var mapView: MapView
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
+		// Setup the viewmodel.
+		//this.viewModel = ViewModelProvider(this).get(MapsViewModel::class.java)
+		this.viewModel = MapsViewModel(this)
+
+		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
@@ -37,6 +43,33 @@ class MapsActivity : FragmentActivity() {
 
 		this.mapView.getMapboxMap()
 
+	}
+
+	override fun onCreateOptionsMenu(menu: Menu): Boolean {
+		this.menuInflater.inflate(R.menu.menu, menu)
+		return super.onCreateOptionsMenu(menu)
+	}
+
+	override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+		val checked = !item.isChecked
+
+		item.isChecked = checked
+
+		when (item.itemId) {
+			R.id.chairlift -> this.viewModel.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.easy -> this.viewModel.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.moderate -> this.viewModel.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.difficult -> this.viewModel.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.night -> {
+				this.viewModel.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.viewModel.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.viewModel.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.viewModel.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+			}
+		}
+
+		return super.onOptionsItemSelected(item)
 	}
 
 	/**
@@ -53,39 +86,42 @@ class MapsActivity : FragmentActivity() {
 		this.map = googleMap
 
 		// Move the camera.
-		val cameraPosition = CameraPosition.Builder().target(LatLng(47.924006680198424, -117.10511684417725))
-				.tilt(45F)
-				.bearing(317.50552F)
-				.zoom(14F)
-				.build()
-		this.map!!.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-		this.map!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
+		val cameraPosition = CameraPosition.Builder()
+			.target(LatLng(47.924006680198424, -117.10511684417725))
+			.tilt(45F)
+			.bearing(317.50552F)
+			.zoom(14F)
+			.build()
+		this.map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+		this.map.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
 				LatLng(47.943674, -117.092470)))
 
-		// Change the map type to satellite.
-		this.map!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
+		// Set the map to use satellite view.
+		this.map.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
 		// Add the chairlifts to the map.
-		this.viewModel.createChairLifts(googleMap, this)
+		this.viewModel.createChairLifts(googleMap)
 
 		// Add the easy runs to the map.
-		this.viewModel.createEasyRuns(googleMap, this)
+		this.viewModel.createEasyRuns(googleMap)
 
 		// Add the moderate runs to the map.
-		this.viewModel.createModerateRuns(googleMap, this)
+		this.viewModel.createModerateRuns(googleMap)
 
 		// Add the difficult runs to the map.
-		this.viewModel.createDifficultRuns(googleMap, this)
+		this.viewModel.createDifficultRuns(googleMap)
 
 		// Request location permission, so that we can get the location of the device.
 		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
 		// If this permission isn't granted then that's fine too.
 		if (this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
-						Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
+				Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
 			showLocation()
 		} else {
-			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-					PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION)
+			ActivityCompat.requestPermissions(
+				this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+				PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+			)
 		}
 	}
 
@@ -110,7 +146,7 @@ class MapsActivity : FragmentActivity() {
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-					2F, SkierLocation(this.map!!, this.resources))
+				2F, SkierLocation(this.map, this.resources))
 		}
 
 	}

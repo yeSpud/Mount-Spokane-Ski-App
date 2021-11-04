@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
     <name>Easy runs</name>
-    <open>1</open>
     <Placemark>
         <name>Ego Flats</name>
-        <styleUrl>#m_ylw-pushpin0</styleUrl>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -14,7 +14,8 @@
     </Placemark>
     <Placemark>
         <name>Johnson&apos;s Run</name>
-        <styleUrl>#m_ylw-pushpin0</styleUrl>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -52,7 +53,8 @@
     </Placemark>
     <Placemark>
         <name>Cat Track</name>
-        <styleUrl>#m_ylw-pushpin</styleUrl>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -160,7 +162,7 @@
     </Placemark>
     <Placemark>
         <name>3 to 4</name>
-        <styleUrl>#m_ylw-pushpin0</styleUrl>
+        <styleUrl>#msn_ylw-pushpin0</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -175,9 +177,9 @@
                 -117.1050035223704,47.93289755618804,0 -117.1050630830917,47.93296063605804,0
                 -117.1051337815481,47.93304353151078,0 -117.1051767709399,47.93309316841368,0
                 -117.1052388043496,47.93316870753198,0 -117.1053031201478,47.9332515920966,0
-                -117.1053701335392,47.93334016959292,0 -117.1054340331984,47.93343894009586,0
-                -117.1054993399912,47.93351954276098,0 -117.1055661589161,47.93359029892705,0
-                -117.1056343006194,47.93363930398221,0 -117.1057306674848,47.93369658495308,0
+                -117.1053701335392,47.93334016959292,0 -117.1054437752071,47.9334277290552,0
+                -117.1055078854279,47.9335074503463,0 -117.1055841209146,47.93358264078896,0
+                -117.1056610632151,47.93364269040124,0 -117.1057306674848,47.93369658495308,0
                 -117.1058008254008,47.93373962950042,0 -117.1058853446905,47.93379705843879,0
                 -117.1060335799266,47.93388785383035,0 -117.1061071786875,47.93392906625424,0
                 -117.1062518728835,47.93400396965675,0 -117.1063283589043,47.93404487949758,0
@@ -206,7 +208,8 @@
     </Placemark>
     <Placemark>
         <name>Half Hitch</name>
-        <styleUrl>#m_ylw-pushpin</styleUrl>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -289,7 +292,8 @@
     </Placemark>
     <Placemark>
         <name>Pond Run</name>
-        <styleUrl>#m_ylw-pushpin</styleUrl>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -312,12 +316,19 @@
                 -117.1042588956359,47.92936447359867,0 -117.1042042990844,47.92932337813648,0
                 -117.10417355688,47.92930204745134,0 -117.1041276224477,47.92924436172118,0
                 -117.104110042564,47.92920120815863,0 -117.1040964889077,47.92914805286179,0
+                -117.1040931449529,47.92911940382866,0 -117.1040182028284,47.92895317435647,0
+                -117.1040034252358,47.92890911550738,0 -117.1039788629586,47.92887154310836,0
+                -117.103942260839,47.92878338902408,0 -117.1038876536303,47.9287074364979,0
+                -117.1037838639676,47.92859722926676,0 -117.1037090660384,47.92853045537021,0
+                -117.1036556456166,47.92847664438134,0 -117.1036371465248,47.92845885341424,0
+                -117.1036079362638,47.92843225356664,0 -117.1035568918329,47.92839645978428,0
             </coordinates>
         </LineString>
     </Placemark>
     <Placemark>
         <name>Lower Northwest Passage</name>
-        <styleUrl>#m_ylw-pushpin</styleUrl>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>

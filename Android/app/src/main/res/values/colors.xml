@@ -7,4 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Trail and chairlift colors -->
+    <color name="easy">#5CD111</color>
+    <color name="moderate">#0176FE</color>
+    <color name="difficult">#000000</color>
+    <color name="chairlift">#DA262D</color>
 </resources>
