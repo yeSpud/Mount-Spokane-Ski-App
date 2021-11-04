@@ -16,13 +16,13 @@ import com.google.maps.android.data.kml.KmlPlacemark
 
 class MapsViewModel(activity: MapsActivity): AndroidViewModel(activity.application) {
 
-	private val chairlifts: HashMap<String, MapItem> = HashMap(6)
+	val chairlifts: HashMap<String, MapItem> = HashMap(6)
 
-	private val easyRuns: HashMap<String, MapItem> = HashMap(22)
+	val easyRuns: HashMap<String, MapItem> = HashMap(22)
 
-	private val moderateRuns: HashMap<String, MapItem> = HashMap(19)
+	val moderateRuns: HashMap<String, MapItem> = HashMap(19)
 
-	private val difficultRuns: HashMap<String, MapItem> = HashMap(25)
+	val difficultRuns: HashMap<String, MapItem> = HashMap(25)
 
 	fun createChairLifts(map: GoogleMap) {
 

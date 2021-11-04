@@ -10,6 +10,8 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.GoogleMap
 import android.os.Bundle
 import android.os.Process
+import android.view.Menu
+import android.view.MenuItem
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -25,6 +27,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
+		// Setup the viewmodel.
+		//this.viewModel = ViewModelProvider(this).get(MapsViewModel::class.java)
 		this.viewModel = MapsViewModel(this)
 
 		// Setup data binding.
@@ -34,6 +38,27 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
 		mapFragment!!.getMapAsync(this)
+	}
+
+	override fun onCreateOptionsMenu(menu: Menu): Boolean {
+		this.menuInflater.inflate(R.menu.menu, menu)
+		return super.onCreateOptionsMenu(menu)
+	}
+
+	override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+		val checked = !item.isChecked
+
+		item.isChecked = checked
+
+		when (item.itemId) {
+			R.id.chairlift -> this.viewModel.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.easy -> this.viewModel.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.moderate -> this.viewModel.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.difficult -> this.viewModel.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+		}
+
+		return super.onOptionsItemSelected(item)
 	}
 
 	/**

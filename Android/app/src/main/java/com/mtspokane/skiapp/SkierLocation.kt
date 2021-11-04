@@ -19,8 +19,8 @@ class SkierLocation(private val map: GoogleMap, private val resources: Resources
 		if (this.locationMarker == null) {
 			this.locationMarker = this.map.addMarker(MarkerOptions()
 				.position(LatLng(location.latitude, location.longitude))
-				.title(this.resources.getString(R.string.your_location))
-				.snippet(this.resources.getString(R.string.more_info)))
+				.title(this.resources.getString(R.string.your_location)))
+				//.snippet(this.resources.getString(R.string.more_info)))
 		} else {
 
 			// Otherwise just update the LatLng location.
