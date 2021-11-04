@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/chairlift"
+        android:checkable="true"
+        android:checked="true"
+        android:enabled="true"
+        android:orderInCategory="0"
+        android:title="@string/show_chairlifts" />
+
+    <item
+        android:id="@+id/easy"
+        android:checkable="true"
+        android:checked="true"
+        android:enabled="true"
+        android:orderInCategory="1"
+        android:title="@string/show_beginner" />
+
+    <item
+        android:id="@+id/moderate"
+        android:checkable="true"
+        android:checked="true"
+        android:enabled="true"
+        android:orderInCategory="2"
+        android:title="@string/show_intermediate" />
+
+    <item
+        android:id="@+id/difficult"
+        android:checkable="true"
+        android:checked="true"
+        android:enabled="true"
+        android:orderInCategory="3"
+        android:title="@string/show_advanced" />
+
+    <item
+        android:id="@+id/night"
+        android:checkable="true"
+        android:checked="false"
+        android:enabled="true"
+        android:orderInCategory="4"
+        android:title="@string/night_runs" />
+</menu>

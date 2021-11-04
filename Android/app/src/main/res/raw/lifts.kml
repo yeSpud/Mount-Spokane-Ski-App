@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns:gx="http://www.google.com/kml/ext/2.2"
+    xmlns="http://www.opengis.net/kml/2.2">
+    <name>Mt Spokane Lifts</name>
+    <Placemark>
+        <name>Chair 1: Vista Cruiser</name>
+        <LookAt>
+            <longitude>-117.1059399122729</longitude>
+            <latitude>47.9195003570722</latitude>
+            <altitude>0</altitude>
+            <heading>1.473779983859113e-09</heading>
+            <tilt>44.9999950124726</tilt>
+            <range>2122.687376136957</range>
+            <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+        </LookAt>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                -117.099266845541,47.91606715553383,0 -117.1126129810919,47.92294353366535,0
+            </coordinates>
+        </LineString>
+    </Placemark>
+    <Placemark>
+        <name>Chair 2: Illuminator</name>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin0</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                -117.098637384573,47.92221929989261,0 -117.1119355485026,47.9250541084338,0
+            </coordinates>
+        </LineString>
+    </Placemark>
+    <Placemark>
+        <name>Chair 3: Parkway Express</name>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin0</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                -117.0966530617209,47.92301666633388,0 -117.1039234488206,47.93080242968863,0
+            </coordinates>
+        </LineString>
+    </Placemark>
+    <Placemark>
+        <name>Chair 4: Hidden Treasure</name>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                -117.1005550502552,47.94163035979481,0 -117.1067590655054,47.93233891555709,0
+            </coordinates>
+        </LineString>
+    </Placemark>
+    <Placemark>
+        <name>Chair 5: Beginner&apos;s Luck</name>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin0</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                -117.0954266523773,47.92175256734555,0 -117.0989319661659,47.92292940522836,0
+            </coordinates>
+        </LineString>
+    </Placemark>
+    <Placemark>
+        <name>Chair 6: Northwood</name>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                -117.1299404320796,47.92891149682423,0 -117.112973282171,47.92339173840757,0
+            </coordinates>
+        </LineString>
+    </Placemark>
+</kml>
