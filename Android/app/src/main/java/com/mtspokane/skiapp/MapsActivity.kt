@@ -6,23 +6,23 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.GoogleMap
 import android.os.Bundle
 import android.os.Process
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.*
+import com.mapbox.maps.MapView
+import com.mapbox.maps.Style
+import com.mapbox.maps.plugin.Plugin
+import com.mapbox.maps.plugin.annotation.annotations
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 
-class MapsActivity : FragmentActivity(), OnMapReadyCallback {
+class MapsActivity : FragmentActivity() {
 
 	private lateinit var viewModel: MapsViewModel
 
-	private lateinit var map: GoogleMap
+	private lateinit var mapView: MapView
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -35,9 +35,14 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
-		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
-		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-		mapFragment!!.getMapAsync(this)
+		// Setup the mapview.
+		this.mapView = binding.mapView
+
+		// Change the map type to satellite.
+		this.mapView.getMapboxMap().loadStyleUri(Style.SATELLITE)
+
+		this.mapView.getMapboxMap()
+
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {

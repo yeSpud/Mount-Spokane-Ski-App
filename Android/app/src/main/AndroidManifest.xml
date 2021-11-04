@@ -3,6 +3,7 @@
     package="com.mtspokane.skiapp">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
@@ -13,17 +14,6 @@
         android:supportsRtl="true"
         android:fullBackupContent="true">
         <!-- android:theme="@style/Theme.MtSpokaneSkiApp" -->
-
-        <!--
-             The API key for Google Maps-based APIs is defined as a string resource.
-             (See the file "local.properties").
-             Note that the API key is linked to the encryption key used to sign the APK.
-             You need a different API key for each encryption key, including the release key that is used to
-             sign the APK for publishing.
-        -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${GOOGLE_MAPS_API_KEY}" />
 
         <activity
             android:name=".MapsActivity"
