@@ -2,9 +2,8 @@
 <kml xmlns:gx="http://www.google.com/kml/ext/2.2"
     xmlns="http://www.opengis.net/kml/2.2">
     <name>Mt Spokane Lifts</name>
-    <open>1</open>
     <Placemark>
-        <name>Chair 1</name>
+        <name>Chair 1: Vista Cruiser</name>
         <LookAt>
             <longitude>-117.1059399122729</longitude>
             <latitude>47.9195003570722</latitude>
@@ -23,8 +22,9 @@
         </LineString>
     </Placemark>
     <Placemark>
-        <name>Chair 2</name>
-        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <name>Chair 2: Illuminator</name>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin0</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -33,40 +33,39 @@
         </LineString>
     </Placemark>
     <Placemark>
-        <name>Chair 3</name>
-        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <name>Chair 3: Parkway Express</name>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin0</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
-                -117.0966530617209,47.92301666633388,0
-                -117.1039234488206,47.93080242968863,0
+                -117.0966530617209,47.92301666633388,0 -117.1039234488206,47.93080242968863,0
             </coordinates>
         </LineString>
     </Placemark>
     <Placemark>
-        <name>Chair 4</name>
+        <name>Chair 4: Hidden Treasure</name>
         <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
-                -117.1005550502552,47.94163035979481,0
-                -117.1067590655054,47.93233891555709,0
+                -117.1005550502552,47.94163035979481,0 -117.1067590655054,47.93233891555709,0
             </coordinates>
         </LineString>
     </Placemark>
     <Placemark>
-        <name>Chair 5</name>
-        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <name>Chair 5: Beginner&apos;s Luck</name>
+        <description>night run</description>
+        <styleUrl>#msn_ylw-pushpin0</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
-                -117.0954266523773,47.92175256734555,0
-                -117.0989319661659,47.92292940522836,0
+                -117.0954266523773,47.92175256734555,0 -117.0989319661659,47.92292940522836,0
             </coordinates>
         </LineString>
     </Placemark>
     <Placemark>
-        <name>Chair 6</name>
+        <name>Chair 6: Northwood</name>
         <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
