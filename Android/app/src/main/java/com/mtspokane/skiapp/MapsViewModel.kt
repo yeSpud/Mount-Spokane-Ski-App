@@ -5,11 +5,6 @@ import android.os.Build
 import androidx.annotation.ColorRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.AndroidViewModel
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Polyline
-import com.google.android.gms.maps.model.PolylineOptions
-import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.data.kml.KmlLayer
 import com.google.maps.android.data.kml.KmlLineString
 import com.google.maps.android.data.kml.KmlPlacemark
@@ -24,6 +19,7 @@ class MapsViewModel(activity: MapsActivity): AndroidViewModel(activity.applicati
 
 	val difficultRuns: HashMap<String, MapItem> = HashMap(25)
 
+	/*
 	fun createChairLifts(map: GoogleMap) {
 
 		// Load in the chairlift kml file.
@@ -180,5 +176,5 @@ class MapsViewModel(activity: MapsActivity): AndroidViewModel(activity.applicati
 		mapItem.addPolyLine(polyline)
 
 		return mapItem
-	}
+	} */
 }

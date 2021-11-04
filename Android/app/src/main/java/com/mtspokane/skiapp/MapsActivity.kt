@@ -1,21 +1,16 @@
 package com.mtspokane.skiapp
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
-import android.os.Process
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.viewModels
-import androidx.core.app.ActivityCompat
-import com.mapbox.maps.MapView
-import com.mapbox.maps.Style
-import com.mapbox.maps.plugin.Plugin
-import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.maps.MapView
+import com.mapbox.mapboxsdk.maps.Style
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 
 class MapsActivity : FragmentActivity() {
@@ -27,8 +22,10 @@ class MapsActivity : FragmentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
+		// Startup mapbox.
+		Mapbox.getInstance(this.applicationContext, this.getString(R.string.mapbox_access_token))
+
 		// Setup the viewmodel.
-		//this.viewModel = ViewModelProvider(this).get(MapsViewModel::class.java)
 		this.viewModel = MapsViewModel(this)
 
 		// Setup data binding.
@@ -37,12 +34,11 @@ class MapsActivity : FragmentActivity() {
 
 		// Setup the mapview.
 		this.mapView = binding.mapView
+		this.mapView.getMapAsync {
+			it.setStyle(Style.SATELLITE)
+		}
 
-		// Change the map type to satellite.
-		this.mapView.getMapboxMap().loadStyleUri(Style.SATELLITE)
-
-		this.mapView.getMapboxMap()
-
+		this.mapView.onCreate(savedInstanceState)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -56,6 +52,7 @@ class MapsActivity : FragmentActivity() {
 
 		item.isChecked = checked
 
+		/*
 		when (item.itemId) {
 			R.id.chairlift -> this.viewModel.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
 			R.id.easy -> this.viewModel.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
@@ -68,6 +65,7 @@ class MapsActivity : FragmentActivity() {
 				this.viewModel.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
 			}
 		}
+		 */
 
 		return super.onOptionsItemSelected(item)
 	}
@@ -81,6 +79,7 @@ class MapsActivity : FragmentActivity() {
 	 * it inside the SupportMapFragment. This method will only be triggered once the user has
 	 * installed Google Play services and returned to the app.
 	 */
+	/*
 	override fun onMapReady(googleMap: GoogleMap) {
 
 		this.map = googleMap
@@ -123,7 +122,7 @@ class MapsActivity : FragmentActivity() {
 				PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
 			)
 		}
-	}
+	} */
 
 	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -144,10 +143,11 @@ class MapsActivity : FragmentActivity() {
 
 		val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
+		/*
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
 				2F, SkierLocation(this.map, this.resources))
-		}
+		} */
 
 	}
 

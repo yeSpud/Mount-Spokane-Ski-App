@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.mapbox.maps.MapView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.mapbox.mapboxsdk.maps.MapView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:mapbox="http://schemas.android.com/apk/res-auto"
     android:id="@+id/mapView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    mapbox:mapbox_cameraTargetLat="40.7128"
-    mapbox:mapbox_cameraTargetLng="-74.0060"
-    mapbox:mapbox_cameraZoom="9.0" />
+    mapbox:mapbox_cameraTargetLat="47.924006680198424"
+    mapbox:mapbox_cameraTargetLng="-117.10511684417725"
+    mapbox:mapbox_cameraZoom="14.0" />

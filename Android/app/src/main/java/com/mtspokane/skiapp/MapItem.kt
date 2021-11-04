@@ -1,14 +1,13 @@
 package com.mtspokane.skiapp
 
-import com.google.android.gms.maps.model.Polyline
-
 class MapItem(val name: String, private val isNightRun: Boolean = false) {
 
-	private var polyline: Array<Polyline> = emptyArray()
+	//private var polyline: Array<Polyline> = emptyArray()
 
 	var defaultVisibility = true
 		private set
 
+	/*
 	fun addPolyLine(polyline: Polyline) {
 
 		val array: Array<Polyline> = Array(this.polyline.size + 1) {
@@ -35,5 +34,5 @@ class MapItem(val name: String, private val isNightRun: Boolean = false) {
 				it.isVisible = this.defaultVisibility
 			}
 		}
-	}
+	} */
 }
