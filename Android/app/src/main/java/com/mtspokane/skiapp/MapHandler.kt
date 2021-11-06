@@ -8,6 +8,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Process
 import androidx.annotation.ColorRes
+import androidx.annotation.RawRes
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -85,13 +86,15 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		}
 	}
 
+	private fun parseKmlFile(@RawRes file: Int): Iterable<KmlPlacemark> {
+		val kml = KmlLayer(this.map, file, this.activity)
+		return kml.placemarks
+	}
+
 	private fun createChairLifts() {
 
-		// Load in the chairlift kml file.
-		val kml = KmlLayer(this.map, R.raw.lifts, this.activity)
-
-		// Iterate though each placemark...
-		kml.placemarks.forEach {
+		// Load in the chairlift kml file, and iterate though each placemark.
+		parseKmlFile(R.raw.lifts).forEach {
 
 			// Get the name and polyline.
 			val hashPair = getHashmapPair(it, R.color.chairlift, 4, this.map)
@@ -112,11 +115,8 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	private fun createEasyRuns() {
 
-		// Load in the easy runs kml file.
-		val kml = KmlLayer(this.map, R.raw.easy, this.activity)
-
-		// Iterate though each placemark...
-		kml.placemarks.forEach {
+		// Load in the easy runs kml file, and iterate though each placemark.
+		parseKmlFile(R.raw.easy).forEach {
 
 			// Get the name and polyline.
 			val hashPair = getHashmapPair(it, R.color.easy, 3, this.map)
@@ -137,11 +137,8 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	private fun createModerateRuns() {
 
-		// Load in the moderate runs kml file.
-		val kml = KmlLayer(this.map, R.raw.moderate, this.activity)
-
-		// Iterate though each placemark...
-		kml.placemarks.forEach {
+		// Load in the moderate runs kml file, and iterate though each placemark.
+		parseKmlFile(R.raw.moderate).forEach {
 
 			// Get the name and polyline.
 			val hashPair = getHashmapPair(it, R.color.moderate, 2, this.map)
@@ -162,11 +159,8 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	private fun createDifficultRuns() {
 
-		// Load in the difficult runs kml file.
-		val kml = KmlLayer(this.map, R.raw.difficult, this.activity)
-
-		// Iterate though each placemark...
-		kml.placemarks.forEach {
+		// Load in the difficult runs kml file, and iterate though each placemark.
+		parseKmlFile(R.raw.difficult).forEach {
 
 			// Get the name and polyline.
 			val hashPair = getHashmapPair(it, R.color.difficult, 1, this.map)
@@ -241,6 +235,22 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		mapItem.addPolyLine(polyline)
 
 		return mapItem
+	}
+
+	fun createChairliftPolygons() {
+		// TODO
+	}
+
+	fun createEasyPolygons() {
+		// TODO
+	}
+
+	fun createModeratePolygons() {
+		// TODO
+	}
+
+	fun createDifficultPolygons() {
+		// TODO
 	}
 
 	@SuppressLint("MissingPermission")

@@ -1,10 +1,13 @@
 package com.mtspokane.skiapp
 
+import com.google.android.gms.maps.model.Polygon
 import com.google.android.gms.maps.model.Polyline
 
 class MapItem(val name: String, private val isNightRun: Boolean = false) {
 
 	private var polyline: Array<Polyline> = emptyArray()
+
+	var polygon: Polygon? = null
 
 	var defaultVisibility = true
 		private set
