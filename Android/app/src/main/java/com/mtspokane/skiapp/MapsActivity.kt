@@ -61,13 +61,7 @@ class MapsActivity : FragmentActivity() {
 			// If request is cancelled, the result arrays are empty.
 			this.permissionValue -> {
 				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-					this.map.createChairliftPolygons()
-					this.map.createEasyPolygons()
-					this.map.createModeratePolygons()
-					this.map.createDifficultPolygons()
-
-					this.map.showLocation()
+					this.map.setupLocation()
 				}
 			}
 		}

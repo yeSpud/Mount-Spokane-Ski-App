@@ -15,9 +15,11 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.*
+import com.google.maps.android.data.Geometry
 import com.google.maps.android.data.kml.KmlLayer
 import com.google.maps.android.data.kml.KmlLineString
 import com.google.maps.android.data.kml.KmlPlacemark
+import com.google.maps.android.data.kml.KmlPolygon
 import kotlin.collections.Map
 
 class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
@@ -78,7 +80,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		// If this permission isn't granted then that's fine too.
 		if (activity.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
 				Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
-			showLocation()
+			this.setupLocation()
 		} else {
 			ActivityCompat.requestPermissions(this.activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
 				this.activity.permissionValue
@@ -97,7 +99,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		parseKmlFile(R.raw.lifts).forEach {
 
 			// Get the name and polyline.
-			val hashPair = getHashmapPair(it, R.color.chairlift, 4, this.map)
+			val hashPair = getHashmapPair(it, R.color.chairlift, 4F)
 
 			// Check if the map item is already in the hashmap.
 			if (this.chairlifts[hashPair.first] == null) {
@@ -119,7 +121,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		parseKmlFile(R.raw.easy).forEach {
 
 			// Get the name and polyline.
-			val hashPair = getHashmapPair(it, R.color.easy, 3, this.map)
+			val hashPair = getHashmapPair(it, R.color.easy, 3F)
 
 			// Check if the map item is already in the hashmap.
 			if (this.easyRuns[hashPair.first] == null) {
@@ -141,7 +143,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		parseKmlFile(R.raw.moderate).forEach {
 
 			// Get the name and polyline.
-			val hashPair = getHashmapPair(it, R.color.moderate, 2, this.map)
+			val hashPair = getHashmapPair(it, R.color.moderate, 2F)
 
 			// Check if the map item is already in the hashmap.
 			if (this.moderateRuns[hashPair.first] == null) {
@@ -163,7 +165,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		parseKmlFile(R.raw.difficult).forEach {
 
 			// Get the name and polyline.
-			val hashPair = getHashmapPair(it, R.color.difficult, 1, this.map)
+			val hashPair = getHashmapPair(it, R.color.difficult, 1F)
 
 			// Check if the map item is already in the hashmap.
 			if (this.difficultRuns[hashPair.first] == null) {
@@ -179,8 +181,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		}
 	}
 
-	private fun createPolyline(vararg coordinates: LatLng, @ColorRes color: Int, zIndex: Short,
-	                           map: GoogleMap): Polyline {
+	private fun createPolyline(vararg coordinates: LatLng, @ColorRes color: Int, zIndex: Float): Polyline {
 
 		val argb = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			this.activity.getColor(color)
@@ -188,7 +189,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 			ResourcesCompat.getColor(this.activity.resources, color, null)
 		}
 
-		return map.addPolyline(
+		return this.map.addPolyline(
 			PolylineOptions()
 			.add(*coordinates)
 			.color(argb)
@@ -197,26 +198,49 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 			.endCap(RoundCap())
 			.clickable(false)
 			.width(8F)
-			.zIndex(zIndex.toFloat())
+			.zIndex(zIndex)
 			.visible(true))
 	}
 
-	private fun getHashmapPair(placemark: KmlPlacemark, @ColorRes color: Int, zIndex: Short,
-	                           map: GoogleMap): Pair<String, Polyline> {
+	private fun getHashmapPair(placemark: KmlPlacemark, @ColorRes color: Int, zIndex: Float): Pair<String, Polyline> {
 
 		// Get the name of the placemark.
-		@Suppress("UNCHECKED_CAST")
-		val name = (placemark.properties.elementAt(0) as Map.Entry<String, String>).value
+		val name = getPlacemarkName(placemark)
 
 		// Get the LatLng coordinates of the placemark.
 		val lineString: KmlLineString = placemark.geometry as KmlLineString
 		val coordinates: Array<LatLng> = lineString.geometryObject.toTypedArray()
 
 		// Create the polyline using the coordinates.
-		val polyline = createPolyline(*coordinates, color = color, zIndex = zIndex, map = map)
+		val polyline = createPolyline(*coordinates, color = color, zIndex = zIndex)
 
 		// Return the name and polyline as a pair for the hashmap.
 		return Pair(name, polyline)
+	}
+
+	private fun getPlacemarkName(placemark: KmlPlacemark): String {
+
+		val properties: Iterable<Any?> = placemark.properties
+
+		// Iterate though the properties.
+		properties.forEach {
+
+			// Check if the property is a hashmap entry.
+			if (it is Map.Entry<*, *>) {
+
+				val entry: Map.Entry<*, *> = it
+
+				// Check if the entry has a name key.
+				if (entry.key == "name") {
+
+					// Return the value of the name.
+					return entry.value as String
+				}
+			}
+		}
+
+		// If the name wasn't found in the properties return an empty string.
+		return ""
 	}
 
 	private fun createMapItem(properties: MutableIterable<Any?>, name: String, polyline: Polyline): MapItem {
@@ -237,20 +261,64 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		return mapItem
 	}
 
-	fun createChairliftPolygons() {
+	private fun createChairliftPolygons() {
 		// TODO
 	}
 
-	fun createEasyPolygons() {
+	private fun createEasyPolygons() {
+
+		// Load the easy polygons file.
+		parseKmlFile(R.raw.easy_polygons).forEach {
+
+			val polygon: Polygon = createPolygon(it.geometry, R.color.easy_polygon)
+
+			val name = getPlacemarkName(it)
+
+			// Try to find the MapItem with the name of the polygon.
+			if (this.easyRuns[name] != null) {
+
+				// Add the polygon to the MapItem.
+				this.easyRuns[name]!!.addPolygon(polygon)
+			}
+		}
+	}
+
+	private fun createModeratePolygons() {
 		// TODO
 	}
 
-	fun createModeratePolygons() {
+	private fun createDifficultPolygons() {
 		// TODO
 	}
 
-	fun createDifficultPolygons() {
-		// TODO
+	private fun createPolygon(kmlPolygon: Geometry<Any>, @ColorRes color: Int): Polygon {
+
+		val polygon: KmlPolygon = kmlPolygon as KmlPolygon
+
+		val argb = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			this.activity.getColor(color)
+		} else {
+			ResourcesCompat.getColor(this.activity.resources, color, null)
+		}
+
+		return this.map.addPolygon(PolygonOptions()
+			.add(*polygon.outerBoundaryCoordinates.toTypedArray())
+			.clickable(false)
+			.geodesic(true).zIndex(0F)
+			.fillColor(argb)
+			.strokeColor(argb)
+			.strokeWidth(8F)
+			.visible(BuildConfig.DEBUG))
+
+	}
+
+	fun setupLocation() {
+		this.createChairliftPolygons()
+		this.createEasyPolygons()
+		this.createModeratePolygons()
+		this.createDifficultPolygons()
+
+		this.showLocation()
 	}
 
 	@SuppressLint("MissingPermission")

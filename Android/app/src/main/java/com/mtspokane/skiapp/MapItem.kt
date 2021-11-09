@@ -7,7 +7,7 @@ class MapItem(val name: String, private val isNightRun: Boolean = false) {
 
 	private var polyline: Array<Polyline> = emptyArray()
 
-	var polygon: Polygon? = null
+	private var polygon: Array<Polygon> = emptyArray()
 
 	var defaultVisibility = true
 		private set
@@ -38,5 +38,18 @@ class MapItem(val name: String, private val isNightRun: Boolean = false) {
 				it.isVisible = this.defaultVisibility
 			}
 		}
+	}
+
+	fun addPolygon(polygon: Polygon) {
+
+		val array: Array<Polygon> = Array(this.polygon.size + 1) {
+			if (it == this.polygon.size) {
+				polygon
+			} else {
+				this.polygon[it]
+			}
+		}
+
+		this.polygon = array
 	}
 }

@@ -13,4 +13,7 @@
     <color name="moderate">#0176FE</color>
     <color name="difficult">#000000</color>
     <color name="chairlift">#DA262D</color>
+
+    <!-- Polygon colors -->
+    <color name="easy_polygon">#805CD111</color>
 </resources>
