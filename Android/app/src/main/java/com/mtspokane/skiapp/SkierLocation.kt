@@ -25,8 +25,12 @@ class SkierLocation(private val mapHandler: MapHandler) : LocationListener {
 			this.locationMarker!!.position = LatLng(location.latitude, location.longitude)
 		}
 
-		// Set the marker tag to the location object.
-		this.locationMarker!!.tag = location
+		// Check if our skier is on a run.
+		checkIfOnRun(location)
+	}
+
+	fun checkIfOnRun(location: Location) {
+		// TODO
 	}
 
 	override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {

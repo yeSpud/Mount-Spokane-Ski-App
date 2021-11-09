@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.os.Process
+import android.util.Log
 import androidx.annotation.ColorRes
 import androidx.annotation.RawRes
 import androidx.core.app.ActivityCompat
@@ -20,7 +21,6 @@ import com.google.maps.android.data.kml.KmlLayer
 import com.google.maps.android.data.kml.KmlLineString
 import com.google.maps.android.data.kml.KmlPlacemark
 import com.google.maps.android.data.kml.KmlPolygon
-import kotlin.collections.Map
 
 class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
@@ -98,19 +98,22 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		// Load in the chairlift kml file, and iterate though each placemark.
 		parseKmlFile(R.raw.lifts).forEach {
 
-			// Get the name and polyline.
-			val hashPair = getHashmapPair(it, R.color.chairlift, 4F)
+			// Get the name of the lift.
+			val name: String = getPlacemarkName(it)
+
+			// Get polyline.
+			val polyline: Polyline = getPlacemarkPolyline(it, R.color.chairlift, 4F)
 
 			// Check if the map item is already in the hashmap.
-			if (this.chairlifts[hashPair.first] == null) {
+			if (this.chairlifts[name] == null) {
 
 				// Create a map item and add it to the hashmap.
-				this.chairlifts[hashPair.first] = createMapItem(it.properties, hashPair.first, hashPair.second)
+				this.chairlifts[name] = createMapItem(it, name, polyline)
 
 			} else {
 
 				// Add the polyline to the map item.
-				this.chairlifts[hashPair.first]!!.addPolyLine(hashPair.second)
+				this.chairlifts[name]!!.addPolyLine(polyline)
 			}
 		}
 	}
@@ -120,19 +123,22 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		// Load in the easy runs kml file, and iterate though each placemark.
 		parseKmlFile(R.raw.easy).forEach {
 
-			// Get the name and polyline.
-			val hashPair = getHashmapPair(it, R.color.easy, 3F)
+			// Get the name of the easy run.
+			val name: String = getPlacemarkName(it)
+
+			// Get the polyline.
+			val polyline = getPlacemarkPolyline(it, R.color.easy, 3F)
 
 			// Check if the map item is already in the hashmap.
-			if (this.easyRuns[hashPair.first] == null) {
+			if (this.easyRuns[name] == null) {
 
 				// Create a map item and add it to the hashmap.
-				this.easyRuns[hashPair.first] = createMapItem(it.properties, hashPair.first, hashPair.second)
+				this.easyRuns[name] = createMapItem(it, name, polyline)
 
 			} else {
 
 				// Add the polyline to the map item.
-				this.easyRuns[hashPair.first]!!.addPolyLine(hashPair.second)
+				this.easyRuns[name]!!.addPolyLine(polyline)
 			}
 		}
 	}
@@ -142,19 +148,22 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		// Load in the moderate runs kml file, and iterate though each placemark.
 		parseKmlFile(R.raw.moderate).forEach {
 
-			// Get the name and polyline.
-			val hashPair = getHashmapPair(it, R.color.moderate, 2F)
+			// Get the name of the moderate run.
+			val name: String = getPlacemarkName(it)
+
+			// Get the polyline.
+			val polyline: Polyline = getPlacemarkPolyline(it, R.color.moderate, 2F)
 
 			// Check if the map item is already in the hashmap.
-			if (this.moderateRuns[hashPair.first] == null) {
+			if (this.moderateRuns[name] == null) {
 
 				// Create a map item and add it to the hashmap.
-				this.moderateRuns[hashPair.first] = createMapItem(it.properties, hashPair.first, hashPair.second)
+				this.moderateRuns[name] = createMapItem(it, name, polyline)
 
 			} else {
 
 				// Add the polyline to the map item.
-				this.moderateRuns[hashPair.first]!!.addPolyLine(hashPair.second)
+				this.moderateRuns[name]!!.addPolyLine(polyline)
 			}
 		}
 	}
@@ -164,19 +173,22 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		// Load in the difficult runs kml file, and iterate though each placemark.
 		parseKmlFile(R.raw.difficult).forEach {
 
+			// Get the name of the difficult run.
+			val name: String = getPlacemarkName(it)
+
 			// Get the name and polyline.
-			val hashPair = getHashmapPair(it, R.color.difficult, 1F)
+			val polyline: Polyline = getPlacemarkPolyline(it, R.color.difficult, 1F)
 
 			// Check if the map item is already in the hashmap.
-			if (this.difficultRuns[hashPair.first] == null) {
+			if (this.difficultRuns[name] == null) {
 
 				// Create a map item and add it to the hashmap.
-				this.difficultRuns[hashPair.first] = createMapItem(it.properties, hashPair.first, hashPair.second)
+				this.difficultRuns[name] = createMapItem(it, name, polyline)
 
 			} else {
 
 				// Add the polyline to the map item.
-				this.difficultRuns[hashPair.first]!!.addPolyLine(hashPair.second)
+				this.difficultRuns[name]!!.addPolyLine(polyline)
 			}
 		}
 	}
@@ -202,57 +214,32 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 			.visible(true))
 	}
 
-	private fun getHashmapPair(placemark: KmlPlacemark, @ColorRes color: Int, zIndex: Float): Pair<String, Polyline> {
-
-		// Get the name of the placemark.
-		val name = getPlacemarkName(placemark)
+	private fun getPlacemarkPolyline(placemark: KmlPlacemark, @ColorRes color: Int, zIndex: Float): Polyline {
 
 		// Get the LatLng coordinates of the placemark.
 		val lineString: KmlLineString = placemark.geometry as KmlLineString
 		val coordinates: Array<LatLng> = lineString.geometryObject.toTypedArray()
 
 		// Create the polyline using the coordinates.
-		val polyline = createPolyline(*coordinates, color = color, zIndex = zIndex)
-
-		// Return the name and polyline as a pair for the hashmap.
-		return Pair(name, polyline)
+		return createPolyline(*coordinates, color = color, zIndex = zIndex)
 	}
 
 	private fun getPlacemarkName(placemark: KmlPlacemark): String {
 
-		val properties: Iterable<Any?> = placemark.properties
+		return if (placemark.hasProperty("name")) {
+			placemark.getProperty("name")
+		} else {
 
-		// Iterate though the properties.
-		properties.forEach {
-
-			// Check if the property is a hashmap entry.
-			if (it is Map.Entry<*, *>) {
-
-				val entry: Map.Entry<*, *> = it
-
-				// Check if the entry has a name key.
-				if (entry.key == "name") {
-
-					// Return the value of the name.
-					return entry.value as String
-				}
-			}
+			// If the name wasn't found in the properties return an empty string.
+			Log.w("getPlacemarkName", "Placemark is missing name!")
+			""
 		}
-
-		// If the name wasn't found in the properties return an empty string.
-		return ""
 	}
 
-	private fun createMapItem(properties: MutableIterable<Any?>, name: String, polyline: Polyline): MapItem {
+	private fun createMapItem(placemark: KmlPlacemark, name: String, polyline: Polyline): MapItem {
 
-		// Check if this is a night item.
-		var night = false
-		if (properties.count() == 2) {
-
-			// Its a night item if it the 2nd property contains "night run".
-			@Suppress("UNCHECKED_CAST")
-			night = (properties.elementAt(1) as Map.Entry<String, String>).value.contains("night run")
-		}
+		// Check if this is a night item. Its a night item if the property contains a description.
+		val night = placemark.hasProperty("description")
 
 		// Create a new map item for the polyline (since its not in the hashmap).
 		val mapItem = MapItem(name, night)
@@ -272,7 +259,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 			val polygon: Polygon = createPolygon(it.geometry, R.color.easy_polygon)
 
-			val name = getPlacemarkName(it)
+			val name: String = getPlacemarkName(it)
 
 			// Try to find the MapItem with the name of the polygon.
 			if (this.easyRuns[name] != null) {
