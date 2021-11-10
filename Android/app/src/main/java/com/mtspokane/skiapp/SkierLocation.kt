@@ -3,13 +3,19 @@ package com.mtspokane.skiapp
 import android.location.Location
 import android.location.LocationListener
 import android.os.Bundle
+import android.util.Log
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
 class SkierLocation(private val mapHandler: MapHandler) : LocationListener {
 
 	private var locationMarker: Marker? = null
+
+	private var lastKnownRun: String = ""
 
 	override fun onLocationChanged(location: Location) {
 
@@ -18,7 +24,6 @@ class SkierLocation(private val mapHandler: MapHandler) : LocationListener {
 			this.locationMarker = this.mapHandler.map.addMarker(MarkerOptions()
 				.position(LatLng(location.latitude, location.longitude))
 				.title(this.mapHandler.activity.resources.getString(R.string.your_location)))
-				//.snippet(this.resources.getString(R.string.more_info)))
 		} else {
 
 			// Otherwise just update the LatLng location.
@@ -26,14 +31,55 @@ class SkierLocation(private val mapHandler: MapHandler) : LocationListener {
 		}
 
 		// Check if our skier is on a run.
-		checkIfOnRun(location)
+		this.mapHandler.activity.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
+			checkIfOnRun(location)
+		}.start()
 	}
 
-	fun checkIfOnRun(location: Location) {
+	@ExperimentalCoroutinesApi
+	private suspend fun checkIfOnRun(location: Location) = coroutineScope {
+
+		val easyRunName = async { getRunNameFromPoint(location, this@SkierLocation.mapHandler.easyRuns.values) }
+		val moderateRunName = async { getRunNameFromPoint(location, this@SkierLocation.mapHandler.moderateRuns.values) }
+		val difficultRunName = async { getRunNameFromPoint(location, this@SkierLocation.mapHandler.difficultRuns.values) }
+
+		var runName = ""
+		when {
+			easyRunName.await() != null -> runName = easyRunName.getCompleted()!!
+			moderateRunName.await() != null -> runName = moderateRunName.getCompleted()!!
+			difficultRunName.await() != null -> runName = difficultRunName.getCompleted()!!
+		}
+
 		// TODO
+		if (runName != "") {
+			if (runName == this@SkierLocation.lastKnownRun) {
+				Log.d("checkIfOnRun", "Still on $runName")
+			} else {
+				Log.i("checkIfOnRun", "On run: $runName")
+				this@SkierLocation.lastKnownRun = runName
+				this@SkierLocation.mapHandler.activity.actionBar!!.title = this@SkierLocation.
+				mapHandler.activity.getString(R.string.current_run, runName)
+			}
+		} else {
+			Log.i("checkIfOnRun", "Unable to determine run")
+			this@SkierLocation.mapHandler.activity.actionBar!!.title = this@SkierLocation.
+			mapHandler.activity.getString(R.string.app_name)
+		}
 	}
 
 	override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
 		// ignore
+	}
+
+	companion object {
+
+		fun getRunNameFromPoint(location: Location, items: Collection<MapItem>): String? {
+			for (mapItem: MapItem in items) {
+				if (mapItem.pointInsidePolygon(location)) {
+					return mapItem.name
+				}
+			}
+			return null
+		}
 	}
 }

@@ -1,7 +1,10 @@
 package com.mtspokane.skiapp
 
+import android.location.Location
+import androidx.annotation.MainThread
 import com.google.android.gms.maps.model.Polygon
 import com.google.android.gms.maps.model.Polyline
+import com.google.maps.android.PolyUtil
 
 class MapItem(val name: String, private val isNightRun: Boolean = false) {
 
@@ -51,5 +54,15 @@ class MapItem(val name: String, private val isNightRun: Boolean = false) {
 		}
 
 		this.polygon = array
+	}
+
+	@MainThread
+	fun pointInsidePolygon(point: Location): Boolean {
+		this.polygon.forEach {
+			if (PolyUtil.containsLocation(point.latitude, point.longitude, it.points, true)) {
+				return true
+			}
+		}
+		return false
 	}
 }
