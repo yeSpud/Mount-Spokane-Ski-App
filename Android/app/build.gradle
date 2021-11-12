@@ -12,9 +12,9 @@ android {
         minSdk 21
         targetSdk 31
 
-        def date = new Date().format('yyyy.MM.dd.HH.mm')
-        versionCode 1
-        versionName "$date"
+        def versionNameDate = new Date().format('yyyy.MM.dd.HH.mm')
+        versionCode 2
+        versionName "$versionNameDate"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         targetSdkVersion 31
@@ -67,4 +67,5 @@ dependencies {
     implementation 'com.google.maps.android:android-maps-utils:2.3.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2-native-mt'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
 }
