@@ -1,10 +1,13 @@
 package com.mtspokane.skiapp
 
+import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.core.app.ActivityCompat
 import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 
@@ -12,7 +15,7 @@ class MapsActivity : FragmentActivity() {
 
 	private val map = MapHandler(this)
 
-	val permissionValue = 29500
+	lateinit var locationPopupDialog: AlertDialog
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -24,6 +27,14 @@ class MapsActivity : FragmentActivity() {
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
 		mapFragment!!.getMapAsync(this.map)
+
+		// Setup the location popup dialog.
+		val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
+		alertDialogBuilder.setTitle(R.string.alert_title)
+		alertDialogBuilder.setMessage(R.string.alert_message)
+		alertDialogBuilder.setPositiveButton(R.string.alert_ok) { _, _ -> ActivityCompat.
+		requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), permissionValue) }
+		this.locationPopupDialog = alertDialogBuilder.create()
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -59,11 +70,17 @@ class MapsActivity : FragmentActivity() {
 		when (requestCode) {
 
 			// If request is cancelled, the result arrays are empty.
-			this.permissionValue -> {
+			permissionValue -> {
 				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					this.map.setupLocation()
 				}
 			}
 		}
+	}
+
+	companion object{
+
+		const val permissionValue = 29500
+
 	}
 }

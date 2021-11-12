@@ -10,7 +10,6 @@ import android.os.Process
 import android.util.Log
 import androidx.annotation.ColorRes
 import androidx.annotation.RawRes
-import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -91,13 +90,13 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		// Request location permission, so that we can get the location of the device.
 		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
 		// If this permission isn't granted then that's fine too.
-		if (activity.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
+		if (this.activity.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
 				Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
 			this.setupLocation()
 		} else {
-			ActivityCompat.requestPermissions(this.activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-				this.activity.permissionValue
-			)
+
+			// Show the info popup about location.
+			this.activity.locationPopupDialog.show()
 		}
 	}
 
@@ -322,7 +321,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 	}
 
 	@SuppressLint("MissingPermission")
-	fun showLocation() {
+	fun showLocation() { // TODO Run this as a foreground service.
 
 		val locationManager = this.activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
