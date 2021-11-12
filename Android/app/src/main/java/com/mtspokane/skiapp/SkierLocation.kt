@@ -9,7 +9,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
 
 class SkierLocation(private val mapHandler: MapHandler) : LocationListener {
 
@@ -36,18 +35,29 @@ class SkierLocation(private val mapHandler: MapHandler) : LocationListener {
 		}.start()
 	}
 
-	@ExperimentalCoroutinesApi
 	private suspend fun checkIfOnRun(location: Location) = coroutineScope {
 
-		val easyRunName = async { getRunNameFromPoint(location, this@SkierLocation.mapHandler.easyRuns.values) }
-		val moderateRunName = async { getRunNameFromPoint(location, this@SkierLocation.mapHandler.moderateRuns.values) }
-		val difficultRunName = async { getRunNameFromPoint(location, this@SkierLocation.mapHandler.difficultRuns.values) }
+		var easyRunName: String? = null
+		var moderateRunName: String? = null
+		var difficultRunName: String? = null
+
+		val nameJobs = listOf(
+			async(Dispatchers.Main) {
+				easyRunName = getRunNameFromPoint(location, this@SkierLocation.mapHandler.easyRuns.values)
+				Log.d("checkIfOnRun", "Finished checking names for easy runs") },
+			async(Dispatchers.Main) { moderateRunName = getRunNameFromPoint(location, this@SkierLocation.mapHandler.moderateRuns.values)
+				Log.d("checkIfOnRun", "Finished checking names for moderate runs") },
+			async(Dispatchers.Main) { difficultRunName = getRunNameFromPoint(location, this@SkierLocation.mapHandler.difficultRuns.values)
+				Log.d("checkIfOnRun", "Finished checking names for difficult runs") }
+		)
+
+		nameJobs.awaitAll()
 
 		var runName = ""
 		when {
-			easyRunName.await() != null -> runName = easyRunName.getCompleted()!!
-			moderateRunName.await() != null -> runName = moderateRunName.getCompleted()!!
-			difficultRunName.await() != null -> runName = difficultRunName.getCompleted()!!
+			easyRunName != null -> runName = easyRunName!!
+			moderateRunName != null -> runName = moderateRunName!!
+			difficultRunName != null -> runName = difficultRunName!!
 		}
 
 		// TODO
