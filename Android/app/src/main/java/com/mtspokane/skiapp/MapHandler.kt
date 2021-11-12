@@ -49,16 +49,29 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 		this.map = googleMap
 
+		if (BuildConfig.DEBUG) {
+			this.map.setOnCameraIdleListener {
+				val cameraPosition: CameraPosition = this.map.cameraPosition
+
+				Log.v("OnCameraIdle", "Bearing: ${cameraPosition.bearing}")
+				Log.v("OnCameraIdle", "Target: ${cameraPosition.target}")
+				Log.v("OnCameraIdle", "Tilt: ${cameraPosition.tilt}")
+				Log.v("OnCameraIdle", "Zoom: ${cameraPosition.zoom}")
+			}
+		}
+
 		// Move the camera.
 		val cameraPosition = CameraPosition.Builder()
-			.target(LatLng(47.924006680198424, -117.10511684417725))
+			.target(LatLng(47.92517834073426, -117.10480503737926))
 			.tilt(45F)
 			.bearing(317.50552F)
-			.zoom(14F)
+			.zoom(14.414046F)
 			.build()
 		this.map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 		this.map.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
 			LatLng(47.943674, -117.092470)))
+		this.map.setMaxZoomPreference(20F)
+		this.map.setMinZoomPreference(13F)
 
 		// Set the map to use satellite view.
 		this.map.mapType = GoogleMap.MAP_TYPE_SATELLITE
