@@ -9,8 +9,10 @@ import android.os.Build
 import android.os.Process
 import android.util.Log
 import androidx.annotation.ColorRes
+import androidx.annotation.MainThread
 import androidx.annotation.RawRes
 import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -19,6 +21,7 @@ import com.google.maps.android.data.kml.KmlLayer
 import com.google.maps.android.data.kml.KmlLineString
 import com.google.maps.android.data.kml.KmlPlacemark
 import com.google.maps.android.data.kml.KmlPolygon
+import kotlinx.coroutines.*
 
 class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
@@ -74,46 +77,70 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		// Set the map to use satellite view.
 		this.map.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
-		// TODO Execute the rest on a coroutine?
+		this.activity.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
 
-		// Add the chairlifts to the map.
-		// Load in the chairlift kml file, and iterate though each placemark.
-		loadPolylines(this.map, R.raw.lifts, this.activity, R.color.chairlift, 4f, this.chairlifts)
+			val polylineLoads = listOf(
 
-		// Load in the easy runs kml file, and iterate though each placemark.
-		loadPolylines(this.map, R.raw.easy, this.activity, R.color.easy, 3f, this.easyRuns)
+				// Add the chairlifts to the map.
+				// Load in the chairlift kml file, and iterate though each placemark.
+				async(Dispatchers.Main) { loadPolylines(this@MapHandler.map, R.raw.lifts,
+					this@MapHandler.activity, R.color.chairlift, 4f, this@MapHandler.chairlifts)
+					Log.d("onMapReady", "Finished loading chairlift polylines")},
 
-		// Load in the moderate runs kml file, and iterate though each placemark.
-		loadPolylines(this.map, R.raw.moderate, this.activity, R.color.moderate, 2f, this.moderateRuns)
+				// Load in the easy runs kml file, and iterate though each placemark.
+				async(Dispatchers.Main) { loadPolylines(this@MapHandler.map, R.raw.easy,
+					this@MapHandler.activity, R.color.easy, 3f, this@MapHandler.easyRuns)
+					Log.d("onMapReady", "Finished loading easy run polylines")},
 
-		// Load in the difficult runs kml file, and iterate though each placemark.
-		loadPolylines(this.map, R.raw.difficult, this.activity, R.color.difficult, 1f, this.difficultRuns)
+				// Load in the moderate runs kml file, and iterate though each placemark.
+				async(Dispatchers.Main) { loadPolylines(this@MapHandler.map, R.raw.moderate,
+					this@MapHandler.activity, R.color.moderate, 2f, this@MapHandler.moderateRuns)
+					Log.d("onMapReady", "Finished loading moderate run polylines")},
 
-		// Request location permission, so that we can get the location of the device.
-		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
-		// If this permission isn't granted then that's fine too.
-		if (this.activity.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
-				Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
-			this.setupLocation()
-		} else {
+				// Load in the difficult runs kml file, and iterate though each placemark.
+				async(Dispatchers.Main) { loadPolylines(this@MapHandler.map, R.raw.difficult,
+					this@MapHandler.activity, R.color.difficult, 1f, this@MapHandler.difficultRuns)
+					Log.d("onMapReady", "Finished loading difficult polylines")}
+			)
 
-			// Show the info popup about location.
-			this.activity.locationPopupDialog.show()
-		}
+			// Wait for all the polylines to load before checking permissions.
+			polylineLoads.awaitAll()
+
+			// Request location permission, so that we can get the location of the device.
+			// The result of the permission request is handled by a callback, onRequestPermissionsResult.
+			// If this permission isn't granted then that's fine too.
+			Log.v("onMapReady", "Checking location permissions...")
+			if (this@MapHandler.activity.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION,
+					Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
+				this@MapHandler.setupLocation()
+			} else {
+
+				// Show the info popup about location.
+				this@MapHandler.activity.locationPopupDialog.show()
+			}
+		}.start()
 	}
 
-	fun setupLocation() { // TODO Make this a suspend function
+	suspend fun setupLocation() = coroutineScope {
 
-		// TODO Chairlift polygons
+		val polygonLoads = listOf(
 
-		// Load the easy polygons file.
-		loadPolygons(this.map, R.raw.easy_polygons, this.activity, R.color.easy_polygon, this.easyRuns)
+			// TODO Chairlift polygons
 
-		// TODO Moderate polygons
+			// Load the easy polygons file.
+			async(Dispatchers.Main) { loadPolygons(this@MapHandler.map, R.raw.easy_polygons,
+				this@MapHandler.activity, R.color.easy_polygon, this@MapHandler.easyRuns)
+			Log.d("setupLocation", "Finished loading easy polygons")}
 
-		// TODO Difficult polygons
+			// TODO Moderate polygons
 
-		this.showLocation()
+			// TODO Difficult polygons
+		)
+
+		polygonLoads.awaitAll() // Wait for all loads to have finished...
+
+		Log.v("setupLocation", "Showing location on map...")
+		this@MapHandler.showLocation()
 	}
 
 	@SuppressLint("MissingPermission")
@@ -134,6 +161,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 			return kml.placemarks
 		}
 
+		@MainThread
 		private fun loadPolylines(map: GoogleMap, @RawRes file: Int, activity: MapsActivity,
 		                          @ColorRes color: Int, zIndex: Float, hashMap: HashMap<String, MapItem>) {
 
@@ -203,6 +231,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 			}
 		}
 
+		@MainThread
 		private fun loadPolygons(map: GoogleMap, @RawRes file: Int, activity: MapsActivity,
 		                         @ColorRes color: Int, hashMap: HashMap<String, MapItem>) {
 
