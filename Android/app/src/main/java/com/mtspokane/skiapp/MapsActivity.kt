@@ -1,35 +1,28 @@
 package com.mtspokane.skiapp
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.content.Context
+import android.app.AlertDialog
 import android.content.pm.PackageManager
-import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.GoogleMap
 import android.os.Bundle
-import android.os.Process
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.*
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class MapsActivity : FragmentActivity(), OnMapReadyCallback {
+class MapsActivity : FragmentActivity() {
 
-	private lateinit var viewModel: MapsViewModel
+	private val map = MapHandler(this)
 
-	private lateinit var map: GoogleMap
+	lateinit var locationPopupDialog: AlertDialog
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-
-		// Setup the viewmodel.
-		//this.viewModel = ViewModelProvider(this).get(MapsViewModel::class.java)
-		this.viewModel = MapsViewModel(this)
 
 		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
@@ -37,7 +30,15 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-		mapFragment!!.getMapAsync(this)
+		mapFragment!!.getMapAsync(this.map)
+
+		// Setup the location popup dialog.
+		val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
+		alertDialogBuilder.setTitle(R.string.alert_title)
+		alertDialogBuilder.setMessage(R.string.alert_message)
+		alertDialogBuilder.setPositiveButton(R.string.alert_ok) { _, _ -> ActivityCompat.
+		requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), permissionValue) }
+		this.locationPopupDialog = alertDialogBuilder.create()
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -52,72 +53,19 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		item.isChecked = checked
 
 		when (item.itemId) {
-			R.id.chairlift -> this.viewModel.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.easy -> this.viewModel.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.moderate -> this.viewModel.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.difficult -> this.viewModel.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.chairlift -> this.map.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.easy -> this.map.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.moderate -> this.map.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+			R.id.difficult -> this.map.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
 			R.id.night -> {
-				this.viewModel.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.viewModel.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.viewModel.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.viewModel.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.map.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.map.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.map.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				this.map.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
 			}
 		}
 
 		return super.onOptionsItemSelected(item)
-	}
-
-	/**
-	 * Manipulates the map once available.
-	 * This callback is triggered when the map is ready to be used.
-	 * This is where we can add markers or lines, add listeners or move the camera. In this case,
-	 * we just add a marker near Sydney, Australia.
-	 * If Google Play services is not installed on the device, the user will be prompted to install
-	 * it inside the SupportMapFragment. This method will only be triggered once the user has
-	 * installed Google Play services and returned to the app.
-	 */
-	override fun onMapReady(googleMap: GoogleMap) {
-
-		this.map = googleMap
-
-		// Move the camera.
-		val cameraPosition = CameraPosition.Builder()
-			.target(LatLng(47.924006680198424, -117.10511684417725))
-			.tilt(45F)
-			.bearing(317.50552F)
-			.zoom(14F)
-			.build()
-		this.map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-		this.map.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
-				LatLng(47.943674, -117.092470)))
-
-		// Set the map to use satellite view.
-		this.map.mapType = GoogleMap.MAP_TYPE_SATELLITE
-
-		// Add the chairlifts to the map.
-		this.viewModel.createChairLifts(googleMap)
-
-		// Add the easy runs to the map.
-		this.viewModel.createEasyRuns(googleMap)
-
-		// Add the moderate runs to the map.
-		this.viewModel.createModerateRuns(googleMap)
-
-		// Add the difficult runs to the map.
-		this.viewModel.createDifficultRuns(googleMap)
-
-		// Request location permission, so that we can get the location of the device.
-		// The result of the permission request is handled by a callback, onRequestPermissionsResult.
-		// If this permission isn't granted then that's fine too.
-		if (this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
-				Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
-			showLocation()
-		} else {
-			ActivityCompat.requestPermissions(
-				this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-				PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-			)
-		}
 	}
 
 	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -126,27 +74,19 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 		when (requestCode) {
 
 			// If request is cancelled, the result arrays are empty.
-			PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
+			permissionValue -> {
 				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					showLocation()
+					this.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
+						this@MapsActivity.map.setupLocation()
+					}.start()
 				}
 			}
 		}
 	}
 
-	@SuppressLint("MissingPermission")
-	private fun showLocation() {
+	companion object{
 
-		val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		const val permissionValue = 29500
 
-		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-				2F, SkierLocation(this.map, this.resources))
-		}
-
-	}
-
-	companion object {
-		private const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 29500
 	}
 }

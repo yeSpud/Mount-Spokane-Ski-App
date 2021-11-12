@@ -1,9 +1,17 @@
 <resources>
     <string name="app_name">Mt Spokane Ski App</string>
 
+    <!-- Location alert dialog -->
+    <string name="alert_title">A note about location</string>
+    <string name="alert_message">Your (precise) location is used to determine which runs you are on, and to track if you are no longer on the mountain. This data is gathered and used in the background <b>only while you are on the mountain</b>. Your location data never leaves your device.</string>
+    <string name="alert_ok">Understood</string>
+
     <!-- Marker text -->
     <string name="your_location">You are here</string>
     <string name="more_info">Tap for additional stats</string>
+
+    <!-- Run header -->
+    <string name="current_run">Currently on run: %s</string>
 
     <!-- Menu text -->
     <string name="show_chairlifts">Show Chairlifts</string>
