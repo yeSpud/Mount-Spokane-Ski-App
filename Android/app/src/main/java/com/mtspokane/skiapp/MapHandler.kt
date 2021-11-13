@@ -35,6 +35,10 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	val difficultRuns: HashMap<String, MapItem> = HashMap(25)
 
+	val other: HashMap<String, Polygon> = HashMap(6)
+
+	lateinit var skiAreaBounds: Polygon
+
 	private val location = SkierLocation(this)
 
 	/**
@@ -125,6 +129,8 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 		val polygonLoads = listOf(
 
+			// TODO Ski area bounds polygon
+
 			// TODO Chairlift polygons
 
 			// Load the easy polygons file.
@@ -135,6 +141,8 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 			// TODO Moderate polygons
 
 			// TODO Difficult polygons
+
+			// TODO Other polygons (lodges, parking lots, vista house, tubing area)
 		)
 
 		polygonLoads.awaitAll() // Wait for all loads to have finished...

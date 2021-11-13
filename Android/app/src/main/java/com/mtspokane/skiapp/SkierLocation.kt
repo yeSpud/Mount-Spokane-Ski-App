@@ -35,7 +35,7 @@ class SkierLocation(private val mapHandler: MapHandler) : LocationListener {
 		}.start()
 	}
 
-	private suspend fun checkIfOnRun(location: Location) = coroutineScope {
+	private suspend fun checkIfOnRun(location: Location): Boolean = coroutineScope {
 
 		var easyRunName: String? = null
 		var moderateRunName: String? = null
@@ -70,10 +70,12 @@ class SkierLocation(private val mapHandler: MapHandler) : LocationListener {
 				this@SkierLocation.mapHandler.activity.actionBar!!.title = this@SkierLocation.
 				mapHandler.activity.getString(R.string.current_run, runName)
 			}
+			return@coroutineScope true
 		} else {
 			Log.i("checkIfOnRun", "Unable to determine run")
 			this@SkierLocation.mapHandler.activity.actionBar!!.title = this@SkierLocation.
 			mapHandler.activity.getString(R.string.app_name)
+			return@coroutineScope false
 		}
 	}
 
