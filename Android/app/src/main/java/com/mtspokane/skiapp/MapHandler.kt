@@ -39,7 +39,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	lateinit var skiAreaBounds: Polygon
 
-	private val location = SkierLocation(this)
+	private val inAppLocationHandler = InAppSkierLocation(this)
 
 	/**
 	 * Manipulates the map once available.
@@ -158,7 +158,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-				2F, this.location)
+				2F, this.inAppLocationHandler)
 		}
 	}
 
