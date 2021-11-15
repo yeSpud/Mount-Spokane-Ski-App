@@ -16,7 +16,7 @@ class InAppSkierLocation(private val mapHandler: MapHandler) : LocationListener 
 	override fun onLocationChanged(location: Location) {
 
 		// If we are not on the mountain return early.
-		if (!Locations.isOnMountain()) {
+		if (!Locations.isOnMountain(location, this.mapHandler.skiAreaBounds)) {
 			return
 		}
 
@@ -35,10 +35,10 @@ class InAppSkierLocation(private val mapHandler: MapHandler) : LocationListener 
 		this.mapHandler.activity.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
 
 			when {
-				Locations.checkIfOnOther() -> {
+				Locations.checkIfOnOther(location) -> {
 					// TODO On other
 				}
-				Locations.checkIfOnChairlift() -> {
+				Locations.checkIfOnChairlift(location) -> {
 					// TODO On chairlift
 				}
 				Locations.checkIfOnRun(location, this@InAppSkierLocation.mapHandler) -> {

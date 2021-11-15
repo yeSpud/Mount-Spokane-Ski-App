@@ -129,20 +129,26 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 		val polygonLoads = listOf(
 
-			// TODO Ski area bounds polygon
+			// TODO Other polygons (lodges, parking lots, vista house, tubing area, ski area bounds)
 
 			// TODO Chairlift polygons
 
 			// Load the easy polygons file.
-			async(Dispatchers.Main) { loadPolygons(this@MapHandler.map, R.raw.easy_polygons,
-				this@MapHandler.activity, R.color.easy_polygon, this@MapHandler.easyRuns)
-			Log.d("setupLocation", "Finished loading easy polygons")}
+			async(Dispatchers.Main) {
+				loadPolygons(this@MapHandler.map, R.raw.easy_polygons, this@MapHandler.activity,
+					R.color.easy_polygon, this@MapHandler.easyRuns)
+				Log.d("setupLocation", "Finished loading easy polygons")
+			},
 
-			// TODO Moderate polygons
+			// Load the  moderate polygons file.
+			async(Dispatchers.Main) {
+				loadPolygons(this@MapHandler.map, R.raw.moderate_polygons, this@MapHandler.activity,
+					R.color.moderate_polygon, this@MapHandler.moderateRuns)
+				Log.d("setupLocation", "Finished loading moderate polygons")
+			}
 
 			// TODO Difficult polygons
 
-			// TODO Other polygons (lodges, parking lots, vista house, tubing area)
 		)
 
 		polygonLoads.awaitAll() // Wait for all loads to have finished...

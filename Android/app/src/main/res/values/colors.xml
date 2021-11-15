@@ -17,4 +17,5 @@
     <!-- Polygon colors -->
     <color name="easy_polygon">#335CD111</color>
     <color name="moderate_polygon">#330176FE</color>
+    <color name="difficult_polygon">#33000000</color>
 </resources>

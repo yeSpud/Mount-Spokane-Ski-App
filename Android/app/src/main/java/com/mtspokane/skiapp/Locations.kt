@@ -2,6 +2,8 @@ package com.mtspokane.skiapp
 
 import android.location.Location
 import android.util.Log
+import com.google.android.gms.maps.model.Polygon
+import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -13,18 +15,24 @@ object Locations {
 	var currentRun: String = ""
 	private set
 
-	fun isOnMountain(): Boolean {
-		// TODO
-		return true
+	var chairliftName: String = ""
+	private set
+
+	var otherName: String = ""
+	private set
+
+	fun isOnMountain(location: Location, skiAreaBounds: Polygon): Boolean {
+		return PolyUtil.containsLocation(location.latitude, location.longitude, skiAreaBounds.points, true)
 	}
 
-	suspend fun checkIfOnOther(): Boolean = coroutineScope {
+	suspend fun checkIfOnOther(location: Location): Boolean = coroutineScope {
 		// TODO
 		return@coroutineScope false
 	}
 
-	suspend fun checkIfOnChairlift(): Boolean = coroutineScope {
+	suspend fun checkIfOnChairlift(location: Location): Boolean = coroutineScope {
 		// TODO
+		// Remember to check change in altitude (ascending vs descending)
 		return@coroutineScope false
 	}
 
