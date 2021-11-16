@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.ktx.addMarker
 import kotlinx.coroutines.*
 
 class InAppSkierLocation(private val mapHandler: MapHandler) : LocationListener {
@@ -22,9 +23,10 @@ class InAppSkierLocation(private val mapHandler: MapHandler) : LocationListener 
 
 		// If the marker hasn't been added to the map create a new one.
 		if (this.locationMarker == null) {
-			this.locationMarker = this.mapHandler.map.addMarker(MarkerOptions()
-				.position(LatLng(location.latitude, location.longitude))
-				.title(this.mapHandler.activity.resources.getString(R.string.your_location)))
+			this.locationMarker = this.mapHandler.map.addMarker {
+				position(LatLng(location.latitude, location.longitude))
+				title(this@InAppSkierLocation.mapHandler.activity.resources.getString(R.string.your_location))
+			}
 		} else {
 
 			// Otherwise just update the LatLng location.

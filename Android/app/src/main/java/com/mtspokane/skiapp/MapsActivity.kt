@@ -14,7 +14,6 @@ import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 class MapsActivity : FragmentActivity() {
 

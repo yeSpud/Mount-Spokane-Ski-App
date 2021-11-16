@@ -18,10 +18,12 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.*
-import com.google.maps.android.data.kml.KmlLayer
 import com.google.maps.android.data.kml.KmlLineString
 import com.google.maps.android.data.kml.KmlPlacemark
 import com.google.maps.android.data.kml.KmlPolygon
+import com.google.maps.android.ktx.addPolygon
+import com.google.maps.android.ktx.addPolyline
+import com.google.maps.android.ktx.utils.kml.kmlLayer
 import kotlinx.coroutines.*
 
 class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
@@ -225,7 +227,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 	companion object {
 
 		private fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: MapsActivity): Iterable<KmlPlacemark> {
-			val kml = KmlLayer(map, file, activity)
+			val kml = kmlLayer(map, file, activity)
 			return kml.placemarks
 		}
 
@@ -247,16 +249,17 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 				val argb = getARGB(activity, color)
 
 				// Create the polyline using the coordinates and other options.
-				val polyline: Polyline = map.addPolyline(PolylineOptions()
-					.addAll(coordinates)
-					.color(argb)
-					.geodesic(true)
-					.startCap(RoundCap())
-					.endCap(RoundCap())
-					.clickable(false)
-					.width(8F)
-					.zIndex(zIndex)
-					.visible(true))
+				val polyline: Polyline = map.addPolyline {
+					addAll(coordinates)
+					color(argb)
+					geodesic(true)
+					startCap(RoundCap())
+					endCap(RoundCap())
+					clickable(false)
+					width(8.0F)
+					zIndex(zIndex)
+					visible(true)
+				}
 
 				// Check if the map item is already in the hashmap.
 				if (hashMap[name] == null) {
@@ -327,15 +330,16 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		@MainThread
 		private fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
 		                            fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon {
-			return map.addPolygon(PolygonOptions()
-				.addAll(points)
-				.clickable(false)
-				.geodesic(true)
-				.zIndex(zIndex)
-				.fillColor(fillColor)
-				.strokeColor(strokeColor)
-				.strokeWidth(strokeWidth)
-				.visible(BuildConfig.DEBUG))
+			return map.addPolygon {
+				addAll(points)
+				clickable(false)
+				geodesic(true)
+				zIndex(zIndex)
+				fillColor(fillColor)
+				strokeColor(strokeColor)
+				strokeWidth(strokeWidth)
+				visible(BuildConfig.DEBUG)
+			}
 		}
 	}
 }

@@ -2,6 +2,7 @@ package com.mtspokane.skiapp
 
 import android.location.Location
 import android.util.Log
+import androidx.annotation.MainThread
 import com.google.android.gms.maps.model.Polygon
 import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.*
@@ -22,6 +23,7 @@ object Locations {
 		return PolyUtil.containsLocation(location.latitude, location.longitude, skiAreaBounds.points, true)
 	}
 
+	@MainThread
 	suspend fun checkIfOnOther(location: Location, otherItem: Array<MapItem>): Boolean = coroutineScope {
 
 		otherItem.forEach {
@@ -83,6 +85,7 @@ object Locations {
 		}
 	}
 
+	@MainThread
 	private fun getRunNameFromPoint(location: Location, items: Collection<MapItem>): String? {
 		for (mapItem: MapItem in items) {
 			if (mapItem.pointInsidePolygon(location)) {
