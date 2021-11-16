@@ -35,9 +35,11 @@ class InAppSkierLocation(private val mapHandler: MapHandler) : LocationListener 
 		this.mapHandler.activity.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
 
 			when {
-				Locations.checkIfOnOther(location) -> {
-					// TODO On other
-				}
+				/*@Suppress("UNCHECKED_CAST")
+				Locations.checkIfOnOther(location, this@InAppSkierLocation.mapHandler.other as Array<MapItem>) -> {
+					this@InAppSkierLocation.mapHandler.activity.actionBar!!.title = mapHandler.activity.
+					getString(R.string.current_other, Locations.currentRun)
+				} */
 				Locations.checkIfOnChairlift(location) -> {
 					// TODO On chairlift
 				}

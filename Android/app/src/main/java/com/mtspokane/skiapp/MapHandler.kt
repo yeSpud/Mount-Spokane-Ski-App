@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.LocationManager
 import android.os.Build
 import android.os.Process
@@ -35,7 +36,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	val difficultRuns: HashMap<String, MapItem> = HashMap(25)
 
-	val other: HashMap<String, Polygon> = HashMap(6)
+	val other: Array<MapItem?> = arrayOfNulls(6)
 
 	lateinit var skiAreaBounds: Polygon
 
@@ -53,6 +54,8 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 	override fun onMapReady(googleMap: GoogleMap) {
 
 		this.map = googleMap
+
+		val tag = "onMapReady"
 
 		if (BuildConfig.DEBUG) {
 			this.map.setOnCameraIdleListener {
@@ -81,30 +84,38 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		// Set the map to use satellite view.
 		this.map.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
-		this.activity.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
+		this.activity.lifecycleScope.async(Dispatchers.Main, CoroutineStart.LAZY) {
 
 			val polylineLoads = listOf(
 
 				// Add the chairlifts to the map.
 				// Load in the chairlift kml file, and iterate though each placemark.
-				async(Dispatchers.Main) { loadPolylines(this@MapHandler.map, R.raw.lifts,
-					this@MapHandler.activity, R.color.chairlift, 4f, this@MapHandler.chairlifts)
-					Log.d("onMapReady", "Finished loading chairlift polylines")},
+				async(Dispatchers.Main, CoroutineStart.DEFAULT) {
+					Log.v(tag, "Started loading chairlift polylines")
+					loadPolylines(this@MapHandler.map, R.raw.lifts, this@MapHandler.activity,
+						R.color.chairlift, 4f, this@MapHandler.chairlifts)
+					Log.v(tag, "Finished loading chairlift polylines")},
 
 				// Load in the easy runs kml file, and iterate though each placemark.
-				async(Dispatchers.Main) { loadPolylines(this@MapHandler.map, R.raw.easy,
-					this@MapHandler.activity, R.color.easy, 3f, this@MapHandler.easyRuns)
-					Log.d("onMapReady", "Finished loading easy run polylines")},
+				async(Dispatchers.Main, CoroutineStart.DEFAULT) {
+					Log.v(tag, "Started loading easy polylines")
+					loadPolylines(this@MapHandler.map, R.raw.easy, this@MapHandler.activity,
+						R.color.easy, 3f, this@MapHandler.easyRuns)
+					Log.v(tag, "Finished loading easy run polylines")},
 
 				// Load in the moderate runs kml file, and iterate though each placemark.
-				async(Dispatchers.Main) { loadPolylines(this@MapHandler.map, R.raw.moderate,
-					this@MapHandler.activity, R.color.moderate, 2f, this@MapHandler.moderateRuns)
-					Log.d("onMapReady", "Finished loading moderate run polylines")},
+				async(Dispatchers.Main, CoroutineStart.DEFAULT) {
+					Log.v(tag, "Started loading moderate polylines")
+					loadPolylines(this@MapHandler.map, R.raw.moderate, this@MapHandler.activity,
+						R.color.moderate, 2f, this@MapHandler.moderateRuns)
+					Log.v(tag, "Finished loading moderate run polylines")},
 
 				// Load in the difficult runs kml file, and iterate though each placemark.
-				async(Dispatchers.Main) { loadPolylines(this@MapHandler.map, R.raw.difficult,
-					this@MapHandler.activity, R.color.difficult, 1f, this@MapHandler.difficultRuns)
-					Log.d("onMapReady", "Finished loading difficult polylines")}
+				async(Dispatchers.Main, CoroutineStart.DEFAULT) {
+					Log.v(tag, "Started loading difficult polylines")
+					loadPolylines(this@MapHandler.map, R.raw.difficult, this@MapHandler.activity,
+						R.color.difficult, 1f, this@MapHandler.difficultRuns)
+					Log.v(tag, "Finished loading difficult polylines")}
 			)
 
 			// Wait for all the polylines to load before checking permissions.
@@ -127,24 +138,67 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	suspend fun setupLocation() = coroutineScope {
 
+		val tag = "setupLocation"
+
 		val polygonLoads = listOf(
 
-			// TODO Other polygons (lodges, parking lots, vista house, tubing area, ski area bounds)
+			// Other polygons (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds)
+			async(Dispatchers.Main) {
+				Log.v(tag, "Started loading other polygons")
+
+				var otherIndex = 0
+
+				// Load the other polygons file.
+				parseKmlFile(this@MapHandler.map, R.raw.other, this@MapHandler.activity).forEach {
+
+					// Get the name of the other polygon.
+					val name: String = getPlacemarkName(it)
+
+					// Get the polygon from the file.
+					val kmlPolygon: KmlPolygon = it.geometry as KmlPolygon
+
+					// If the polygon is the ski area bounds then add it to the map as its own object.
+					if (name == "Ski Area Bounds") {
+						Log.d(tag, "Adding bounds to map")
+						this@MapHandler.skiAreaBounds = addPolygonToMap(this@MapHandler.map,
+							kmlPolygon.outerBoundaryCoordinates, 0.0F, 0x59CCCCCC,
+							Color.MAGENTA, 1.0F)
+					} else {
+
+						// Load the other polygons as normal.
+
+						val item = MapItem(name)
+
+						val polygon: Polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates,
+							0.5F, 0x59CCCCCC, Color.MAGENTA, 8F)
+
+						item.addPolygon(polygon)
+
+						this@MapHandler.other[otherIndex] = item
+						otherIndex++
+
+						Log.i(tag, "Added item: $name")
+					}
+				}
+				Log.v(tag, "Finished loading other polygons")
+			},
 
 			// TODO Chairlift polygons
 
 			// Load the easy polygons file.
 			async(Dispatchers.Main) {
+				Log.v(tag, "Started loading easy polygons")
 				loadPolygons(this@MapHandler.map, R.raw.easy_polygons, this@MapHandler.activity,
 					R.color.easy_polygon, this@MapHandler.easyRuns)
-				Log.d("setupLocation", "Finished loading easy polygons")
+				Log.v(tag, "Finished loading easy polygons")
 			},
 
 			// Load the  moderate polygons file.
 			async(Dispatchers.Main) {
+				Log.v(tag, "Started loading moderate polygons")
 				loadPolygons(this@MapHandler.map, R.raw.moderate_polygons, this@MapHandler.activity,
 					R.color.moderate_polygon, this@MapHandler.moderateRuns)
-				Log.d("setupLocation", "Finished loading moderate polygons")
+				Log.v(tag, "Finished loading moderate polygons")
 			}
 
 			// TODO Difficult polygons
@@ -153,7 +207,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 		polygonLoads.awaitAll() // Wait for all loads to have finished...
 
-		Log.v("setupLocation", "Showing location on map...")
+		Log.v(tag, "Showing location on map...")
 		this@MapHandler.showLocation()
 	}
 
@@ -252,19 +306,12 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 			// Load the polygons file.
 			parseKmlFile(map, file, activity).forEach {
 
-				//val polygon: Polygon = createPolygon(it.geometry, activity, color, map)
 				val kmlPolygon: KmlPolygon = it.geometry as KmlPolygon
 
 				val argb = getARGB(activity, color)
 
-				val polygon = map.addPolygon(PolygonOptions()
-					.addAll(kmlPolygon.outerBoundaryCoordinates)
-					.clickable(false)
-					.geodesic(true).zIndex(0F)
-					.fillColor(argb)
-					.strokeColor(argb)
-					.strokeWidth(8F)
-					.visible(BuildConfig.DEBUG))
+				val polygon: Polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates,
+					0.5F, argb, argb, 8F)
 
 				val name: String = getPlacemarkName(it)
 
@@ -275,6 +322,20 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 					hashMap[name]!!.addPolygon(polygon)
 				}
 			}
+		}
+
+		@MainThread
+		private fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
+		                            fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon {
+			return map.addPolygon(PolygonOptions()
+				.addAll(points)
+				.clickable(false)
+				.geodesic(true)
+				.zIndex(zIndex)
+				.fillColor(fillColor)
+				.strokeColor(strokeColor)
+				.strokeWidth(strokeWidth)
+				.visible(BuildConfig.DEBUG))
 		}
 	}
 }

@@ -4,10 +4,7 @@ import android.location.Location
 import android.util.Log
 import com.google.android.gms.maps.model.Polygon
 import com.google.maps.android.PolyUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 
 
 object Locations {
@@ -25,8 +22,15 @@ object Locations {
 		return PolyUtil.containsLocation(location.latitude, location.longitude, skiAreaBounds.points, true)
 	}
 
-	suspend fun checkIfOnOther(location: Location): Boolean = coroutineScope {
-		// TODO
+	suspend fun checkIfOnOther(location: Location, otherItem: Array<MapItem>): Boolean = coroutineScope {
+
+		otherItem.forEach {
+			if (it.pointInsidePolygon(location)) {
+				this@Locations.otherName = it.name
+				return@coroutineScope true
+			}
+		}
+
 		return@coroutineScope false
 	}
 
@@ -43,15 +47,15 @@ object Locations {
 		var difficultRunName: String? = null
 
 		val nameJobs = listOf(
-			async(Dispatchers.Main) {
+			async(Dispatchers.Main, CoroutineStart.LAZY) {
 				easyRunName = getRunNameFromPoint(location, mapHandler.easyRuns.values)
-				Log.d("checkIfOnRun", "Finished checking names for easy runs") },
-			async(Dispatchers.Main) {
+				Log.v("checkIfOnRun", "Finished checking names for easy runs") },
+			async(Dispatchers.Main, CoroutineStart.LAZY) {
 				moderateRunName = getRunNameFromPoint(location, mapHandler.moderateRuns.values)
-				Log.d("checkIfOnRun", "Finished checking names for moderate runs") },
-			async(Dispatchers.Main) {
+				Log.v("checkIfOnRun", "Finished checking names for moderate runs") },
+			async(Dispatchers.Main, CoroutineStart.LAZY) {
 				difficultRunName = getRunNameFromPoint(location, mapHandler.difficultRuns.values)
-				Log.d("checkIfOnRun", "Finished checking names for difficult runs") }
+				Log.v("checkIfOnRun", "Finished checking names for difficult runs") }
 		)
 
 		nameJobs.awaitAll()
@@ -68,7 +72,7 @@ object Locations {
 			if (runName == this@Locations.currentRun) {
 				Log.d("checkIfOnRun", "Still on $runName")
 			} else {
-				Log.i("checkIfOnRun", "On run: $runName")
+				Log.d("checkIfOnRun", "On run: $runName")
 				this@Locations.currentRun = runName
 
 			}

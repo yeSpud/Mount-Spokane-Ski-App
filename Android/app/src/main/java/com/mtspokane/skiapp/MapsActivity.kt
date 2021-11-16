@@ -13,6 +13,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class MapsActivity : FragmentActivity() {
@@ -76,7 +77,7 @@ class MapsActivity : FragmentActivity() {
 			// If request is cancelled, the result arrays are empty.
 			permissionValue -> {
 				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					this.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
+					this.lifecycleScope.async(Dispatchers.Main, CoroutineStart.LAZY) {
 						this@MapsActivity.map.setupLocation()
 					}.start()
 				}
