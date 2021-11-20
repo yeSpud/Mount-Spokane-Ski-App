@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.PolyUtil
 import com.google.maps.android.ktx.addMarker
 import kotlinx.coroutines.*
 
@@ -17,7 +17,8 @@ class InAppSkierLocation(private val mapHandler: MapHandler) : LocationListener 
 	override fun onLocationChanged(location: Location) {
 
 		// If we are not on the mountain return early.
-		if (!Locations.isOnMountain(location, this.mapHandler.skiAreaBounds)) {
+		if (!PolyUtil.containsLocation(location.latitude, location.longitude, this.mapHandler
+				.skiAreaBounds.points, true)) {
 			return
 		}
 
@@ -37,22 +38,19 @@ class InAppSkierLocation(private val mapHandler: MapHandler) : LocationListener 
 		this.mapHandler.activity.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
 
 			when {
-				/*@Suppress("UNCHECKED_CAST")
-				Locations.checkIfOnOther(location, this@InAppSkierLocation.mapHandler.other as Array<MapItem>) -> {
-					this@InAppSkierLocation.mapHandler.activity.actionBar!!.title = mapHandler.activity.
-					getString(R.string.current_other, Locations.currentRun)
-				} */
-				Locations.checkIfOnChairlift(location) -> {
-					// TODO On chairlift
-				}
-				Locations.checkIfOnRun(location, this@InAppSkierLocation.mapHandler) -> {
-					this@InAppSkierLocation.mapHandler.activity.actionBar!!.title = mapHandler.activity.
-					getString(R.string.current_run, Locations.currentRun)
-				}
-				else -> {
-					this@InAppSkierLocation.mapHandler.activity.actionBar!!.title = this@InAppSkierLocation.
-					mapHandler.activity.getString(R.string.app_name)
-				}
+				@Suppress("UNCHECKED_CAST")
+				Locations.checkIfOnOther(location, this@InAppSkierLocation.mapHandler.other
+						as Array<MapItem>) -> this@InAppSkierLocation.mapHandler.activity.actionBar!!
+					.title = mapHandler.activity.getString(R.string.current_other, Locations.otherName)
+				Locations.checkIfOnChairlift(location, this@InAppSkierLocation.mapHandler.chairlifts
+					.values.toTypedArray()) -> this@InAppSkierLocation.mapHandler.activity
+					.actionBar!!.title = this@InAppSkierLocation.mapHandler.activity
+					.getString(R.string.current_chairlift, Locations.chairliftName)
+				Locations.checkIfOnRun(location, this@InAppSkierLocation.mapHandler) -> this@InAppSkierLocation
+					.mapHandler.activity.actionBar!!.title = this@InAppSkierLocation.mapHandler
+					.activity.getString(R.string.current_run, Locations.currentRun)
+				else -> this@InAppSkierLocation.mapHandler.activity.actionBar!!.title = this@InAppSkierLocation
+					.mapHandler.activity.getString(R.string.app_name)
 			}
 		}.start()
 	}

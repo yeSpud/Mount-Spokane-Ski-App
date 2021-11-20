@@ -12,6 +12,7 @@
 
     <!-- Run header -->
     <string name="current_run">Currently on run: %s</string>
+    <string name="current_chairlift">Currently on: %s</string>
     <string name="current_other">Current in %s</string>
 
     <!-- Menu text -->

@@ -1,10 +1,9 @@
 package com.mtspokane.skiapp
 
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import androidx.annotation.MainThread
-import com.google.android.gms.maps.model.Polygon
-import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.*
 
 
@@ -19,8 +18,40 @@ object Locations {
 	var otherName: String = ""
 	private set
 
-	fun isOnMountain(location: Location, skiAreaBounds: Polygon): Boolean {
-		return PolyUtil.containsLocation(location.latitude, location.longitude, skiAreaBounds.points, true)
+	private var previousLocation: Location? = null
+
+	private var vDirection: VerticalDirection = VerticalDirection.UNKNOWN
+
+	private val canUseAccuracy = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+
+	private fun updateLocationVDirection(currentLocation: Location) {
+
+		if (this.previousLocation != null) {
+			if (currentLocation.altitude != 0.0 && this.previousLocation!!.altitude != 0.0) {
+				if (this.canUseAccuracy) {
+					when {
+						(currentLocation.altitude - currentLocation.verticalAccuracyMeters) > (this.previousLocation!!.altitude + this.previousLocation!!.verticalAccuracyMeters) -> this.vDirection = VerticalDirection.UP_CERTAIN
+						(currentLocation.altitude + currentLocation.verticalAccuracyMeters) < (this.previousLocation!!.altitude - this.previousLocation!!.verticalAccuracyMeters) -> this.vDirection = VerticalDirection.DOWN_CERTAIN
+						currentLocation.altitude > this.previousLocation!!.altitude -> this.vDirection = VerticalDirection.UP
+						currentLocation.altitude < this.previousLocation!!.altitude -> this.vDirection = VerticalDirection.DOWN
+						else -> this.vDirection = VerticalDirection.FLAT
+					}
+				} else {
+					Log.w("updateLocationDirection", "Device does not support altitude accuracy!")
+					when {
+						currentLocation.altitude > this.previousLocation!!.altitude -> this.vDirection = VerticalDirection.UP
+						currentLocation.altitude < this.previousLocation!!.altitude -> this.vDirection = VerticalDirection.DOWN
+						else -> this.vDirection = VerticalDirection.FLAT
+					}
+				}
+			} else {
+				this.vDirection = VerticalDirection.UNKNOWN
+			}
+		} else {
+			this.vDirection = VerticalDirection.UNKNOWN
+		}
+
+		this.previousLocation = currentLocation
 	}
 
 	@MainThread
@@ -36,10 +67,54 @@ object Locations {
 		return@coroutineScope false
 	}
 
-	suspend fun checkIfOnChairlift(location: Location): Boolean = coroutineScope {
-		// TODO
-		// Remember to check change in altitude (ascending vs descending)
-		return@coroutineScope false
+	@MainThread
+	suspend fun checkIfOnChairlift(location: Location, chairlifts: Array<MapItem>): Boolean = coroutineScope {
+
+		val numberOfChecks = 6
+		val minimumConfidenceValue = 4/numberOfChecks
+		var currentConfidence = 0
+
+		this@Locations.updateLocationVDirection(location)
+
+		currentConfidence += when (this@Locations.vDirection) {
+			VerticalDirection.UP_CERTAIN -> 3
+			VerticalDirection.UP -> 2
+			VerticalDirection.FLAT -> 1
+			else -> 0
+		}
+
+		// Check speed.
+		if (location.speed != 0.0F && this@Locations.previousLocation != null) {
+
+			// 500 feet per minute to meters per second.
+			val maxChairliftSpeed = 500.0F * 0.00508F
+
+			if (this@Locations.canUseAccuracy) {
+				if (location.speedAccuracyMetersPerSecond != 0.0F && this@Locations.previousLocation!!.speedAccuracyMetersPerSecond != 0.0F) {
+					currentConfidence += when {
+						location.speed + location.speedAccuracyMetersPerSecond <= maxChairliftSpeed -> 2
+						location.speed <= maxChairliftSpeed -> 1
+						else -> 0
+					}
+				}
+			} else {
+				Log.w("checkIfOnChairlift", "Device does not support speed accuracy!")
+				currentConfidence += if (location.speed <= maxChairliftSpeed) {
+					1
+				} else {
+					0
+				}
+			}
+		}
+
+		chairlifts.forEach {
+			if (it.pointInsidePolygon(location)) {
+				this@Locations.chairliftName = it.name
+				currentConfidence += 1
+			}
+		}
+
+		return@coroutineScope currentConfidence / numberOfChecks >= minimumConfidenceValue
 	}
 
 	suspend fun checkIfOnRun(location: Location, mapHandler: MapHandler): Boolean = coroutineScope {
@@ -69,7 +144,6 @@ object Locations {
 			difficultRunName != null -> runName = difficultRunName!!
 		}
 
-		// TODO
 		if (runName != "") {
 			if (runName == this@Locations.currentRun) {
 				Log.d("checkIfOnRun", "Still on $runName")
@@ -95,4 +169,7 @@ object Locations {
 		return null
 	}
 
+	private enum class VerticalDirection {
+		UP_CERTAIN, UP, FLAT, DOWN, DOWN_CERTAIN, UNKNOWN
+	}
 }
