@@ -9,6 +9,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Process
 import android.util.Log
+import androidx.annotation.AnyThread
 import androidx.annotation.ColorRes
 import androidx.annotation.MainThread
 import androidx.annotation.RawRes
@@ -92,28 +93,28 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 				// Add the chairlifts to the map.
 				// Load in the chairlift kml file, and iterate though each placemark.
-				async(Dispatchers.Main, CoroutineStart.DEFAULT) {
+				async(Dispatchers.IO, CoroutineStart.DEFAULT) {
 					Log.v(tag, "Started loading chairlift polylines")
 					loadPolylines(this@MapHandler.map, R.raw.lifts, this@MapHandler.activity,
 						R.color.chairlift, 4f, this@MapHandler.chairlifts)
 					Log.v(tag, "Finished loading chairlift polylines")},
 
 				// Load in the easy runs kml file, and iterate though each placemark.
-				async(Dispatchers.Main, CoroutineStart.DEFAULT) {
+				async(Dispatchers.IO, CoroutineStart.DEFAULT) {
 					Log.v(tag, "Started loading easy polylines")
 					loadPolylines(this@MapHandler.map, R.raw.easy, this@MapHandler.activity,
 						R.color.easy, 3f, this@MapHandler.easyRuns)
 					Log.v(tag, "Finished loading easy run polylines")},
 
 				// Load in the moderate runs kml file, and iterate though each placemark.
-				async(Dispatchers.Main, CoroutineStart.DEFAULT) {
+				async(Dispatchers.IO, CoroutineStart.DEFAULT) {
 					Log.v(tag, "Started loading moderate polylines")
 					loadPolylines(this@MapHandler.map, R.raw.moderate, this@MapHandler.activity,
 						R.color.moderate, 2f, this@MapHandler.moderateRuns)
 					Log.v(tag, "Finished loading moderate run polylines")},
 
 				// Load in the difficult runs kml file, and iterate though each placemark.
-				async(Dispatchers.Main, CoroutineStart.DEFAULT) {
+				async(Dispatchers.IO, CoroutineStart.DEFAULT) {
 					Log.v(tag, "Started loading difficult polylines")
 					loadPolylines(this@MapHandler.map, R.raw.difficult, this@MapHandler.activity,
 						R.color.difficult, 1f, this@MapHandler.difficultRuns)
@@ -226,17 +227,25 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	companion object {
 
+		@AnyThread
 		private fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: MapsActivity): Iterable<KmlPlacemark> {
 			val kml = kmlLayer(map, file, activity)
 			return kml.placemarks
 		}
 
-		@MainThread
-		private fun loadPolylines(map: GoogleMap, @RawRes file: Int, activity: MapsActivity,
-		                          @ColorRes color: Int, zIndex: Float, hashMap: HashMap<String, MapItem>) {
+		@AnyThread
+		private suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
+		                                  @ColorRes color: Int, zIndex: Float,
+		                                  hashMap: HashMap<String, MapItem>) = coroutineScope {
 
-			// Load in the polyline's kml file, and iterate though each placemark.
-			parseKmlFile(map, file, activity).forEach {
+			val fileJob = async(Dispatchers.IO, CoroutineStart.LAZY) {
+				parseKmlFile(map, fileRes, activity)
+			}
+			fileJob.start()
+			val file = fileJob.await()
+
+			// Iterate though each placemark.
+			file.forEach {
 
 				// Get the name of the polyline.
 				val name: String = getPlacemarkName(it)
@@ -249,16 +258,19 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 				val argb = getARGB(activity, color)
 
 				// Create the polyline using the coordinates and other options.
-				val polyline: Polyline = map.addPolyline {
-					addAll(coordinates)
-					color(argb)
-					geodesic(true)
-					startCap(RoundCap())
-					endCap(RoundCap())
-					clickable(false)
-					width(8.0F)
-					zIndex(zIndex)
-					visible(true)
+				var polyline: Polyline
+				withContext(Dispatchers.Main) {
+					polyline = map.addPolyline {
+						addAll(coordinates)
+						color(argb)
+						geodesic(true)
+						startCap(RoundCap())
+						endCap(RoundCap())
+						clickable(false)
+						width(8.0F)
+						zIndex(zIndex)
+						visible(true)
+					}
 				}
 
 				// Check if the map item is already in the hashmap.

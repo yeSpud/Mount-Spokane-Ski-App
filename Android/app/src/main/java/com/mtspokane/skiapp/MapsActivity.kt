@@ -84,9 +84,7 @@ class MapsActivity : FragmentActivity() {
 		}
 	}
 
-	companion object{
-
+	companion object {
 		const val permissionValue = 29500
-
 	}
 }
