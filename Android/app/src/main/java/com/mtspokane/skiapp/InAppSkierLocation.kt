@@ -35,7 +35,7 @@ class InAppSkierLocation(private val mapHandler: MapHandler) : LocationListener 
 		}
 
 		// Check if our skier is on a run, chairlift, or other.
-		this.mapHandler.activity.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
+		this.mapHandler.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
 			when {
 				@Suppress("UNCHECKED_CAST")

@@ -2,7 +2,7 @@
 <kml xmlns="http://www.opengis.net/kml/2.2">
     <Placemark>
         <name>Teakettle</name>
-        <styleUrl>#msn_ylw-pushpin10</styleUrl>
+        <styleUrl>#msn_ylw-pushpin102</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -88,7 +88,7 @@
     </Placemark>
     <Placemark>
         <name>Hourglass</name>
-        <styleUrl>#msn_ylw-pushpin1010</styleUrl>
+        <styleUrl>#msn_ylw-pushpin10100</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -98,7 +98,7 @@
                 -117.1057958708174,47.91668797533021,0 -117.1049311620551,47.91651143193768,0
                 -117.104426072965,47.91637483966618,0 -117.103919516078,47.91626230155228,0
                 -117.1029370118418,47.91605036444965,0 -117.1017780681245,47.91587548733523,0
-                -117.1006618128089,47.91581171566868,0 -117.0997129421344,47.91592898869962,0
+                -117.1006618128089,47.91581171566868,0
             </coordinates>
         </LineString>
     </Placemark>
@@ -170,7 +170,7 @@
     </Placemark>
     <Placemark>
         <name>No Alibi</name>
-        <styleUrl>#msn_ylw-pushpin40</styleUrl>
+        <styleUrl>#msn_ylw-pushpin10100</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -184,7 +184,6 @@
                 -117.1033911600079,47.91805853307113,0 -117.1025555933009,47.91763567984109,0
                 -117.101617816245,47.91707555044206,0 -117.1011774399993,47.91673228966927,0
                 -117.1008047746237,47.91632605853959,0 -117.1004350055027,47.91604877078183,0
-                -117.0998452464625,47.9158536037075,0
             </coordinates>
         </LineString>
     </Placemark>
@@ -454,7 +453,7 @@
     <Placemark>
         <name>Rockslide</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <styleUrl>#msn_ylw-pushpin5</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -475,11 +474,11 @@
     <Placemark>
         <name>Rockslide</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin0</styleUrl>
+        <styleUrl>#msn_ylw-pushpin26</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
-                -117.1084950997562,47.92748161081511,0 -117.1082749517615,47.92757929386642,0
+                -117.1084950997562,47.92748161081511,0 -117.1082749517615,47.92757929386643,0
                 -117.1080679238392,47.92760814701043,0 -117.1077802765946,47.9277339858972,0
                 -117.1076222840529,47.92779097714712,0 -117.1074121646521,47.92793666155537,0
                 -117.1072139611865,47.9281641840562,0 -117.1070451321346,47.92844266100751,0
@@ -511,7 +510,7 @@
     </Placemark>
     <Placemark>
         <name>Lu&apos;s Laine</name>
-        <styleUrl>#msn_ylw-pushpin2</styleUrl>
+        <styleUrl>#msn_ylw-pushpin25</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -528,7 +527,7 @@
     </Placemark>
     <Placemark>
         <name>Lower Geronimo</name>
-        <styleUrl>#msn_ylw-pushpin2</styleUrl>
+        <styleUrl>#msn_ylw-pushpin25</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -568,7 +567,7 @@
     </Placemark>
     <Placemark>
         <name>Pinball</name>
-        <styleUrl>#msn_ylw-pushpin2</styleUrl>
+        <styleUrl>#msn_ylw-pushpin25</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -594,7 +593,7 @@
     </Placemark>
     <Placemark>
         <name>Pinball</name>
-        <styleUrl>#msn_ylw-pushpin2</styleUrl>
+        <styleUrl>#msn_ylw-pushpin25</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -608,7 +607,7 @@
     </Placemark>
     <Placemark>
         <name>Slingshot</name>
-        <styleUrl>#msn_ylw-pushpin2</styleUrl>
+        <styleUrl>#msn_ylw-pushpin25</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>

@@ -55,24 +55,26 @@ object Locations {
 		this.previousLocation = currentLocation
 	}
 
-	@MainThread
+	@AnyThread
 	suspend fun checkIfOnOther(location: Location, otherItem: Array<MapItem>): Boolean = coroutineScope {
 
-		otherItem.forEach {
-			if (it.pointInsidePolygon(location)) {
-				this@Locations.otherName = it.name
-				return@coroutineScope true
+		withContext(Dispatchers.Main) {
+			otherItem.forEach {
+				if (it.pointInsidePolygon(location)) {
+					this@Locations.otherName = it.name
+					return@withContext true
+				}
 			}
-		}
 
-		return@coroutineScope false
+			return@withContext false
+		}
 	}
 
-	@MainThread
+	@AnyThread
 	suspend fun checkIfOnChairlift(location: Location, chairlifts: Array<MapItem>): Boolean = coroutineScope {
 
 		val numberOfChecks = 6
-		val minimumConfidenceValue = 4/numberOfChecks
+		val minimumConfidenceValue: Double = 4.0/numberOfChecks
 		var currentConfidence = 0
 
 		this@Locations.updateLocationVDirection(location)
@@ -108,68 +110,56 @@ object Locations {
 			}
 		}
 
-		chairlifts.forEach {
-			if (it.pointInsidePolygon(location)) {
-				this@Locations.chairliftName = it.name
-				currentConfidence += 1
+		withContext(Dispatchers.Main) {
+			chairlifts.forEach {
+				if (it.pointInsidePolygon(location)) {
+					this@Locations.chairliftName = it.name
+					currentConfidence += 1
+				}
 			}
 		}
 
 		return@coroutineScope currentConfidence / numberOfChecks >= minimumConfidenceValue
 	}
 
+	@AnyThread
 	suspend fun checkIfOnRun(location: Location, mapHandler: MapHandler): Boolean = coroutineScope {
 
-		var easyRunName: String? = null
-		var moderateRunName: String? = null
-		var difficultRunName: String? = null
+		val runArrays: Array<Collection<MapItem>> = arrayOf(mapHandler.easyRuns.values,
+			mapHandler.moderateRuns.values,
+			mapHandler.difficultRuns.values)
 
-		val nameJobs = listOf(
-			async(Dispatchers.IO) {
-				easyRunName = getRunNameFromPoint(location, mapHandler.easyRuns.values)
-				Log.v("checkIfOnRun", "Finished checking names for easy runs") },
-			async(Dispatchers.IO) {
-				moderateRunName = getRunNameFromPoint(location, mapHandler.moderateRuns.values)
-				Log.v("checkIfOnRun", "Finished checking names for moderate runs") },
-			async(Dispatchers.IO) {
-				difficultRunName = getRunNameFromPoint(location, mapHandler.difficultRuns.values)
-				Log.v("checkIfOnRun", "Finished checking names for difficult runs") }
-		)
-
-		nameJobs.awaitAll()
-
-		var runName = ""
-		when {
-			easyRunName != null -> runName = easyRunName!!
-			moderateRunName != null -> runName = moderateRunName!!
-			difficultRunName != null -> runName = difficultRunName!!
-		}
-
-		if (runName != "") {
-			if (runName == this@Locations.currentRun) {
-				Log.d("checkIfOnRun", "Still on $runName")
-			} else {
-				Log.d("checkIfOnRun", "On run: $runName")
-				this@Locations.currentRun = runName
-
+		runArrays.forEach { runs ->
+			val job: Deferred<Boolean> = async(Dispatchers.Main, CoroutineStart.LAZY) {
+				runs.forEach {
+					if (checkIfOnSpecificRun(it, location)) {
+						return@async true
+					}
+				}
+				return@async false
 			}
-			return@coroutineScope true
-		} else {
-			Log.i("checkIfOnRun", "Unable to determine run")
-			return@coroutineScope false
+			job.start()
+			if (job.await()) {
+				return@coroutineScope true
+			}
 		}
+		return@coroutineScope false
 	}
 
-	@AnyThread
-	private suspend fun getRunNameFromPoint(location: Location, items: Collection<MapItem>): String? = coroutineScope {
-		withContext(Dispatchers.Main) {
-			for (mapItem: MapItem in items) {
-				if (mapItem.pointInsidePolygon(location)) {
-					return@withContext mapItem.name
+	@MainThread
+	private fun checkIfOnSpecificRun(mapItem: MapItem, location: Location): Boolean {
+		if (mapItem.pointInsidePolygon(location)) {
+			if (mapItem.name != "") {
+				if (mapItem.name == this@Locations.currentRun) {
+					Log.d("checkIfOnSpecificRun", "Still on ${mapItem.name}")
+				} else {
+					Log.d("checkIfOnSpecificRun", "On run: ${mapItem.name}")
+					this@Locations.currentRun = mapItem.name
 				}
+				return true
 			}
 		}
-		return@coroutineScope null
+		return false
 	}
 
 	private enum class VerticalDirection {

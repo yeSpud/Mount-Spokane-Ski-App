@@ -17,7 +17,7 @@ import kotlinx.coroutines.async
 
 class MapsActivity : FragmentActivity() {
 
-	private val map = MapHandler(this)
+	private var mapHandler: MapHandler? = null
 
 	lateinit var locationPopupDialog: AlertDialog
 
@@ -28,9 +28,11 @@ class MapsActivity : FragmentActivity() {
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
+		this.mapHandler = MapHandler(this)
+
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-		mapFragment!!.getMapAsync(this.map)
+		mapFragment!!.getMapAsync(this.mapHandler!!)
 
 		// Setup the location popup dialog.
 		val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -41,6 +43,12 @@ class MapsActivity : FragmentActivity() {
 		this.locationPopupDialog = alertDialogBuilder.create()
 	}
 
+	override fun onDestroy() {
+		super.onDestroy()
+
+		this.mapHandler = null
+	}
+
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
 		this.menuInflater.inflate(R.menu.menu, menu)
 		return super.onCreateOptionsMenu(menu)
@@ -48,20 +56,23 @@ class MapsActivity : FragmentActivity() {
 
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
-		val checked = !item.isChecked
+		if (this.mapHandler != null) {
 
-		item.isChecked = checked
+			val checked = !item.isChecked
 
-		when (item.itemId) {
-			R.id.chairlift -> this.map.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.easy -> this.map.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.moderate -> this.map.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.difficult -> this.map.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.night -> {
-				this.map.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.map.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.map.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.map.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+			item.isChecked = checked
+
+			when (item.itemId) {
+				R.id.chairlift -> this.mapHandler!!.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.easy -> this.mapHandler!!.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.moderate -> this.mapHandler!!.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.difficult -> this.mapHandler!!.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.night -> {
+					this.mapHandler!!.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+					this.mapHandler!!.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+					this.mapHandler!!.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+					this.mapHandler!!.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				}
 			}
 		}
 
@@ -77,7 +88,7 @@ class MapsActivity : FragmentActivity() {
 			permissionValue -> {
 				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					this.lifecycleScope.async(Dispatchers.Main, CoroutineStart.LAZY) {
-						this@MapsActivity.map.setupLocation()
+						this@MapsActivity.mapHandler!!.setupLocation()
 					}.start()
 				}
 			}

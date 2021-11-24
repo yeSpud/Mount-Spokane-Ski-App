@@ -38,7 +38,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 	val difficultRuns: HashMap<String, MapItem> = HashMap(25)
 
-	val other: Array<MapItem?> = arrayOfNulls(6)
+	val other: Array<MapItem?> = arrayOfNulls(6) // TODO Account for parking lots and tubing area...
 
 	lateinit var skiAreaBounds: Polygon
 
@@ -146,8 +146,8 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 
 		val polygonLoads = listOf(
 
-			// Other polygons (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds)
-			// TODO Finish the remaining polylines
+			// Other polygons
+			// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading other polygons")
 
