@@ -3,6 +3,7 @@ package com.mtspokane.skiapp
 import android.location.Location
 import android.os.Build
 import android.util.Log
+import androidx.annotation.AnyThread
 import androidx.annotation.MainThread
 import kotlinx.coroutines.*
 
@@ -124,13 +125,13 @@ object Locations {
 		var difficultRunName: String? = null
 
 		val nameJobs = listOf(
-			async(Dispatchers.Main, CoroutineStart.LAZY) {
+			async(Dispatchers.IO) {
 				easyRunName = getRunNameFromPoint(location, mapHandler.easyRuns.values)
 				Log.v("checkIfOnRun", "Finished checking names for easy runs") },
-			async(Dispatchers.Main, CoroutineStart.LAZY) {
+			async(Dispatchers.IO) {
 				moderateRunName = getRunNameFromPoint(location, mapHandler.moderateRuns.values)
 				Log.v("checkIfOnRun", "Finished checking names for moderate runs") },
-			async(Dispatchers.Main, CoroutineStart.LAZY) {
+			async(Dispatchers.IO) {
 				difficultRunName = getRunNameFromPoint(location, mapHandler.difficultRuns.values)
 				Log.v("checkIfOnRun", "Finished checking names for difficult runs") }
 		)
@@ -159,14 +160,16 @@ object Locations {
 		}
 	}
 
-	@MainThread
-	private fun getRunNameFromPoint(location: Location, items: Collection<MapItem>): String? {
-		for (mapItem: MapItem in items) {
-			if (mapItem.pointInsidePolygon(location)) {
-				return mapItem.name
+	@AnyThread
+	private suspend fun getRunNameFromPoint(location: Location, items: Collection<MapItem>): String? = coroutineScope {
+		withContext(Dispatchers.Main) {
+			for (mapItem: MapItem in items) {
+				if (mapItem.pointInsidePolygon(location)) {
+					return@withContext mapItem.name
+				}
 			}
 		}
-		return null
+		return@coroutineScope null
 	}
 
 	private enum class VerticalDirection {

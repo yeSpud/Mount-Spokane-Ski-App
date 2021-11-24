@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
-    <name>Easy runs</name>
     <Placemark>
         <name>Ego Flats</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin6</styleUrl>
+        <styleUrl>#msn_ylw-pushpin60</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -15,7 +14,7 @@
     <Placemark>
         <name>Johnson&apos;s Run</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin6</styleUrl>
+        <styleUrl>#msn_ylw-pushpin60</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -60,7 +59,7 @@
     <Placemark>
         <name>Cat Track</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin6</styleUrl>
+        <styleUrl>#msn_ylw-pushpin60</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -215,7 +214,7 @@
     <Placemark>
         <name>Half Hitch</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin6</styleUrl>
+        <styleUrl>#msn_ylw-pushpin60</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -276,13 +275,13 @@
     </Placemark>
     <Placemark>
         <name>Bail Out</name>
-        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <styleUrl>#msn_ylw-pushpin15</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
                 -117.104275335759,47.93610107152307,0 -117.1043081296583,47.93618688608227,0
                 -117.10440937179,47.93629569479327,0 -117.1044754598662,47.93635603446627,0
-                -117.1045673287019,47.93642705371177,0 -117.104676234734,47.93649320722691,0
+                -117.1045673287019,47.93642705371176,0 -117.104676234734,47.93649320722691,0
                 -117.1047621478844,47.93653404454196,0 -117.1048482679204,47.93657055918272,0
                 -117.1049651528276,47.93660700869479,0 -117.1050511303165,47.93663433187993,0
                 -117.1051234275403,47.93665119235276,0 -117.1051795341178,47.93665997787716,0
@@ -314,7 +313,7 @@
     <Placemark>
         <name>Lower Northwest Passage</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin6</styleUrl>
+        <styleUrl>#msn_ylw-pushpin60</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>

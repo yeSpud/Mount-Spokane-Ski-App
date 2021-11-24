@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
-    <name>Other polygons</name>
-    <open>1</open>
     <Placemark>
         <name>Ski Area Bounds</name>
+        <visibility>0</visibility>
         <styleUrl>#msn_ylw-pushpin</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
                 <LinearRing>
                     <coordinates>
-                        -117.1092698403918,47.94503705991382,0
+                        -117.1092698403918,47.94503705991383,0
                         -117.1148479659527,47.94492883605903,0
                         -117.1166523251346,47.94262240338326,0
                         -117.1183481485597,47.93748962229092,0 -117.126494151075,47.93412345828714,0
@@ -30,7 +29,27 @@
                         -117.0957048015431,47.92611668212385,0
                         -117.0902299240554,47.93308298267896,0 -117.096347227661,47.93851889544561,0
                         -117.0989192244677,47.94299349415164,0
-                        -117.1092698403918,47.94503705991382,0
+                        -117.1092698403918,47.94503705991383,0
+                    </coordinates>
+                </LinearRing>
+            </outerBoundaryIs>
+        </Polygon>
+    </Placemark>
+    <Placemark>
+        <name>Ski School</name>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <Polygon>
+            <tessellate>1</tessellate>
+            <outerBoundaryIs>
+                <LinearRing>
+                    <coordinates>
+                        -117.0952856529414,47.92148555775947,0
+                        -117.0953744340662,47.92134052791604,0
+                        -117.0951943277119,47.92130152585246,0
+                        -117.0951429323183,47.92138955083075,0
+                        -117.0951081359567,47.92138147022453,0
+                        -117.0950916769508,47.92141658587061,0
+                        -117.0952856529414,47.92148555775947,0
                     </coordinates>
                 </LinearRing>
             </outerBoundaryIs>
