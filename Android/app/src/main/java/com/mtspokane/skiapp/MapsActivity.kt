@@ -1,8 +1,11 @@
 package com.mtspokane.skiapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
 import android.view.Menu
@@ -19,6 +22,8 @@ class MapsActivity : FragmentActivity() {
 
 	private var mapHandler: MapHandler? = null
 
+	private var inAppLocationHandler: InAppSkierLocation? = null
+
 	lateinit var locationPopupDialog: AlertDialog
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +34,7 @@ class MapsActivity : FragmentActivity() {
 		setContentView(binding.root)
 
 		this.mapHandler = MapHandler(this)
+		this.inAppLocationHandler = InAppSkierLocation(this.mapHandler!!, this)
 
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
@@ -46,6 +52,9 @@ class MapsActivity : FragmentActivity() {
 	override fun onDestroy() {
 		super.onDestroy()
 
+		this.inAppLocationHandler!!.destroy()
+		this.inAppLocationHandler = null
+		this.mapHandler!!.destroy()
 		this.mapHandler = null
 	}
 
@@ -92,6 +101,17 @@ class MapsActivity : FragmentActivity() {
 					}.start()
 				}
 			}
+		}
+	}
+
+	@SuppressLint("MissingPermission")
+	fun showLocation() { // TODO Run this as a foreground service.
+
+		val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
+				2F, this.inAppLocationHandler!!)
 		}
 	}
 
