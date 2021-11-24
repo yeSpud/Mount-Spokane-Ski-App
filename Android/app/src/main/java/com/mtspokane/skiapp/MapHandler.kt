@@ -147,6 +147,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 		val polygonLoads = listOf(
 
 			// Other polygons (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds)
+			// TODO Finish the remaining polylines
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading other polygons")
 
@@ -165,7 +166,7 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 					if (name == "Ski Area Bounds") {
 						Log.d(tag, "Adding bounds to map")
 						this@MapHandler.skiAreaBounds = addPolygonToMap(this@MapHandler.map,
-							kmlPolygon.outerBoundaryCoordinates, 0.0F, R.color.other_polygon_fill,
+							kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
 							Color.MAGENTA, 1.0F)
 					} else {
 
@@ -187,7 +188,13 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 				Log.v(tag, "Finished loading other polygons")
 			},
 
-			// TODO Chairlift polygons
+			// Load the chairlift polygons file.
+			async(Dispatchers.IO) {
+				Log.v(tag, "Started loading chairlift polygons")
+				loadPolygons(this@MapHandler.map, R.raw.lift_polygons, this@MapHandler.activity,
+					R.color.chairlift_polygon, this@MapHandler.chairlifts)
+				Log.v(tag, "Finished loading chairlift polygons")
+			},
 
 			// Load the easy polygons file.
 			async(Dispatchers.IO) {
@@ -212,7 +219,6 @@ class MapHandler(val activity: MapsActivity): OnMapReadyCallback {
 					R.color.difficult_polygon, this@MapHandler.difficultRuns)
 				Log.v(tag, "Finished loading difficult polygons")
 			}
-
 		)
 
 		polygonLoads.awaitAll() // Wait for all loads to have finished...
