@@ -2,10 +2,12 @@ package com.mtspokane.skiapp
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
+import android.app.*
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.location.LocationManager
+import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
 import android.view.Menu
@@ -105,13 +107,33 @@ class MapsActivity : FragmentActivity() {
 	}
 
 	@SuppressLint("MissingPermission")
-	fun showLocation() { // TODO Run this as a foreground service.
+	fun showLocation() {
 
-		val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
 				2F, this.inAppLocationHandler!!)
+		}
+
+		// Check if the location service has already been started.
+		if (!SkierLocationService.checkIfRunning(this)) {
+
+			val notification: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				Notification.Builder(this, NotificationChannel("Location", "Location", NotificationManager.IMPORTANCE_DEFAULT).id)
+					.setSmallIcon(R.drawable.icon_fg)
+					.setShowWhen(false)
+					.build()
+			} else {
+				Notification()
+			}
+
+			val service = SkierLocationService()
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+				service.startForeground(SkierLocationService.foregroundId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+			} else {
+				service.startForeground(SkierLocationService.foregroundId, notification)
+			}
 		}
 	}
 

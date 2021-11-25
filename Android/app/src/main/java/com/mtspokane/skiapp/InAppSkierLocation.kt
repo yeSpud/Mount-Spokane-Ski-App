@@ -8,6 +8,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.PolyUtil
 import com.google.maps.android.ktx.addMarker
+import com.google.maps.android.ktx.utils.contains
 import kotlinx.coroutines.*
 
 class InAppSkierLocation(private var mapHandler: MapHandler?, private var activity: MapsActivity?) : LocationListener {
@@ -23,8 +24,7 @@ class InAppSkierLocation(private var mapHandler: MapHandler?, private var activi
 	override fun onLocationChanged(location: Location) {
 
 		// If we are not on the mountain return early.
-		if (!PolyUtil.containsLocation(location.latitude, location.longitude, this.mapHandler!!
-				.skiAreaBounds.points, true)) {
+		if (this.mapHandler!!.skiAreaBounds.contains(LatLng(location.latitude,location.longitude))) {
 			return
 		}
 

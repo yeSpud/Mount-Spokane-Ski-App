@@ -15,6 +15,8 @@
         android:fullBackupContent="true">
         <!-- android:theme="@style/Theme.MtSpokaneSkiApp" -->
 
+        <service android:name=".SkierLocationService" android:foregroundServiceType="location"/>
+
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "local.properties").
