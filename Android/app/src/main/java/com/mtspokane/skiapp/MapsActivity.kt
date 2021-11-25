@@ -1,8 +1,11 @@
 package com.mtspokane.skiapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
 import android.view.Menu
@@ -13,11 +16,13 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 class MapsActivity : FragmentActivity() {
 
-	private val map = MapHandler(this)
+	private var mapHandler: MapHandler? = null
+
+	private var inAppLocationHandler: InAppSkierLocation? = null
 
 	lateinit var locationPopupDialog: AlertDialog
 
@@ -28,9 +33,12 @@ class MapsActivity : FragmentActivity() {
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
+		this.mapHandler = MapHandler(this)
+		this.inAppLocationHandler = InAppSkierLocation(this.mapHandler!!, this)
+
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-		mapFragment!!.getMapAsync(this.map)
+		mapFragment!!.getMapAsync(this.mapHandler!!)
 
 		// Setup the location popup dialog.
 		val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -41,6 +49,15 @@ class MapsActivity : FragmentActivity() {
 		this.locationPopupDialog = alertDialogBuilder.create()
 	}
 
+	override fun onDestroy() {
+		super.onDestroy()
+
+		this.inAppLocationHandler!!.destroy()
+		this.inAppLocationHandler = null
+		this.mapHandler!!.destroy()
+		this.mapHandler = null
+	}
+
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
 		this.menuInflater.inflate(R.menu.menu, menu)
 		return super.onCreateOptionsMenu(menu)
@@ -48,20 +65,23 @@ class MapsActivity : FragmentActivity() {
 
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
-		val checked = !item.isChecked
+		if (this.mapHandler != null) {
 
-		item.isChecked = checked
+			val checked = !item.isChecked
 
-		when (item.itemId) {
-			R.id.chairlift -> this.map.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.easy -> this.map.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.moderate -> this.map.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.difficult -> this.map.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-			R.id.night -> {
-				this.map.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.map.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.map.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-				this.map.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+			item.isChecked = checked
+
+			when (item.itemId) {
+				R.id.chairlift -> this.mapHandler!!.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.easy -> this.mapHandler!!.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.moderate -> this.mapHandler!!.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.difficult -> this.mapHandler!!.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.night -> {
+					this.mapHandler!!.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+					this.mapHandler!!.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+					this.mapHandler!!.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+					this.mapHandler!!.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+				}
 			}
 		}
 
@@ -76,17 +96,26 @@ class MapsActivity : FragmentActivity() {
 			// If request is cancelled, the result arrays are empty.
 			permissionValue -> {
 				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					this.lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
-						this@MapsActivity.map.setupLocation()
+					this.lifecycleScope.async(Dispatchers.Main, CoroutineStart.LAZY) {
+						this@MapsActivity.mapHandler!!.setupLocation()
 					}.start()
 				}
 			}
 		}
 	}
 
-	companion object{
+	@SuppressLint("MissingPermission")
+	fun showLocation() { // TODO Run this as a foreground service.
 
+		val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
+				2F, this.inAppLocationHandler!!)
+		}
+	}
+
+	companion object {
 		const val permissionValue = 29500
-
 	}
 }
