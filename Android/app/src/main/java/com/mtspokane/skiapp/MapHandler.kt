@@ -21,21 +21,23 @@ import com.google.maps.android.data.kml.KmlPolygon
 import com.google.maps.android.ktx.addPolygon
 import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
+import com.mtspokane.skiapp.mapItem.UIMapItem
+import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
 import kotlinx.coroutines.*
 
 class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 	var map: GoogleMap? = null
 
-	val chairlifts: HashMap<String, MapItem> = HashMap(6)
+	val chairlifts: HashMap<String, VisibleUIMapItem> = HashMap(6)
 
-	val easyRuns: HashMap<String, MapItem> = HashMap(22)
+	val easyRuns: HashMap<String, VisibleUIMapItem> = HashMap(22)
 
-	val moderateRuns: HashMap<String, MapItem> = HashMap(19)
+	val moderateRuns: HashMap<String, VisibleUIMapItem> = HashMap(19)
 
-	val difficultRuns: HashMap<String, MapItem> = HashMap(25)
+	val difficultRuns: HashMap<String, VisibleUIMapItem> = HashMap(25)
 
-	val other: Array<MapItem?> = arrayOfNulls(6) // TODO Account for parking lots and tubing area...
+	val other: Array<UIMapItem?> = arrayOfNulls(6) // TODO Account for parking lots and tubing area...
 
 	lateinit var skiAreaBounds: Polygon
 
@@ -172,7 +174,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 						// Load the other polygons as normal.
 
-						val item = MapItem(name)
+						val item = UIMapItem(name)
 
 						val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon.outerBoundaryCoordinates,
 							0.5F, R.color.other_polygon_fill, Color.MAGENTA, 8F)
@@ -237,7 +239,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 		@AnyThread
 		private suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
 		                                  @ColorRes color: Int, zIndex: Float,
-		                                  hashMap: HashMap<String, MapItem>) = coroutineScope {
+		                                  hashMap: HashMap<String, VisibleUIMapItem>) = coroutineScope {
 
 			// Load the polyline from the file, and iterate though each placemark.
 			parseKmlFile(map, fileRes, activity).forEach {
@@ -275,7 +277,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					val night = it.hasProperty("description")
 
 					// Create a new map item for the polyline (since its not in the hashmap).
-					val mapItem = MapItem(name, night)
+					val mapItem = VisibleUIMapItem(name, isNightRun = night) // TODO Add icon
 					mapItem.addPolyLine(polyline)
 
 					// Add the map item to the hashmap.
@@ -311,7 +313,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 		@AnyThread
 		private suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
-		                                 @ColorRes color: Int, hashMap: HashMap<String, MapItem>) = coroutineScope {
+		                                 @ColorRes color: Int, hashMap: HashMap<String, VisibleUIMapItem>) = coroutineScope {
 
 			// Load the polygons file.
 			parseKmlFile(map, fileRes, activity).forEach {

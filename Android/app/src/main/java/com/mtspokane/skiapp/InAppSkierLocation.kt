@@ -6,9 +6,9 @@ import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
-import com.google.maps.android.PolyUtil
 import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.utils.contains
+import com.mtspokane.skiapp.mapItem.UIMapItem
 import kotlinx.coroutines.*
 
 class InAppSkierLocation(private var mapHandler: MapHandler?, private var activity: MapsActivity?) : LocationListener {
@@ -45,13 +45,13 @@ class InAppSkierLocation(private var mapHandler: MapHandler?, private var activi
 
 			when {
 				@Suppress("UNCHECKED_CAST")
-				Locations.checkIfOnOther(location, this@InAppSkierLocation.mapHandler!!.other
-						as Array<MapItem>) -> this@InAppSkierLocation.activity!!.actionBar!!
+				Locations.checkIfOnOtherAsync(location, this@InAppSkierLocation.mapHandler!!.other
+						as Array<UIMapItem>) -> this@InAppSkierLocation.activity!!.actionBar!!
 					.title = this@InAppSkierLocation.activity!!.getString(R.string.current_other, Locations.otherName)
-				Locations.checkIfOnChairlift(location, this@InAppSkierLocation.mapHandler!!.chairlifts
+				Locations.checkIfOnChairliftAsync(location, this@InAppSkierLocation.mapHandler!!.chairlifts
 					.values.toTypedArray()) -> this@InAppSkierLocation.activity!!.actionBar!!
 					.title = this@InAppSkierLocation.activity!!.getString(R.string.current_chairlift, Locations.chairliftName)
-				Locations.checkIfOnRun(location, this@InAppSkierLocation.mapHandler!!) -> this@InAppSkierLocation
+				Locations.checkIfOnRunAsync(location, this@InAppSkierLocation.mapHandler!!) -> this@InAppSkierLocation
 					.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_run, Locations.currentRun)
 				else -> this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation
 					.activity!!.getString(R.string.app_name)

@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.location.LocationManager
@@ -129,6 +130,12 @@ class MapsActivity : FragmentActivity() {
 			}
 
 			val service = SkierLocationService()
+			val serviceIntent = Intent()
+			//serviceIntent.putExtra("ski area bounds", this.mapHandler!!.skiAreaBounds.)
+			serviceIntent.putExtra("other", this.mapHandler!!.other)
+			serviceIntent.putExtra("chairlifts", this.mapHandler!!.chairlifts.values.toTypedArray())
+
+
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 				service.startForeground(SkierLocationService.foregroundId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
 			} else {
