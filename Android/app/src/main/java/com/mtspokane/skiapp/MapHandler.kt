@@ -8,6 +8,7 @@ import android.os.Process
 import android.util.Log
 import androidx.annotation.AnyThread
 import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.annotation.RawRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
@@ -97,28 +98,28 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading chairlift polylines")
 					loadPolylines(this@MapHandler.map!!, R.raw.lifts, this@MapHandler.activity!!,
-						R.color.chairlift, 4f, this@MapHandler.chairlifts)
+						R.color.chairlift, 4f, this@MapHandler.chairlifts) // TODO Chairlift icon
 					Log.v(tag, "Finished loading chairlift polylines")},
 
 				// Load in the easy runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading easy polylines")
 					loadPolylines(this@MapHandler.map!!, R.raw.easy, this@MapHandler.activity!!,
-						R.color.easy, 3f, this@MapHandler.easyRuns)
+						R.color.easy, 3f, this@MapHandler.easyRuns, R.drawable.ic_easy)
 					Log.v(tag, "Finished loading easy run polylines")},
 
 				// Load in the moderate runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading moderate polylines")
 					loadPolylines(this@MapHandler.map!!, R.raw.moderate, this@MapHandler.activity!!,
-						R.color.moderate, 2f, this@MapHandler.moderateRuns)
+						R.color.moderate, 2f, this@MapHandler.moderateRuns, R.drawable.ic_moderate)
 					Log.v(tag, "Finished loading moderate run polylines")},
 
 				// Load in the difficult runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading difficult polylines")
 					loadPolylines(this@MapHandler.map!!, R.raw.difficult, this@MapHandler.activity!!,
-						R.color.difficult, 1f, this@MapHandler.difficultRuns)
+						R.color.difficult, 1f, this@MapHandler.difficultRuns, R.drawable.ic_difficult)
 					Log.v(tag, "Finished loading difficult polylines")}
 			)
 
@@ -239,7 +240,8 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 		@AnyThread
 		private suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
 		                                  @ColorRes color: Int, zIndex: Float,
-		                                  hashMap: HashMap<String, VisibleUIMapItem>) = coroutineScope {
+		                                  hashMap: HashMap<String, VisibleUIMapItem>,
+		                                  @DrawableRes icon: Int? = null) = coroutineScope {
 
 			// Load the polyline from the file, and iterate though each placemark.
 			parseKmlFile(map, fileRes, activity).forEach {
@@ -277,7 +279,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					val night = it.hasProperty("description")
 
 					// Create a new map item for the polyline (since its not in the hashmap).
-					val mapItem = VisibleUIMapItem(name, isNightRun = night) // TODO Add icon
+					val mapItem = VisibleUIMapItem(name, isNightRun = night, icon = icon)
 					mapItem.addPolyLine(polyline)
 
 					// Add the map item to the hashmap.
