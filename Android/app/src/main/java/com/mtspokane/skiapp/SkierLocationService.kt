@@ -11,11 +11,18 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import kotlinx.coroutines.CoroutineStart
+import android.app.NotificationManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import androidx.annotation.DrawableRes
+import android.graphics.drawable.BitmapDrawable
 
-class SkierLocationService: Service(), LocationListener {
+import android.graphics.drawable.Drawable
+import androidx.appcompat.content.res.AppCompatResources
+
+
+class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 
 	/*
 	 * Runs every time the service is started.
@@ -24,24 +31,7 @@ class SkierLocationService: Service(), LocationListener {
 		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
 
-		val notificationIntent = Intent(this, MapsActivity::class.java)
-
-		val pendingIntent: PendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
-		} else {
-			PendingIntent.getActivity(this, 0, notificationIntent, 0)
-		}
-
-		val notification: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			Notification.Builder(this, NotificationChannel(CHANNEL_ID, "Location", NotificationManager.IMPORTANCE_DEFAULT).id)
-				.setSmallIcon(R.drawable.icon_fg)
-				.setShowWhen(false)
-				.setContentTitle(this.getString(R.string.tracking_notice))
-				.setContentIntent(pendingIntent)
-				.build()
-		} else {
-			Notification() // TODO Notification pre Oreo
-		}
+		val notification: Notification = createNotification("", null)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			this.startForeground(foregroundId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
@@ -60,13 +50,11 @@ class SkierLocationService: Service(), LocationListener {
 		Log.v("SkierLocationService", "onCreate called!")
 		super.onCreate()
 
-		/*
 		val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
 				2F, this)
 		}
-		 */
 	}
 
 	override fun onDestroy() {
@@ -92,28 +80,67 @@ class SkierLocationService: Service(), LocationListener {
 
 		val other = Locations.checkIfOnOther(location)
 		if (other != null) {
-			this.recreateNotification(this.getString(R.string.current_other, other.name), other.getIcon())
+			this.updateNotification(this.getString(R.string.current_other, other.name), other.getIcon())
 			return
 		}
 
 		val chairlift = Locations.checkIfOnChairlift(location)
 		if (chairlift != null) {
-			this.recreateNotification(this.getString(R.string.current_chairlift, chairlift.name), chairlift.getIcon())
+			this.updateNotification(this.getString(R.string.current_chairlift, chairlift.name), chairlift.getIcon())
 			return
 		}
 
 		val run = Locations.checkIfOnRun(location)
 		if (run != null) {
-			this.recreateNotification(this.getString(R.string.current_run, run.name), run.getIcon())
+			this.updateNotification(this.getString(R.string.current_run, run.name), run.getIcon())
 			return
 		}
 
-		this.recreateNotification(this.getString(R.string.tracking_notice), null)
+		this.updateNotification(this.getString(R.string.tracking_notice), null)
 		//}.start()
 	}
 
-	private fun recreateNotification(title: String, icon: Int?) {
-		// TODO
+	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
+
+		val bitmap: Bitmap? = if (icon != null) {
+			drawableToBitmap(AppCompatResources.getDrawable(this, icon)!!)
+		} else {
+			null
+		}
+
+		val notification: Notification = createNotification(title, bitmap)
+
+		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+		notificationManager.notify(foregroundId, notification)
+	}
+
+	private fun createPendingIntent(): PendingIntent {
+		val notificationIntent = Intent(this, MapsActivity::class.java)
+		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+		} else {
+			PendingIntent.getActivity(this, 0, notificationIntent, 0)
+		}
+	}
+
+	private fun createNotification(title: String, iconBitmap: Bitmap?): Notification {
+
+		val pendingIntent: PendingIntent = this.createPendingIntent()
+
+		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			val builder = Notification.Builder(this, NotificationChannel(CHANNEL_ID, "Location", NotificationManager.IMPORTANCE_DEFAULT).id)
+			builder.setSmallIcon(R.drawable.icon_fg)
+			builder.setShowWhen(false)
+			builder.setContentTitle(this.getString(R.string.tracking_notice))
+			builder.setContentText(title)
+			builder.setContentIntent(pendingIntent)
+			if (iconBitmap != null) {
+				builder.setLargeIcon(iconBitmap)
+			}
+			builder.build()
+		} else {
+			Notification() // TODO Notification pre Oreo
+		}
 	}
 
 	override fun onBind(intent: Intent?): IBinder? {
@@ -128,7 +155,6 @@ class SkierLocationService: Service(), LocationListener {
 
 		const val CHANNEL_ID = "skiAppTracker"
 
-
 		fun checkIfRunning(activity: MapsActivity): Boolean {
 
 			val activityManager: ActivityManager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -139,6 +165,25 @@ class SkierLocationService: Service(), LocationListener {
 			}
 
 			return false
+		}
+
+		/**
+		 * @author https://studiofreya.com/2018/08/15/android-notification-large-icon-from-vector-xml/
+		 */
+		private fun drawableToBitmap(drawable: Drawable): Bitmap? {
+
+			if (drawable is BitmapDrawable) {
+				return drawable.bitmap
+			}
+
+			val bitmap: Bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight,
+				Bitmap.Config.ARGB_8888)
+
+			val canvas = Canvas(bitmap)
+			drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight())
+			drawable.draw(canvas)
+
+			return bitmap
 		}
 	}
 }

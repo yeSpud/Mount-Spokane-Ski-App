@@ -139,7 +139,7 @@ class MapsActivity : FragmentActivity() {
 			val notificationChannel = NotificationChannel(SkierLocationService.CHANNEL_ID,
 				this.getString(R.string.notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
-			val notificationManager: NotificationManager = this.getSystemService(NotificationManager::class.java)
+			val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 			notificationManager.createNotificationChannel(notificationChannel)
 			Log.v("createNotificationChnnl", "Created new notification channel")
 		}
