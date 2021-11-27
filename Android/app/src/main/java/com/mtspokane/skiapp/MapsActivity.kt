@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -75,15 +76,15 @@ class MapsActivity : FragmentActivity() {
 			item.isChecked = checked
 
 			when (item.itemId) {
-				R.id.chairlift -> this.mapHandler!!.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
-				R.id.easy -> this.mapHandler!!.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-				R.id.moderate -> this.mapHandler!!.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-				R.id.difficult -> this.mapHandler!!.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.chairlift -> MtSpokaneMapItems.chairlifts.forEach{it.togglePolyLineVisibility(checked)}
+				R.id.easy -> MtSpokaneMapItems.easyRuns.forEach{it.togglePolyLineVisibility(checked)}
+				R.id.moderate -> MtSpokaneMapItems.moderateRuns.forEach{it.togglePolyLineVisibility(checked)}
+				R.id.difficult -> MtSpokaneMapItems.difficultRuns.forEach{it.togglePolyLineVisibility(checked)}
 				R.id.night -> {
-					this.mapHandler!!.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-					this.mapHandler!!.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-					this.mapHandler!!.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-					this.mapHandler!!.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+					MtSpokaneMapItems.chairlifts.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
+					MtSpokaneMapItems.easyRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
+					MtSpokaneMapItems.moderateRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
+					MtSpokaneMapItems.difficultRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
 				}
 			}
 		}
@@ -130,10 +131,10 @@ class MapsActivity : FragmentActivity() {
 			}
 
 			val service = SkierLocationService()
-			val serviceIntent = Intent()
+			//val serviceIntent = Intent()
 			//serviceIntent.putExtra("ski area bounds", this.mapHandler!!.skiAreaBounds.)
-			serviceIntent.putExtra("other", this.mapHandler!!.other)
-			serviceIntent.putExtra("chairlifts", this.mapHandler!!.chairlifts.values.toTypedArray())
+			//serviceIntent.putExtra("other", this.mapHandler!!.other)
+			//serviceIntent.putExtra("chairlifts", this.mapHandler!!.chairlifts.values.toTypedArray())
 
 
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

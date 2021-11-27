@@ -6,7 +6,9 @@ import android.util.Log
 import androidx.annotation.AnyThread
 import androidx.annotation.MainThread
 import com.mtspokane.skiapp.mapItem.MapItem
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.UIMapItem
+import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
 import kotlinx.coroutines.*
 
 
@@ -58,13 +60,15 @@ object Locations {
 	}
 
 	@AnyThread
-	suspend fun checkIfOnOtherAsync(location: Location, otherItem: Array<UIMapItem>): Boolean = coroutineScope {
+	suspend fun checkIfOnOtherAsync(location: Location): Boolean = coroutineScope {
 
 		withContext(Dispatchers.Main) {
-			otherItem.forEach {
-				if (it.locationInsidePolygons(location)) {
-					this@Locations.otherName = it.name
-					return@withContext true
+			MtSpokaneMapItems.other.forEach {
+				if (it != null) {
+					if (it.locationInsidePolygons(location)) {
+						this@Locations.otherName = it.name
+						return@withContext true
+					}
 				}
 			}
 
@@ -72,12 +76,14 @@ object Locations {
 		}
 	}
 
-	fun checkIfOnOther(location: Location, otherItem: Array<MapItem>): Boolean {
+	fun checkIfOnOther(location: Location): Boolean {
 
-		otherItem.forEach {
-			if (it.locationInsidePoints(location)) {
-				this.otherName = it.name
-				return true
+		MtSpokaneMapItems.other.forEach {
+			if (it != null) {
+				if (it.locationInsidePoints(location)) {
+					this.otherName = it.name
+					return true
+				}
 			}
 		}
 
@@ -85,7 +91,7 @@ object Locations {
 	}
 
 	@AnyThread
-	suspend fun checkIfOnChairliftAsync(location: Location, chairlifts: Array<UIMapItem>): Boolean = coroutineScope {
+	suspend fun checkIfOnChairliftAsync(location: Location): Boolean = coroutineScope {
 
 		val numberOfChecks = 6
 		val minimumConfidenceValue: Double = 4.0/numberOfChecks
@@ -124,8 +130,12 @@ object Locations {
 			}
 		}
 
+		if (!MtSpokaneMapItems.isSetup) {
+			return@coroutineScope false
+		}
+
 		withContext(Dispatchers.Main) {
-			chairlifts.forEach {
+			MtSpokaneMapItems.chairlifts.forEach {
 				if (it.locationInsidePolygons(location)) {
 					this@Locations.chairliftName = it.name
 					currentConfidence += 1
@@ -136,17 +146,20 @@ object Locations {
 		return@coroutineScope currentConfidence / numberOfChecks >= minimumConfidenceValue
 	}
 
-	fun checkIfOnChairlift(location: Location, chairlifts: Array<MapItem>): Boolean {
+	fun checkIfOnChairlift(location: Location): Boolean {
 		// TODO
 		return false
 	}
 
 	@AnyThread
-	suspend fun checkIfOnRunAsync(location: Location, mapHandler: MapHandler): Boolean = coroutineScope {
+	suspend fun checkIfOnRunAsync(location: Location): Boolean = coroutineScope {
 
-		val runArrays: Array<Collection<UIMapItem>> = arrayOf(mapHandler.easyRuns.values,
-			mapHandler.moderateRuns.values,
-			mapHandler.difficultRuns.values)
+		if (!MtSpokaneMapItems.isSetup) {
+			return@coroutineScope false
+		}
+
+		val runArrays: Array<Array<VisibleUIMapItem>> = arrayOf(MtSpokaneMapItems.easyRuns,
+			MtSpokaneMapItems.moderateRuns, MtSpokaneMapItems.difficultRuns)
 
 		runArrays.forEach { runs -> // TODO Does running this asynchronously actually work? Or is it better just to run it inline...
 			val job: Deferred<Boolean> = async(Dispatchers.Main, CoroutineStart.LAZY) {

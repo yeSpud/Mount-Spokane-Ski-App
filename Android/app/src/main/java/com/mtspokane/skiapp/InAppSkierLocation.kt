@@ -7,8 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
-import com.google.maps.android.ktx.utils.contains
-import com.mtspokane.skiapp.mapItem.UIMapItem
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import kotlinx.coroutines.*
 
 class InAppSkierLocation(private var mapHandler: MapHandler?, private var activity: MapsActivity?) : LocationListener {
@@ -24,7 +23,9 @@ class InAppSkierLocation(private var mapHandler: MapHandler?, private var activi
 	override fun onLocationChanged(location: Location) {
 
 		// If we are not on the mountain return early.
-		if (this.mapHandler!!.skiAreaBounds.contains(LatLng(location.latitude,location.longitude))) {
+		if (MtSpokaneMapItems.skiAreaBounds == null) {
+			return
+		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePolygons(location)) {
 			return
 		}
 
@@ -45,14 +46,12 @@ class InAppSkierLocation(private var mapHandler: MapHandler?, private var activi
 
 			when {
 				@Suppress("UNCHECKED_CAST")
-				Locations.checkIfOnOtherAsync(location, this@InAppSkierLocation.mapHandler!!.other
-						as Array<UIMapItem>) -> this@InAppSkierLocation.activity!!.actionBar!!
-					.title = this@InAppSkierLocation.activity!!.getString(R.string.current_other, Locations.otherName)
-				Locations.checkIfOnChairliftAsync(location, this@InAppSkierLocation.mapHandler!!.chairlifts
-					.values.toTypedArray()) -> this@InAppSkierLocation.activity!!.actionBar!!
-					.title = this@InAppSkierLocation.activity!!.getString(R.string.current_chairlift, Locations.chairliftName)
-				Locations.checkIfOnRunAsync(location, this@InAppSkierLocation.mapHandler!!) -> this@InAppSkierLocation
-					.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_run, Locations.currentRun)
+				Locations.checkIfOnOtherAsync(location) -> this@InAppSkierLocation.activity!!
+					.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_other, Locations.otherName)
+				Locations.checkIfOnChairliftAsync(location) -> this@InAppSkierLocation.activity!!
+					.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_chairlift, Locations.chairliftName)
+				Locations.checkIfOnRunAsync(location) -> this@InAppSkierLocation.activity!!.actionBar!!
+					.title = this@InAppSkierLocation.activity!!.getString(R.string.current_run, Locations.currentRun)
 				else -> this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation
 					.activity!!.getString(R.string.app_name)
 			}

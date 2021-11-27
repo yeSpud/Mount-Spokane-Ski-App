@@ -1,17 +1,18 @@
 package com.mtspokane.skiapp.mapItem
 
 import android.location.Location
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polygon
 import com.google.maps.android.ktx.utils.contains
 
-open class UIMapItem(name: String, @DrawableRes icon: Int? = null) : MapItem(name, icon) {
+open class UIMapItem(name: String, initialPolygon: Polygon? = null, @DrawableRes icon: Int? = null) : MapItem(name, icon) {
 
 	private var polygons: Array<Polygon> = emptyArray()
 
-	fun addPolygon(polygon: Polygon) {
+	fun addAdditionalPolygon(polygon: Polygon) {
 
 		val array: Array<Polygon> = Array(this.polygons.size + 1) {
 			if (it == this.polygons.size) {
@@ -38,5 +39,13 @@ open class UIMapItem(name: String, @DrawableRes icon: Int? = null) : MapItem(nam
 			}
 		}
 		return false
+	}
+
+	init {
+		if (initialPolygon != null) {
+			this.addAdditionalPolygon(initialPolygon)
+		} else {
+			Log.w("UIMapItem", "InitialPolygon is null! (Was one not created?)")
+		}
 	}
 }

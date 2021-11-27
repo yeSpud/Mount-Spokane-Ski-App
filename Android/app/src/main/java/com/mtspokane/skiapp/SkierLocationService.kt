@@ -13,9 +13,10 @@ import com.mtspokane.skiapp.mapItem.MapItem
 
 class SkierLocationService: Service(), LocationListener {
 
+	@Deprecated("Use MtSpokaneMapItems")
 	private lateinit var skiAreaBounds: MapItem
-	private lateinit var otherMapItems: Array<MapItem>
-	private lateinit var chairliftMapItems: Array<MapItem>
+
+	@Deprecated("Use MtSpokaneMapItems")
 	private lateinit var runs: Array<Array<MapItem>>
 
 	@SuppressLint("MissingPermission")
@@ -24,11 +25,13 @@ class SkierLocationService: Service(), LocationListener {
 
 		// TODO Load lateinits from intent.
 
+		/*
 		val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
 				2F, this)
 		}
+		 */
 
 		return START_NOT_STICKY
 	}
@@ -45,9 +48,11 @@ class SkierLocationService: Service(), LocationListener {
 
 		when {
 			@Suppress("UNCHECKED_CAST")
-			Locations.checkIfOnOther(location, this.otherMapItems) -> this.recreateNotification(this.getString(R.string.current_other, Locations.otherName), null /* TODO Other icon*/)
-			Locations.checkIfOnChairlift(location, this.chairliftMapItems) -> this.recreateNotification(this.getString(R.string.current_chairlift, Locations.chairliftName), null /* TODO Chairlift icon*/ )
-			Locations.checkIfOnRun(location, this.runs) -> this.recreateNotification(this.getString(R.string.current_run, Locations.currentRun), /* TODO Run icon */ null)
+			Locations.checkIfOnOther(location) -> this.recreateNotification(this.getString(R.string.current_other, Locations.otherName), null /* TODO Other icon*/)
+			Locations.checkIfOnChairlift(location) -> this.recreateNotification(this.getString(R.string.current_chairlift, Locations.chairliftName), null /* TODO Chairlift icon*/ )
+			Locations.checkIfOnRun(location, this.runs) -> {
+				this.recreateNotification(this.getString(R.string.current_run, Locations.currentRun), /* TODO Run icon */ null)
+			}
 			else -> this.recreateNotification(this.getString(R.string.app_name), null)
 		}
 		//}.start()

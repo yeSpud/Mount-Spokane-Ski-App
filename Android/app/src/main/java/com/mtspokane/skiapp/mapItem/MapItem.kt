@@ -1,14 +1,12 @@
 package com.mtspokane.skiapp.mapItem
 
 import android.location.Location
-import android.os.Parcel
-import android.os.Parcelable
 import androidx.annotation.DrawableRes
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.tan
 
-open class MapItem(val name: String, @DrawableRes private var icon: Int? = null): Parcelable {
+open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)/*: Parcelable*/ {
 
 	internal var points: Array<Array<Pair<Double, Double>>> = emptyArray()
 
@@ -83,6 +81,7 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 	 * Parcel stuff below.
 	 */
 
+	/*
 	constructor(parcel: Parcel) : this(parcel.readString()!!, parcel.readValue(Int::class.java.classLoader) as? Int) {
 		val readArray = parcel.readArray(Array::class.java.classLoader)
 		try {
@@ -101,10 +100,11 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 
 	override fun describeContents(): Int {
 		return this.hashCode()
-	}
+	} */
 
 	companion object {
 
+		/*
 		@JvmField
 		val CREATOR = object: Parcelable.Creator<MapItem> {
 			override fun createFromParcel(parcel: Parcel): MapItem {
@@ -114,7 +114,7 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 			override fun newArray(size: Int): Array<MapItem?> {
 				return arrayOfNulls(size)
 			}
-		}
+		} */
 		/*
 		 * End parcel stuff.
 		 */
