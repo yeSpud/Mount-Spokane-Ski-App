@@ -1,25 +1,64 @@
 package com.mtspokane.skiapp
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import kotlinx.coroutines.CoroutineStart
 
 class SkierLocationService: Service(), LocationListener {
 
-	@SuppressLint("MissingPermission")
+	/*
+	 * Runs every time the service is started.
+	 */
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
 
-		// TODO Load lateinits from intent.
+		val notificationIntent = Intent(this, MapsActivity::class.java)
+
+		val pendingIntent: PendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+		} else {
+			PendingIntent.getActivity(this, 0, notificationIntent, 0)
+		}
+
+		val notification: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			Notification.Builder(this, NotificationChannel(CHANNEL_ID, "Location", NotificationManager.IMPORTANCE_DEFAULT).id)
+				.setSmallIcon(R.drawable.icon_fg)
+				.setShowWhen(false)
+				.setContentTitle(this.getString(R.string.tracking_notice))
+				.setContentIntent(pendingIntent)
+				.build()
+		} else {
+			Notification() // TODO Notification pre Oreo
+		}
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+			this.startForeground(foregroundId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+		} else {
+			startForeground(foregroundId, notification)
+		}
+
+		return START_NOT_STICKY
+	}
+
+	/*
+	 * Runs only once (supposedly?)
+	 */
+	@SuppressLint("MissingPermission")
+	override fun onCreate() {
+		Log.v("SkierLocationService", "onCreate called!")
+		super.onCreate()
 
 		/*
 		val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -28,19 +67,24 @@ class SkierLocationService: Service(), LocationListener {
 				2F, this)
 		}
 		 */
+	}
 
-		return START_NOT_STICKY
+	override fun onDestroy() {
+		Log.v("SkierLocationService", "onDestroy called!")
+		super.onDestroy()
+
+		// TODO Add code here to notify user.
 	}
 
 	override fun onLocationChanged(location: Location) {
 
-		// If we are not on the mountain return early.
+		// If we are not on the mountain stop the tracking.
 		if (MtSpokaneMapItems.skiAreaBounds == null) {
-			return
+			this.stopSelf()
 		} else if (!MtSpokaneMapItems.skiAreaBounds!!.hasPoints) {
-			return
+			this.stopSelf()
 		} else if (MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
-			return
+			this.stopSelf()
 		}
 
 		// Check if our skier is on a run, chairlift, or other.
@@ -64,7 +108,7 @@ class SkierLocationService: Service(), LocationListener {
 			return
 		}
 
-		this.recreateNotification(this.getString(R.string.app_name), null)
+		this.recreateNotification(this.getString(R.string.tracking_notice), null)
 		//}.start()
 	}
 
@@ -81,6 +125,9 @@ class SkierLocationService: Service(), LocationListener {
 	companion object {
 
 		const val foregroundId = 29500
+
+		const val CHANNEL_ID = "skiAppTracker"
+
 
 		fun checkIfRunning(activity: MapsActivity): Boolean {
 

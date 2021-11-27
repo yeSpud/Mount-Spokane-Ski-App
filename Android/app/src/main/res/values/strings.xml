@@ -10,10 +10,14 @@
     <string name="your_location">You are here</string>
     <string name="more_info">Tap for additional stats</string>
 
-    <!-- Run header -->
+    <!-- Run headers -->
     <string name="current_run">Currently on run: %s</string>
     <string name="current_chairlift">Currently on: %s</string>
     <string name="current_other">Current in %s</string>
+
+    <!-- Notification stuff -->
+    <string name="notification_channel_name">Location Tracking</string>
+    <string name="tracking_notice">Tracking your location…</string>
 
     <!-- Menu text -->
     <string name="show_chairlifts">Show Chairlifts</string>

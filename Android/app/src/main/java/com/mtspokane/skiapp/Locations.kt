@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.annotation.AnyThread
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
 import kotlinx.coroutines.*
 
 object Locations {
@@ -77,36 +76,11 @@ object Locations {
 
 		this@Locations.updateLocationVDirection(location)
 
-		currentConfidence += when (this@Locations.vDirection) {
-			VerticalDirection.UP_CERTAIN -> 3
-			VerticalDirection.UP -> 2
-			VerticalDirection.FLAT -> 1
-			else -> 0
-		}
+		// Check altitude.
+		currentConfidence += getAltitudeConfidence()
 
 		// Check speed.
-		if (location.speed != 0.0F && this@Locations.previousLocation != null) {
-
-			// 500 feet per minute to meters per second.
-			val maxChairliftSpeed = 500.0F * 0.00508F
-
-			if (this@Locations.canUseAccuracy) {
-				if (location.speedAccuracyMetersPerSecond != 0.0F && this@Locations.previousLocation!!.speedAccuracyMetersPerSecond != 0.0F) {
-					currentConfidence += when {
-						location.speed + location.speedAccuracyMetersPerSecond <= maxChairliftSpeed -> 2
-						location.speed <= maxChairliftSpeed -> 1
-						else -> 0
-					}
-				}
-			} else {
-				Log.w("checkIfOnChairlift", "Device does not support speed accuracy!")
-				currentConfidence += if (location.speed <= maxChairliftSpeed) {
-					1
-				} else {
-					0
-				}
-			}
-		}
+		currentConfidence += getSpeedConfidence(location)
 
 		if (!MtSpokaneMapItems.isSetup) {
 			return@coroutineScope null
@@ -123,16 +97,81 @@ object Locations {
 			}
 		}
 
-		if (currentConfidence / numberOfChecks >= minimumConfidenceValue) {
-			return@coroutineScope potentialChairlift
+		return@coroutineScope if (currentConfidence / numberOfChecks >= minimumConfidenceValue) {
+			potentialChairlift
 		} else {
-			return@coroutineScope null
+			null
 		}
 	}
 
 	fun checkIfOnChairlift(location: Location): MapItem? {
-		// TODO
-		return null
+
+		val numberOfChecks = 6
+		val minimumConfidenceValue: Double = 4.0/numberOfChecks
+		var currentConfidence = 0
+
+		this@Locations.updateLocationVDirection(location)
+
+		// Check altitude.
+		currentConfidence += getAltitudeConfidence()
+
+		// Check speed.
+		currentConfidence += getSpeedConfidence(location)
+
+		if (!MtSpokaneMapItems.isSetup) {
+			return null
+		}
+
+		var potentialChairlift: MapItem? = null
+		MtSpokaneMapItems.chairlifts.forEach {
+			if (it.locationInsidePoints(location)) {
+				currentConfidence += 1
+				potentialChairlift = it
+			}
+		}
+
+		return if (currentConfidence / numberOfChecks >= minimumConfidenceValue) {
+			potentialChairlift
+		} else {
+			null
+		}
+	}
+
+	private fun getAltitudeConfidence(): Int {
+		return when (this.vDirection) {
+			VerticalDirection.UP_CERTAIN -> 3
+			VerticalDirection.UP -> 2
+			VerticalDirection.FLAT -> 1
+			else -> 0
+		}
+	}
+
+	private fun getSpeedConfidence(location: Location): Int {
+
+		if (location.speed != 0.0F && this.previousLocation != null) {
+
+			// 500 feet per minute to meters per second.
+			val maxChairliftSpeed = 500.0F * 0.00508F
+
+			if (this.canUseAccuracy) {
+				if (location.speedAccuracyMetersPerSecond != 0.0F && this.previousLocation!!.speedAccuracyMetersPerSecond != 0.0F) {
+					return when {
+						location.speed + location.speedAccuracyMetersPerSecond <= maxChairliftSpeed -> 2
+						location.speed <= maxChairliftSpeed -> 1
+						else -> 0
+					}
+				}
+			} else {
+				Log.w("checkIfOnChairlift", "Device does not support speed accuracy!")
+				return if (location.speed <= maxChairliftSpeed) {
+					1
+				} else {
+					0
+				}
+			}
+		}
+
+		return 0
 	}
 
 	@AnyThread
@@ -140,11 +179,13 @@ object Locations {
 
 		if (!MtSpokaneMapItems.isSetup) { return@coroutineScope null }
 
-		val runArrays: Array<Array<VisibleUIMapItem>> = arrayOf(MtSpokaneMapItems.easyRuns,
-			MtSpokaneMapItems.moderateRuns, MtSpokaneMapItems.difficultRuns)
-
 		withContext(Dispatchers.Main) {
-			runArrays.forEach { runs -> runs.forEach { if (it.locationInsidePolygons(location)) { return@withContext it } } }
+			arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
+				MtSpokaneMapItems.difficultRuns).forEach { runs ->
+				runs.forEach {
+					if (it.locationInsidePolygons(location)) { return@withContext it }
+				}
+			}
 		}
 
 		return@coroutineScope null
@@ -152,10 +193,12 @@ object Locations {
 
 	fun checkIfOnRun(location: Location): MapItem? {
 
-		val runs: Array<Array<VisibleUIMapItem>> = arrayOf(MtSpokaneMapItems.easyRuns,
-			MtSpokaneMapItems.moderateRuns, MtSpokaneMapItems.difficultRuns)
-
-		runs.forEach { runDifficulty -> runDifficulty.forEach { if (it.locationInsidePoints(location)) { return it } } }
+		arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
+			MtSpokaneMapItems.difficultRuns).forEach { runDifficulty ->
+			runDifficulty.forEach {
+				if (it.locationInsidePoints(location)) { return it }
+			}
+		}
 
 		return null
 	}

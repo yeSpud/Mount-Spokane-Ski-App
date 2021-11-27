@@ -11,6 +11,7 @@ import android.location.LocationManager
 import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityCompat
@@ -121,26 +122,26 @@ class MapsActivity : FragmentActivity() {
 		// Check if the location service has already been started.
 		if (!SkierLocationService.checkIfRunning(this)) {
 
-			val notification: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				Notification.Builder(this, NotificationChannel("Location", "Location", NotificationManager.IMPORTANCE_DEFAULT).id)
-					.setSmallIcon(R.drawable.icon_fg)
-					.setShowWhen(false)
-					.build()
-			} else {
-				Notification()
-			}
+			this.createNotificationChannel()
 
-			val service = SkierLocationService()
-			//val serviceIntent = Intent()
-			//serviceIntent.putExtra("ski area bounds", this.mapHandler!!.skiAreaBounds.)
-			//serviceIntent.putExtra("other", this.mapHandler!!.other)
-			//serviceIntent.putExtra("chairlifts", this.mapHandler!!.chairlifts.values.toTypedArray())
+			val serviceIntent = Intent(this, SkierLocationService::class.java)
 
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-				service.startForeground(SkierLocationService.foregroundId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				this.startForegroundService(serviceIntent)
 			} else {
-				service.startForeground(SkierLocationService.foregroundId, notification)
+				this.startService(serviceIntent)
 			}
+		}
+	}
+
+	private fun createNotificationChannel() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			val notificationChannel = NotificationChannel(SkierLocationService.CHANNEL_ID,
+				this.getString(R.string.notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+
+			val notificationManager: NotificationManager = this.getSystemService(NotificationManager::class.java)
+			notificationManager.createNotificationChannel(notificationChannel)
+			Log.v("createNotificationChnnl", "Created new notification channel")
 		}
 	}
 
