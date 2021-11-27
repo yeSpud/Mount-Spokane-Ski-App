@@ -12,6 +12,7 @@ open class UIMapItem(name: String, initialPolygon: Polygon? = null, @DrawableRes
 
 	private var polygons: Array<Polygon> = emptyArray()
 
+	@MainThread
 	fun addAdditionalPolygon(polygon: Polygon) {
 
 		val array: Array<Polygon> = Array(this.polygons.size + 1) {
@@ -24,8 +25,12 @@ open class UIMapItem(name: String, initialPolygon: Polygon? = null, @DrawableRes
 
 		this.polygons = array
 		this.points = Array(this.polygons.size) { numberOfPolygons ->
-			Array(this.polygons[numberOfPolygons].points.size) { numberOfPoints ->
-				val tempLatLng = this.polygons[numberOfPolygons].points[numberOfPoints]
+
+			// This needs to be run on the main thread.
+			val polygonPoints = this.polygons[numberOfPolygons].points
+
+			Array(polygonPoints.size) { numberOfPoints ->
+				val tempLatLng = polygonPoints[numberOfPoints]
 				Pair(tempLatLng.latitude, tempLatLng.longitude)
 			}
 		}
@@ -44,8 +49,6 @@ open class UIMapItem(name: String, initialPolygon: Polygon? = null, @DrawableRes
 	init {
 		if (initialPolygon != null) {
 			this.addAdditionalPolygon(initialPolygon)
-		} else {
-			Log.w("UIMapItem", "InitialPolygon is null! (Was one not created?)")
 		}
 	}
 }

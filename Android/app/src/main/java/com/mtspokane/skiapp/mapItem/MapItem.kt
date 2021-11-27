@@ -10,7 +10,7 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 
 	internal var points: Array<Array<Pair<Double, Double>>> = emptyArray()
 
-	val hasPoints: Boolean = this.points[0].isNotEmpty()
+	val hasPoints: Boolean = this.points.isNotEmpty()
 
 	fun setIcon(@DrawableRes icon: Int) {
 		this.icon = icon

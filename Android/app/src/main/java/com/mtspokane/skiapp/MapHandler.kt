@@ -6,10 +6,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Process
 import android.util.Log
-import androidx.annotation.AnyThread
-import androidx.annotation.ColorRes
-import androidx.annotation.DrawableRes
-import androidx.annotation.RawRes
+import androidx.annotation.*
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -88,9 +85,8 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					Log.v(tag, "Started loading chairlift polylines")
 					MtSpokaneMapItems.chairlifts = loadPolylines(this@MapHandler.map!!, R.raw.lifts,
 						this@MapHandler.activity!!, R.color.chairlift, 4f) // TODO Chairlift icon
-					Log.v(tag, "Finished loading chairlift polylines")}//,
+					Log.v(tag, "Finished loading chairlift polylines")},
 
-				/*
 				// Load in the easy runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading easy polylines")
@@ -111,7 +107,6 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					MtSpokaneMapItems.difficultRuns = loadPolylines(this@MapHandler.map!!, R.raw.difficult,
 						this@MapHandler.activity!!, R.color.difficult, 1f, R.drawable.ic_difficult)
 					Log.v(tag, "Finished loading difficult polylines")}
-				 */
 			)
 
 			// Wait for all the polylines to load before checking permissions.
@@ -158,30 +153,32 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					val kmlPolygon: KmlPolygon = it.geometry as KmlPolygon
 
 					// If the polygon is the ski area bounds then add it to the map as its own object.
-					if (name == "Ski Area Bounds") {
-						Log.d(tag, "Adding bounds to map")
+					withContext(Dispatchers.Main) {
+						if (name == "Ski Area Bounds") {
+							Log.d(tag, "Adding bounds to map")
 
-						val skiAreaBoundsPolygon: Polygon = addPolygonToMap(this@MapHandler.map!!,
-							kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
-							Color.MAGENTA, 1.0F)
+							val skiAreaBoundsPolygon: Polygon = addPolygonToMap(this@MapHandler.map!!,
+								kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
+								Color.MAGENTA, 1.0F)
 
-						val skiAreaBoundsMapItem = UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
+							val skiAreaBoundsMapItem = UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
 
-						MtSpokaneMapItems.skiAreaBounds = skiAreaBoundsMapItem
+							MtSpokaneMapItems.skiAreaBounds = skiAreaBoundsMapItem
 
-					} else {
+						} else {
 
-						// Load the other polygons as normal.
+							// Load the other polygons as normal.
 
-						val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon.outerBoundaryCoordinates,
-							0.5F, R.color.other_polygon_fill, Color.MAGENTA, 8F)
+							val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon.outerBoundaryCoordinates,
+								0.5F, R.color.other_polygon_fill, Color.MAGENTA, 8F)
 
-						val item = UIMapItem(name, polygon)
+							val item = UIMapItem(name, polygon)
 
-						MtSpokaneMapItems.other[otherIndex] = item
-						otherIndex++
+							MtSpokaneMapItems.other[otherIndex] = item
+							otherIndex++
 
-						Log.i(tag, "Added item: $name")
+							Log.i(tag, "Added item: $name")
+						}
 					}
 				}
 				Log.v(tag, "Finished loading other polygons")
@@ -256,7 +253,6 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 				// Create the polyline using the coordinates and other options.
 				var polyline: Polyline
 				withContext(Dispatchers.Main) {
-					Log.v("loadPolylines", "Adding polyline to map on main thread...")
 					polyline = map.addPolyline {
 						addAll(coordinates)
 						color(argb)
@@ -268,7 +264,6 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 						zIndex(zIndex)
 						visible(true)
 					}
-					Log.v("loadPolylines", "Finished adding polyline to map on main thread")
 				}
 
 				// Check if the map item is already in the hashmap.
@@ -278,7 +273,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					val night = it.hasProperty("description")
 
 					// Create a new map item for the polyline (since its not in the hashmap).
-					val mapItem = VisibleUIMapItem(name, arrayOf(polyline), isNightRun = night, icon = icon) // FIXME Hangs here
+					val mapItem = VisibleUIMapItem(name, arrayOf(polyline), isNightRun = night, icon = icon)
 
 					// Add the map item to the hashmap.
 					hashMap[name] = mapItem
@@ -326,8 +321,11 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 				val argb = getARGB(activity, color)
 
-				val polygon: Polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates,
-					0.5F, argb, argb, 8F)
+				val polygon: Polygon
+				withContext(Dispatchers.Main) {
+					polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates, 0.5F,
+						argb, argb, 8F)
+				}
 
 				val name: String = getPlacemarkName(it)
 
@@ -342,8 +340,10 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 			visibleUIMapItems.forEach { visibleMapItem ->
 				if (hashMap[visibleMapItem.name] != null) {
-					hashMap[visibleMapItem.name]!!.forEach { polygon ->
-						visibleMapItem.addAdditionalPolygon(polygon)
+					withContext(Dispatchers.Main) {
+						hashMap[visibleMapItem.name]!!.forEach { polygon ->
+							visibleMapItem.addAdditionalPolygon(polygon)
+						}
 					}
 				} else {
 					Log.w("loadPolygons", "Visible map item ${visibleMapItem.name} is not in hashmap!")
@@ -351,20 +351,18 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 			}
 		}
 
-		@AnyThread
+		@MainThread
 		private suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
 		                            fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon = coroutineScope {
-			withContext(Dispatchers.Main) {
-				return@withContext map.addPolygon {
-					addAll(points)
-					clickable(false)
-					geodesic(true)
-					zIndex(zIndex)
-					fillColor(fillColor)
-					strokeColor(strokeColor)
-					strokeWidth(strokeWidth)
-					visible(BuildConfig.DEBUG)
-				}
+			return@coroutineScope map.addPolygon {
+				addAll(points)
+				clickable(false)
+				geodesic(true)
+				zIndex(zIndex)
+				fillColor(fillColor)
+				strokeColor(strokeColor)
+				strokeWidth(strokeWidth)
+				visible(BuildConfig.DEBUG)
 			}
 		}
 	}
