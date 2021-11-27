@@ -6,12 +6,10 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.pm.ServiceInfo
 import android.location.LocationManager
 import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityCompat
@@ -122,8 +120,6 @@ class MapsActivity : FragmentActivity() {
 		// Check if the location service has already been started.
 		if (!SkierLocationService.checkIfRunning(this)) {
 
-			this.createNotificationChannel()
-
 			val serviceIntent = Intent(this, SkierLocationService::class.java)
 
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -131,17 +127,6 @@ class MapsActivity : FragmentActivity() {
 			} else {
 				this.startService(serviceIntent)
 			}
-		}
-	}
-
-	private fun createNotificationChannel() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val notificationChannel = NotificationChannel(SkierLocationService.CHANNEL_ID,
-				this.getString(R.string.notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
-
-			val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-			notificationManager.createNotificationChannel(notificationChannel)
-			Log.v("createNotificationChnnl", "Created new notification channel")
 		}
 	}
 
