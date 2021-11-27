@@ -10,14 +10,10 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.IBinder
 import com.mtspokane.skiapp.mapItem.MapItem
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import kotlinx.coroutines.CoroutineStart
 
 class SkierLocationService: Service(), LocationListener {
-
-	@Deprecated("Use MtSpokaneMapItems")
-	private lateinit var skiAreaBounds: MapItem
-
-	@Deprecated("Use MtSpokaneMapItems")
-	private lateinit var runs: Array<Array<MapItem>>
 
 	@SuppressLint("MissingPermission")
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -39,22 +35,36 @@ class SkierLocationService: Service(), LocationListener {
 	override fun onLocationChanged(location: Location) {
 
 		// If we are not on the mountain return early.
-		if (!this.skiAreaBounds.locationInsidePoints(location)) {
+		if (MtSpokaneMapItems.skiAreaBounds == null) {
+			return
+		} else if (!MtSpokaneMapItems.skiAreaBounds!!.hasPoints) {
+			return
+		} else if (MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
 			return
 		}
 
 		// Check if our skier is on a run, chairlift, or other.
 		//this.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
-		when {
-			@Suppress("UNCHECKED_CAST")
-			Locations.checkIfOnOther(location) -> this.recreateNotification(this.getString(R.string.current_other, Locations.otherName), null /* TODO Other icon*/)
-			Locations.checkIfOnChairlift(location) -> this.recreateNotification(this.getString(R.string.current_chairlift, Locations.chairliftName), null /* TODO Chairlift icon*/ )
-			Locations.checkIfOnRun(location, this.runs) -> {
-				this.recreateNotification(this.getString(R.string.current_run, Locations.currentRun), /* TODO Run icon */ null)
-			}
-			else -> this.recreateNotification(this.getString(R.string.app_name), null)
+		val other = Locations.checkIfOnOther(location)
+		if (other != null) {
+			this.recreateNotification(this.getString(R.string.current_other, other.name), other.getIcon())
+			return
 		}
+
+		val chairlift = Locations.checkIfOnChairlift(location)
+		if (chairlift != null) {
+			this.recreateNotification(this.getString(R.string.current_chairlift, chairlift.name), chairlift.getIcon())
+			return
+		}
+
+		val run = Locations.checkIfOnRun(location)
+		if (run != null) {
+			this.recreateNotification(this.getString(R.string.current_run, run.name), run.getIcon())
+			return
+		}
+
+		this.recreateNotification(this.getString(R.string.app_name), null)
 		//}.start()
 	}
 

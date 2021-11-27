@@ -4,24 +4,12 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.annotation.AnyThread
-import androidx.annotation.MainThread
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
 import kotlinx.coroutines.*
 
-
 object Locations {
-
-	var currentRun: String = ""
-	private set
-
-	var chairliftName: String = ""
-	private set
-
-	var otherName: String = ""
-	private set
 
 	private var previousLocation: Location? = null
 
@@ -60,38 +48,28 @@ object Locations {
 	}
 
 	@AnyThread
-	suspend fun checkIfOnOtherAsync(location: Location): Boolean = coroutineScope {
+	suspend fun checkIfOnOtherAsync(location: Location): MapItem? = coroutineScope {
 
 		withContext(Dispatchers.Main) {
 			MtSpokaneMapItems.other.forEach {
-				if (it != null) {
-					if (it.locationInsidePolygons(location)) {
-						this@Locations.otherName = it.name
-						return@withContext true
-					}
+				if (it != null && it.locationInsidePolygons(location)) {
+					return@withContext it
 				}
 			}
 
-			return@withContext false
+			return@withContext null
 		}
 	}
 
-	fun checkIfOnOther(location: Location): Boolean {
+	fun checkIfOnOther(location: Location): MapItem? {
 
-		MtSpokaneMapItems.other.forEach {
-			if (it != null) {
-				if (it.locationInsidePoints(location)) {
-					this.otherName = it.name
-					return true
-				}
-			}
-		}
+		MtSpokaneMapItems.other.forEach { if (it != null && it.locationInsidePoints(location)) { return it } }
 
-		return false
+		return null
 	}
 
 	@AnyThread
-	suspend fun checkIfOnChairliftAsync(location: Location): Boolean = coroutineScope {
+	suspend fun checkIfOnChairliftAsync(location: Location): MapItem? = coroutineScope {
 
 		val numberOfChecks = 6
 		val minimumConfidenceValue: Double = 4.0/numberOfChecks
@@ -131,82 +109,55 @@ object Locations {
 		}
 
 		if (!MtSpokaneMapItems.isSetup) {
-			return@coroutineScope false
+			return@coroutineScope null
 		}
+
+		var potentialChairlift: MapItem? = null
 
 		withContext(Dispatchers.Main) {
 			MtSpokaneMapItems.chairlifts.forEach {
 				if (it.locationInsidePolygons(location)) {
-					this@Locations.chairliftName = it.name
 					currentConfidence += 1
+					potentialChairlift = it
 				}
 			}
 		}
 
-		return@coroutineScope currentConfidence / numberOfChecks >= minimumConfidenceValue
+		if (currentConfidence / numberOfChecks >= minimumConfidenceValue) {
+			return@coroutineScope potentialChairlift
+		} else {
+			return@coroutineScope null
+		}
 	}
 
-	fun checkIfOnChairlift(location: Location): Boolean {
+	fun checkIfOnChairlift(location: Location): MapItem? {
 		// TODO
-		return false
+		return null
 	}
 
 	@AnyThread
-	suspend fun checkIfOnRunAsync(location: Location): Boolean = coroutineScope {
+	suspend fun checkIfOnRunAsync(location: Location): MapItem? = coroutineScope {
 
-		if (!MtSpokaneMapItems.isSetup) {
-			return@coroutineScope false
-		}
+		if (!MtSpokaneMapItems.isSetup) { return@coroutineScope null }
 
 		val runArrays: Array<Array<VisibleUIMapItem>> = arrayOf(MtSpokaneMapItems.easyRuns,
 			MtSpokaneMapItems.moderateRuns, MtSpokaneMapItems.difficultRuns)
 
-		runArrays.forEach { runs -> // TODO Does running this asynchronously actually work? Or is it better just to run it inline...
-			val job: Deferred<Boolean> = async(Dispatchers.Main, CoroutineStart.LAZY) {
-				Log.v("checkIfOnRun", "Checking run array...")
-				runs.forEach {
-					if (checkIfOnSpecificRun(it, location)) {
-						Log.v("checkIfOnRun", "Finished checking run array (returning true)")
-						return@async true
-					}
-				}
-				Log.v("checkIfOnRun", "Finished checking run array (returning false)")
-				return@async false
-			}
-			job.start()
-			if (job.await()) {
-				return@coroutineScope true
-			}
+		withContext(Dispatchers.Main) {
+			runArrays.forEach { runs -> runs.forEach { if (it.locationInsidePolygons(location)) { return@withContext it } } }
 		}
-		return@coroutineScope false
+
+		return@coroutineScope null
 	}
 
-	fun checkIfOnRun(location: Location, runs: Array<Array<MapItem>>): Boolean {
-		runs.forEach { runDifficulty ->
-			runDifficulty.forEach {
-				if (it.locationInsidePoints(location)) {
-					return true
-				}
-			}
-		}
+	fun checkIfOnRun(location: Location): MapItem? {
 
-		return false
-	}
+		val runs: Array<Array<VisibleUIMapItem>> = arrayOf(MtSpokaneMapItems.easyRuns,
+			MtSpokaneMapItems.moderateRuns, MtSpokaneMapItems.difficultRuns)
 
-	@MainThread
-	private fun checkIfOnSpecificRun(mapItem: UIMapItem, location: Location): Boolean {
-		if (mapItem.locationInsidePolygons(location)) {
-			if (mapItem.name != "") {
-				if (mapItem.name == this@Locations.currentRun) {
-					Log.d("checkIfOnSpecificRun", "Still on ${mapItem.name}")
-				} else {
-					Log.d("checkIfOnSpecificRun", "On run: ${mapItem.name}")
-					this@Locations.currentRun = mapItem.name
-				}
-				return true
-			}
-		}
-		return false
+		runs.forEach { runDifficulty -> runDifficulty.forEach { if (it.locationInsidePoints(location)) { return it } } }
+
+		return null
 	}
 
 	private enum class VerticalDirection {

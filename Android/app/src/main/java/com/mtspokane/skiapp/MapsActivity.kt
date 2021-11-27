@@ -136,7 +136,6 @@ class MapsActivity : FragmentActivity() {
 			//serviceIntent.putExtra("other", this.mapHandler!!.other)
 			//serviceIntent.putExtra("chairlifts", this.mapHandler!!.chairlifts.values.toTypedArray())
 
-
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 				service.startForeground(SkierLocationService.foregroundId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
 			} else {

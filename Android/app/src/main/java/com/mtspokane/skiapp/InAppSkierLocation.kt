@@ -44,17 +44,25 @@ class InAppSkierLocation(private var mapHandler: MapHandler?, private var activi
 		// Check if our skier is on a run, chairlift, or other.
 		this.activity!!.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
-			when {
-				@Suppress("UNCHECKED_CAST")
-				Locations.checkIfOnOtherAsync(location) -> this@InAppSkierLocation.activity!!
-					.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_other, Locations.otherName)
-				Locations.checkIfOnChairliftAsync(location) -> this@InAppSkierLocation.activity!!
-					.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_chairlift, Locations.chairliftName)
-				Locations.checkIfOnRunAsync(location) -> this@InAppSkierLocation.activity!!.actionBar!!
-					.title = this@InAppSkierLocation.activity!!.getString(R.string.current_run, Locations.currentRun)
-				else -> this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation
-					.activity!!.getString(R.string.app_name)
+			val other = Locations.checkIfOnOtherAsync(location)
+			if (other != null) {
+				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_other, other.name)
+				return@async
 			}
+
+			val chairlift = Locations.checkIfOnChairliftAsync(location)
+			if (chairlift != null) {
+				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_chairlift, chairlift.name)
+				return@async
+			}
+
+			val run = Locations.checkIfOnRunAsync(location)
+			if (run != null) {
+				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_run, run.name)
+				return@async
+			}
+
+			this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.app_name)
 		}.start()
 	}
 
