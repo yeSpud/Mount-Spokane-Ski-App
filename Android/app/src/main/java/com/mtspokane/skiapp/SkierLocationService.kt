@@ -19,7 +19,10 @@ import androidx.annotation.DrawableRes
 import android.graphics.drawable.BitmapDrawable
 
 import android.graphics.drawable.Drawable
+import androidx.annotation.RequiresApi
+import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
+import kotlin.reflect.KClass
 
 
 class SkierLocationService: Service(), LocationListener {
@@ -28,7 +31,7 @@ class SkierLocationService: Service(), LocationListener {
 		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
 
-		val notification: Notification = createNotification("", null)
+		val notification: Notification = createPersistentNotification("", null)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			this.startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
@@ -82,12 +85,11 @@ class SkierLocationService: Service(), LocationListener {
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 		notificationManager.cancel(TRACKING_SERVICE_ID)
 
+		val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class)
+
 		val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = Notification.Builder(this, NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
-				this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT).id)
-			builder.setSmallIcon(R.drawable.icon_fg)
-			builder.setShowWhen(true)
-			builder.setContentTitle(this.getText(R.string.activity_notification_text))
+			val builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID, true,
+				R.string.activity_notification_text, pendingIntent)
 			builder.build()
 		} else {
 			Notification() // TODO Notification pre Oreo
@@ -136,14 +138,14 @@ class SkierLocationService: Service(), LocationListener {
 			null
 		}
 
-		val notification: Notification = createNotification(title, bitmap)
+		val notification: Notification = createPersistentNotification(title, bitmap)
 
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 		notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
-	private fun createPendingIntent(): PendingIntent {
-		val notificationIntent = Intent(this, MapsActivity::class.java)
+	private fun createPendingIntent(`class`: KClass<*>): PendingIntent {
+		val notificationIntent = Intent(this, `class`.java)
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 		} else {
@@ -151,18 +153,14 @@ class SkierLocationService: Service(), LocationListener {
 		}
 	}
 
-	private fun createNotification(title: String, iconBitmap: Bitmap?): Notification {
+	private fun createPersistentNotification(title: String, iconBitmap: Bitmap?): Notification {
 
-		val pendingIntent: PendingIntent = this.createPendingIntent()
+		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class)
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = Notification.Builder(this, NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
-				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT).id)
-			builder.setSmallIcon(R.drawable.icon_fg)
-			builder.setShowWhen(false)
-			builder.setContentTitle(this.getString(R.string.tracking_notice))
+			val builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID, false,
+				R.string.tracking_notice, pendingIntent)
 			builder.setContentText(title)
-			builder.setContentIntent(pendingIntent)
 			if (iconBitmap != null) {
 				builder.setLargeIcon(iconBitmap)
 			}
@@ -170,6 +168,17 @@ class SkierLocationService: Service(), LocationListener {
 		} else {
 			Notification() // TODO Notification pre Oreo
 		}
+	}
+
+	@RequiresApi(Build.VERSION_CODES.O)
+	private fun getNotificationBuilder(channelId: String, showTime: Boolean, @StringRes titleText: Int,
+	                                   pendingIntent: PendingIntent): Notification.Builder {
+
+		return Notification.Builder(this, channelId)
+			.setSmallIcon(R.drawable.icon_fg)
+			.setShowWhen(showTime)
+			.setContentTitle(this.getString(titleText))
+			.setContentIntent(pendingIntent)
 	}
 
 	override fun onBind(intent: Intent?): IBinder? {

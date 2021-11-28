@@ -34,8 +34,8 @@ class MapsActivity : FragmentActivity() {
 		super.onCreate(savedInstanceState)
 
 		// Setup data binding.
-		val binding = ActivityMapsBinding.inflate(layoutInflater)
-		setContentView(binding.root)
+		val binding = ActivityMapsBinding.inflate(this.layoutInflater)
+		this.setContentView(binding.root)
 
 		this.mapHandler = MapHandler(this)
 		this.inAppLocationHandler = InAppSkierLocation(this.mapHandler!!, this)
