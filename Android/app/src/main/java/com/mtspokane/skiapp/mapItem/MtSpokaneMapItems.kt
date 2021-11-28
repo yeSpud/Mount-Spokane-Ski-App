@@ -1,6 +1,6 @@
 package com.mtspokane.skiapp.mapItem
 
-object MtSpokaneUIMapItems {
+object MtSpokaneMapItems {
 
 	var skiAreaBounds: UIMapItem? = null // FIXME Leaks memory!
 

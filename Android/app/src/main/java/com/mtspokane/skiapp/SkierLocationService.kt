@@ -11,7 +11,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import com.mtspokane.skiapp.mapItem.MtSpokaneUIMapItems
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import android.app.NotificationManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -81,15 +81,15 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 	override fun onLocationChanged(location: Location) {
 
 		// If we are not on the mountain stop the tracking.
-		if (MtSpokaneUIMapItems.lightSKiAreaBounds == null) {
+		if (MtSpokaneMapItems.skiAreaBounds == null) {
 			this.stopSelf()
-		} else if (!MtSpokaneUIMapItems.lightSKiAreaBounds!!.hasPoints) {
+		} else if (MtSpokaneMapItems.skiAreaBounds!!.points.isEmpty()) {
 			this.stopSelf()
-		} else if (MtSpokaneUIMapItems.lightSKiAreaBounds!!.locationInsidePoints(location)) {
+		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
 			this.stopSelf()
 		}
 
-		/*
+
 		// Check if our skier is on a run, chairlift, or other.
 		//this.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
@@ -113,7 +113,6 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
 		//}.start()
-		 */
 	}
 
 	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
