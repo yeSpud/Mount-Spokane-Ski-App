@@ -3,9 +3,14 @@ plugins {
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
 }
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdk 31
+
+    dataBinding {
+        enabled=true
+    }
 
     defaultConfig {
         applicationId "com.mtspokane.skiapp"

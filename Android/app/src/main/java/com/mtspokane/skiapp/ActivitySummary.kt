@@ -14,6 +14,8 @@ class ActivitySummary: Activity() {
 		this.binding = ActivitySummaryBinding.inflate(this.layoutInflater)
 		this.setContentView(this.binding.root)
 
+		this.actionBar!!.setTitle(R.string.activity_summary_title)
+
 		// TODO
 	}
 

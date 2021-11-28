@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
@@ -64,6 +65,11 @@ class MapsActivity : FragmentActivity() {
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
 		this.menuInflater.inflate(R.menu.menu, menu)
+		if (BuildConfig.DEBUG) {
+			val activitySummary = menu.findItem(R.id.activity_summary)
+			activitySummary.isVisible = true
+			activitySummary.isEnabled = true
+		}
 		return super.onCreateOptionsMenu(menu)
 	}
 
@@ -86,6 +92,10 @@ class MapsActivity : FragmentActivity() {
 					MtSpokaneMapItems.moderateRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
 					MtSpokaneMapItems.difficultRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
 					this.nightRunsOnly = checked
+				}
+				R.id.activity_summary -> {
+					val intent = Intent(this, ActivitySummary::class.java)
+					this.startActivity(intent)
 				}
 			}
 		}
