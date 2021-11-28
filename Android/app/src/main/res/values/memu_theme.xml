@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MtSpokaneSkiApp.MenuTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="android:background">?attr/colorOnPrimary</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
+    </style>
+</resources>
