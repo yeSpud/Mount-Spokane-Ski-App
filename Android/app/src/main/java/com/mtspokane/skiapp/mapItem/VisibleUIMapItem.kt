@@ -9,6 +9,9 @@ class VisibleUIMapItem(name: String, private var polyline: Array<Polyline>, @Dra
 	var defaultVisibility = true
 		private set
 
+	var nightOnlyVisibility = false
+		private set
+
 	fun addAdditionalPolyLine(polyline: Polyline) {
 
 		val array: Array<Polyline> = Array(this.polyline.size + 1) {
@@ -22,18 +25,27 @@ class VisibleUIMapItem(name: String, private var polyline: Array<Polyline>, @Dra
 		this.polyline = array
 	}
 
-	fun togglePolyLineVisibility(visible: Boolean, nightRunsOnly: Boolean = false) {
+	/**
+	 * Default visibility | Nights Only | Night Run | Output
+	 *        0	                 0	         0	        0
+	 *        0	                 0	         1	        0
+	 *        0	                 1	         0	        0
+	 *        0	                 1	         1	        0
+	 *        1	                 0	         0	        1
+	 *        1	                 0	         1	        1
+	 *        1	                 1	         0	        0
+	 *        1	                 1	         1	        1
+	 */
+	fun togglePolyLineVisibility(visible: Boolean, nightRunsOnly: Boolean) {
+		this.defaultVisibility = visible
+		this.nightOnlyVisibility = nightRunsOnly
+
+		this.updateVisibility()
+	}
+
+	private fun updateVisibility() {
 		this.polyline.forEach {
-			if (nightRunsOnly) {
-				if (this.isNightRun) {
-					it.isVisible = visible
-				} else {
-					it.isVisible = false
-				}
-			} else {
-				this.defaultVisibility = visible
-				it.isVisible = this.defaultVisibility
-			}
+			it.isVisible = this.defaultVisibility && (this.isNightRun >= this.nightOnlyVisibility)
 		}
 	}
 }
