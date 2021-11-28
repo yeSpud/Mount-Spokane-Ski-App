@@ -57,11 +57,11 @@ class SkierLocationService: Service(), LocationListener {
 	private fun createNotificationChannels() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-			val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID, this.getString(R.string.tracking_notification_channel_name),
-				NotificationManager.IMPORTANCE_DEFAULT)
+			val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
+				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
-			val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID, this.getString(R.string.progress_notification_channel_name),
-				NotificationManager.IMPORTANCE_DEFAULT)
+			val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
+				this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
 			val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 			notificationManager.createNotificationChannels(listOf(trackingNotificationChannel, progressNotificationChannel))
@@ -84,18 +84,16 @@ class SkierLocationService: Service(), LocationListener {
 
 		val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			val builder = Notification.Builder(this, NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
-				"Activity Summary", NotificationManager.IMPORTANCE_DEFAULT).id)
+				this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT).id)
 			builder.setSmallIcon(R.drawable.icon_fg)
 			builder.setShowWhen(true)
-			builder.setContentTitle("Tap here to view your activity summary")
+			builder.setContentTitle(this.getText(R.string.activity_notification_text))
 			builder.build()
 		} else {
 			Notification() // TODO Notification pre Oreo
 		}
 
 		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
-
-		// TODO Add code here to notify user.
 	}
 
 	override fun onLocationChanged(location: Location) {
@@ -108,9 +106,6 @@ class SkierLocationService: Service(), LocationListener {
 		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
 			this.stopSelf()
 		}
-
-		// Check if our skier is on a run, chairlift, or other.
-		//this.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
 		val other = Locations.checkIfOnOther(location)
 		if (other != null) {
@@ -131,7 +126,6 @@ class SkierLocationService: Service(), LocationListener {
 		}
 
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
-		//}.start()
 	}
 
 	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
@@ -163,7 +157,7 @@ class SkierLocationService: Service(), LocationListener {
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			val builder = Notification.Builder(this, NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
-				"Location", NotificationManager.IMPORTANCE_DEFAULT).id)
+				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT).id)
 			builder.setSmallIcon(R.drawable.icon_fg)
 			builder.setShowWhen(false)
 			builder.setContentTitle(this.getString(R.string.tracking_notice))
