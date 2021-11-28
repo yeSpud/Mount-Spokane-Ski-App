@@ -6,9 +6,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Process
 import android.util.Log
-import androidx.annotation.AnyThread
-import androidx.annotation.ColorRes
-import androidx.annotation.RawRes
+import androidx.annotation.*
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -21,23 +19,14 @@ import com.google.maps.android.data.kml.KmlPolygon
 import com.google.maps.android.ktx.addPolygon
 import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.mapItem.UIMapItem
+import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
 import kotlinx.coroutines.*
 
 class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 	var map: GoogleMap? = null
-
-	val chairlifts: HashMap<String, MapItem> = HashMap(6)
-
-	val easyRuns: HashMap<String, MapItem> = HashMap(22)
-
-	val moderateRuns: HashMap<String, MapItem> = HashMap(19)
-
-	val difficultRuns: HashMap<String, MapItem> = HashMap(25)
-
-	val other: Array<MapItem?> = arrayOfNulls(6) // TODO Account for parking lots and tubing area...
-
-	lateinit var skiAreaBounds: Polygon
 
 	fun destroy() {
 		this.map = null
@@ -94,34 +83,35 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 				// Load in the chairlift kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading chairlift polylines")
-					loadPolylines(this@MapHandler.map!!, R.raw.lifts, this@MapHandler.activity!!,
-						R.color.chairlift, 4f, this@MapHandler.chairlifts)
+					MtSpokaneMapItems.chairlifts = loadPolylines(this@MapHandler.map!!, R.raw.lifts,
+						this@MapHandler.activity!!, R.color.chairlift, 4f) // TODO Chairlift icon
 					Log.v(tag, "Finished loading chairlift polylines")},
 
 				// Load in the easy runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading easy polylines")
-					loadPolylines(this@MapHandler.map!!, R.raw.easy, this@MapHandler.activity!!,
-						R.color.easy, 3f, this@MapHandler.easyRuns)
+					MtSpokaneMapItems.easyRuns = loadPolylines(this@MapHandler.map!!, R.raw.easy,
+						this@MapHandler.activity!!, R.color.easy, 3f, R.drawable.ic_easy)
 					Log.v(tag, "Finished loading easy run polylines")},
 
 				// Load in the moderate runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading moderate polylines")
-					loadPolylines(this@MapHandler.map!!, R.raw.moderate, this@MapHandler.activity!!,
-						R.color.moderate, 2f, this@MapHandler.moderateRuns)
+					MtSpokaneMapItems.moderateRuns = loadPolylines(this@MapHandler.map!!, R.raw.moderate,
+						this@MapHandler.activity!!, R.color.moderate, 2f, R.drawable.ic_moderate)
 					Log.v(tag, "Finished loading moderate run polylines")},
 
 				// Load in the difficult runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading difficult polylines")
-					loadPolylines(this@MapHandler.map!!, R.raw.difficult, this@MapHandler.activity!!,
-						R.color.difficult, 1f, this@MapHandler.difficultRuns)
+					MtSpokaneMapItems.difficultRuns = loadPolylines(this@MapHandler.map!!, R.raw.difficult,
+						this@MapHandler.activity!!, R.color.difficult, 1f, R.drawable.ic_difficult)
 					Log.v(tag, "Finished loading difficult polylines")}
 			)
 
 			// Wait for all the polylines to load before checking permissions.
 			polylineLoads.awaitAll()
+			MtSpokaneMapItems.isSetup = true
 
 			// Request location permission, so that we can get the location of the device.
 			// The result of the permission request is handled by a callback, onRequestPermissionsResult.
@@ -163,26 +153,32 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					val kmlPolygon: KmlPolygon = it.geometry as KmlPolygon
 
 					// If the polygon is the ski area bounds then add it to the map as its own object.
-					if (name == "Ski Area Bounds") {
-						Log.d(tag, "Adding bounds to map")
-						this@MapHandler.skiAreaBounds = addPolygonToMap(this@MapHandler.map!!,
-							kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
-							Color.MAGENTA, 1.0F)
-					} else {
+					withContext(Dispatchers.Main) {
+						if (name == "Ski Area Bounds") {
+							Log.d(tag, "Adding bounds to map")
 
-						// Load the other polygons as normal.
+							val skiAreaBoundsPolygon: Polygon = addPolygonToMap(this@MapHandler.map!!,
+								kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
+								Color.MAGENTA, 1.0F)
 
-						val item = MapItem(name)
+							val skiAreaBoundsMapItem = UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
 
-						val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon.outerBoundaryCoordinates,
-							0.5F, R.color.other_polygon_fill, Color.MAGENTA, 8F)
+							MtSpokaneMapItems.skiAreaBounds = skiAreaBoundsMapItem
 
-						item.addPolygon(polygon)
+						} else {
 
-						this@MapHandler.other[otherIndex] = item
-						otherIndex++
+							// Load the other polygons as normal.
 
-						Log.i(tag, "Added item: $name")
+							val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon.outerBoundaryCoordinates,
+								0.5F, R.color.other_polygon_fill, Color.MAGENTA, 8F)
+
+							val item = UIMapItem(name, polygon)
+
+							MtSpokaneMapItems.other[otherIndex] = item
+							otherIndex++
+
+							Log.i(tag, "Added item: $name")
+						}
 					}
 				}
 				Log.v(tag, "Finished loading other polygons")
@@ -192,7 +188,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading chairlift polygons")
 				loadPolygons(this@MapHandler.map!!, R.raw.lift_polygons, this@MapHandler.activity!!,
-					R.color.chairlift_polygon, this@MapHandler.chairlifts)
+					R.color.chairlift_polygon, MtSpokaneMapItems.chairlifts)
 				Log.v(tag, "Finished loading chairlift polygons")
 			},
 
@@ -200,7 +196,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading easy polygons")
 				loadPolygons(this@MapHandler.map!!, R.raw.easy_polygons, this@MapHandler.activity!!,
-					R.color.easy_polygon, this@MapHandler.easyRuns)
+					R.color.easy_polygon, MtSpokaneMapItems.easyRuns)
 				Log.v(tag, "Finished loading easy polygons")
 			},
 
@@ -208,7 +204,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading moderate polygons")
 				loadPolygons(this@MapHandler.map!!, R.raw.moderate_polygons, this@MapHandler.activity!!,
-					R.color.moderate_polygon, this@MapHandler.moderateRuns)
+					R.color.moderate_polygon, MtSpokaneMapItems.moderateRuns)
 				Log.v(tag, "Finished loading moderate polygons")
 			},
 
@@ -216,7 +212,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading difficult polygons")
 				loadPolygons(this@MapHandler.map!!, R.raw.difficult_polygons, this@MapHandler.activity!!,
-					R.color.difficult_polygon, this@MapHandler.difficultRuns)
+					R.color.difficult_polygon, MtSpokaneMapItems.difficultRuns)
 				Log.v(tag, "Finished loading difficult polygons")
 			}
 		)
@@ -236,8 +232,10 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 		@AnyThread
 		private suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
-		                                  @ColorRes color: Int, zIndex: Float,
-		                                  hashMap: HashMap<String, MapItem>) = coroutineScope {
+		                                  @ColorRes color: Int, zIndex: Float, @DrawableRes icon:
+		                                          Int? = null): Array<VisibleUIMapItem> = coroutineScope {
+
+			val hashMap: HashMap<String, VisibleUIMapItem> = HashMap()
 
 			// Load the polyline from the file, and iterate though each placemark.
 			parseKmlFile(map, fileRes, activity).forEach {
@@ -247,7 +245,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 				// Get the LatLng coordinates of the placemark.
 				val lineString: KmlLineString = it.geometry as KmlLineString
-				val coordinates = lineString.geometryObject
+				val coordinates: ArrayList<LatLng> = lineString.geometryObject
 
 				// Get the color of the polyline.
 				val argb = getARGB(activity, color)
@@ -275,8 +273,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					val night = it.hasProperty("description")
 
 					// Create a new map item for the polyline (since its not in the hashmap).
-					val mapItem = MapItem(name, night)
-					mapItem.addPolyLine(polyline)
+					val mapItem = VisibleUIMapItem(name, arrayOf(polyline), isNightRun = night, icon = icon)
 
 					// Add the map item to the hashmap.
 					hashMap[name] = mapItem
@@ -284,9 +281,11 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 				} else {
 
 					// Add the polyline to the map item.
-					hashMap[name]!!.addPolyLine(polyline)
+					hashMap[name]!!.addAdditionalPolyLine(polyline)
 				}
 			}
+
+			return@coroutineScope hashMap.values.toTypedArray()
 		}
 
 		private fun getARGB(activity: MapsActivity, @ColorRes color: Int): Int {
@@ -311,7 +310,9 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 		@AnyThread
 		private suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
-		                                 @ColorRes color: Int, hashMap: HashMap<String, MapItem>) = coroutineScope {
+		                                 @ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>) = coroutineScope { // TODO Optimize this
+
+			val hashMap: HashMap<String, ArrayList<Polygon>> = HashMap()
 
 			// Load the polygons file.
 			parseKmlFile(map, fileRes, activity).forEach {
@@ -320,34 +321,48 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 				val argb = getARGB(activity, color)
 
-				val polygon: Polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates,
-					0.5F, argb, argb, 8F)
+				val polygon: Polygon
+				withContext(Dispatchers.Main) {
+					polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates, 0.5F,
+						argb, argb, 8F)
+				}
 
 				val name: String = getPlacemarkName(it)
 
-				// Try to find the MapItem with the name of the polygon.
-				if (hashMap[name] != null) {
+				if (hashMap[name] == null) {
+					val arrayList: ArrayList<Polygon> = ArrayList(1)
+					arrayList.add(polygon)
+					hashMap[name] = arrayList
+				} else {
+					hashMap[name]!!.add(polygon)
+				}
+			}
 
-					// Add the polygon to the MapItem.
-					hashMap[name]!!.addPolygon(polygon)
+			visibleUIMapItems.forEach { visibleMapItem ->
+				if (hashMap[visibleMapItem.name] != null) {
+					withContext(Dispatchers.Main) {
+						hashMap[visibleMapItem.name]!!.forEach { polygon ->
+							visibleMapItem.addAdditionalPolygon(polygon)
+						}
+					}
+				} else {
+					Log.w("loadPolygons", "Visible map item ${visibleMapItem.name} is not in hashmap!")
 				}
 			}
 		}
 
-		@AnyThread
+		@MainThread
 		private suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
 		                            fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon = coroutineScope {
-			withContext(Dispatchers.Main) {
-				return@withContext map.addPolygon {
-					addAll(points)
-					clickable(false)
-					geodesic(true)
-					zIndex(zIndex)
-					fillColor(fillColor)
-					strokeColor(strokeColor)
-					strokeWidth(strokeWidth)
-					visible(BuildConfig.DEBUG)
-				}
+			return@coroutineScope map.addPolygon {
+				addAll(points)
+				clickable(false)
+				geodesic(true)
+				zIndex(zIndex)
+				fillColor(fillColor)
+				strokeColor(strokeColor)
+				strokeWidth(strokeWidth)
+				visible(BuildConfig.DEBUG)
 			}
 		}
 	}

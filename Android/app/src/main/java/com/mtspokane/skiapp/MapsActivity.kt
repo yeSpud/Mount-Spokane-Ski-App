@@ -2,18 +2,20 @@ package com.mtspokane.skiapp
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
+import android.app.*
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -25,6 +27,8 @@ class MapsActivity : FragmentActivity() {
 	private var inAppLocationHandler: InAppSkierLocation? = null
 
 	lateinit var locationPopupDialog: AlertDialog
+
+	private var nightRunsOnly = false
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -68,19 +72,20 @@ class MapsActivity : FragmentActivity() {
 		if (this.mapHandler != null) {
 
 			val checked = !item.isChecked
-
 			item.isChecked = checked
+			Log.d("onOptionsItemSelected", "Option selected: $checked")
 
 			when (item.itemId) {
-				R.id.chairlift -> this.mapHandler!!.chairlifts.forEach{it.value.togglePolyLineVisibility(checked)}
-				R.id.easy -> this.mapHandler!!.easyRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-				R.id.moderate -> this.mapHandler!!.moderateRuns.forEach{it.value.togglePolyLineVisibility(checked)}
-				R.id.difficult -> this.mapHandler!!.difficultRuns.forEach{it.value.togglePolyLineVisibility(checked)}
+				R.id.chairlift -> MtSpokaneMapItems.chairlifts.forEach{it.togglePolyLineVisibility(checked, this.nightRunsOnly)}
+				R.id.easy -> MtSpokaneMapItems.easyRuns.forEach{it.togglePolyLineVisibility(checked, this.nightRunsOnly)}
+				R.id.moderate -> MtSpokaneMapItems.moderateRuns.forEach{it.togglePolyLineVisibility(checked, this.nightRunsOnly)}
+				R.id.difficult -> MtSpokaneMapItems.difficultRuns.forEach{it.togglePolyLineVisibility(checked, this.nightRunsOnly)}
 				R.id.night -> {
-					this.mapHandler!!.chairlifts.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-					this.mapHandler!!.easyRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-					this.mapHandler!!.moderateRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
-					this.mapHandler!!.difficultRuns.forEach{ it.value.togglePolyLineVisibility(it.value.defaultVisibility, checked) }
+					MtSpokaneMapItems.chairlifts.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
+					MtSpokaneMapItems.easyRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
+					MtSpokaneMapItems.moderateRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
+					MtSpokaneMapItems.difficultRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
+					this.nightRunsOnly = checked
 				}
 			}
 		}
@@ -105,9 +110,9 @@ class MapsActivity : FragmentActivity() {
 	}
 
 	@SuppressLint("MissingPermission")
-	fun showLocation() { // TODO Run this as a foreground service.
+	fun showLocation() {
 
-		val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,

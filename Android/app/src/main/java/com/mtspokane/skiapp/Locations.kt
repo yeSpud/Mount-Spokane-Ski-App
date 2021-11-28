@@ -4,20 +4,11 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.annotation.AnyThread
-import androidx.annotation.MainThread
+import com.mtspokane.skiapp.mapItem.MapItem
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import kotlinx.coroutines.*
 
-
 object Locations {
-
-	var currentRun: String = ""
-	private set
-
-	var chairliftName: String = ""
-	private set
-
-	var otherName: String = ""
-	private set
 
 	private var previousLocation: Location? = null
 
@@ -56,22 +47,28 @@ object Locations {
 	}
 
 	@AnyThread
-	suspend fun checkIfOnOther(location: Location, otherItem: Array<MapItem>): Boolean = coroutineScope {
+	suspend fun checkIfOnOtherAsync(location: Location): MapItem? = coroutineScope {
 
 		withContext(Dispatchers.Main) {
-			otherItem.forEach {
-				if (it.pointInsidePolygon(location)) {
-					this@Locations.otherName = it.name
-					return@withContext true
+			MtSpokaneMapItems.other.forEach {
+				if (it != null && it.locationInsidePolygons(location)) {
+					return@withContext it
 				}
 			}
 
-			return@withContext false
+			return@withContext null
 		}
 	}
 
+	fun checkIfOnOther(location: Location): MapItem? {
+
+		MtSpokaneMapItems.other.forEach { if (it != null && it.locationInsidePoints(location)) { return it } }
+
+		return null
+	}
+
 	@AnyThread
-	suspend fun checkIfOnChairlift(location: Location, chairlifts: Array<MapItem>): Boolean = coroutineScope {
+	suspend fun checkIfOnChairliftAsync(location: Location): MapItem? = coroutineScope {
 
 		val numberOfChecks = 6
 		val minimumConfidenceValue: Double = 4.0/numberOfChecks
@@ -79,22 +76,86 @@ object Locations {
 
 		this@Locations.updateLocationVDirection(location)
 
-		currentConfidence += when (this@Locations.vDirection) {
+		// Check altitude.
+		currentConfidence += getAltitudeConfidence()
+
+		// Check speed.
+		currentConfidence += getSpeedConfidence(location)
+
+		if (!MtSpokaneMapItems.isSetup) {
+			return@coroutineScope null
+		}
+
+		var potentialChairlift: MapItem? = null
+
+		withContext(Dispatchers.Main) {
+			MtSpokaneMapItems.chairlifts.forEach {
+				if (it.locationInsidePolygons(location)) {
+					currentConfidence += 1
+					potentialChairlift = it
+				}
+			}
+		}
+
+		return@coroutineScope if (currentConfidence / numberOfChecks >= minimumConfidenceValue) {
+			potentialChairlift
+		} else {
+			null
+		}
+	}
+
+	fun checkIfOnChairlift(location: Location): MapItem? {
+
+		val numberOfChecks = 6
+		val minimumConfidenceValue: Double = 4.0/numberOfChecks
+		var currentConfidence = 0
+
+		this@Locations.updateLocationVDirection(location)
+
+		// Check altitude.
+		currentConfidence += getAltitudeConfidence()
+
+		// Check speed.
+		currentConfidence += getSpeedConfidence(location)
+
+		if (!MtSpokaneMapItems.isSetup) {
+			return null
+		}
+
+		var potentialChairlift: MapItem? = null
+		MtSpokaneMapItems.chairlifts.forEach {
+			if (it.locationInsidePoints(location)) {
+				currentConfidence += 1
+				potentialChairlift = it
+			}
+		}
+
+		return if (currentConfidence / numberOfChecks >= minimumConfidenceValue) {
+			potentialChairlift
+		} else {
+			null
+		}
+	}
+
+	private fun getAltitudeConfidence(): Int {
+		return when (this.vDirection) {
 			VerticalDirection.UP_CERTAIN -> 3
 			VerticalDirection.UP -> 2
 			VerticalDirection.FLAT -> 1
 			else -> 0
 		}
+	}
 
-		// Check speed.
-		if (location.speed != 0.0F && this@Locations.previousLocation != null) {
+	private fun getSpeedConfidence(location: Location): Int {
+
+		if (location.speed != 0.0F && this.previousLocation != null) {
 
 			// 500 feet per minute to meters per second.
 			val maxChairliftSpeed = 500.0F * 0.00508F
 
-			if (this@Locations.canUseAccuracy) {
-				if (location.speedAccuracyMetersPerSecond != 0.0F && this@Locations.previousLocation!!.speedAccuracyMetersPerSecond != 0.0F) {
-					currentConfidence += when {
+			if (this.canUseAccuracy) {
+				if (location.speedAccuracyMetersPerSecond != 0.0F && this.previousLocation!!.speedAccuracyMetersPerSecond != 0.0F) {
+					return when {
 						location.speed + location.speedAccuracyMetersPerSecond <= maxChairliftSpeed -> 2
 						location.speed <= maxChairliftSpeed -> 1
 						else -> 0
@@ -102,7 +163,7 @@ object Locations {
 				}
 			} else {
 				Log.w("checkIfOnChairlift", "Device does not support speed accuracy!")
-				currentConfidence += if (location.speed <= maxChairliftSpeed) {
+				return if (location.speed <= maxChairliftSpeed) {
 					1
 				} else {
 					0
@@ -110,56 +171,36 @@ object Locations {
 			}
 		}
 
-		withContext(Dispatchers.Main) {
-			chairlifts.forEach {
-				if (it.pointInsidePolygon(location)) {
-					this@Locations.chairliftName = it.name
-					currentConfidence += 1
-				}
-			}
-		}
-
-		return@coroutineScope currentConfidence / numberOfChecks >= minimumConfidenceValue
+		return 0
 	}
 
 	@AnyThread
-	suspend fun checkIfOnRun(location: Location, mapHandler: MapHandler): Boolean = coroutineScope {
+	suspend fun checkIfOnRunAsync(location: Location): MapItem? = coroutineScope {
 
-		val runArrays: Array<Collection<MapItem>> = arrayOf(mapHandler.easyRuns.values,
-			mapHandler.moderateRuns.values,
-			mapHandler.difficultRuns.values)
+		if (!MtSpokaneMapItems.isSetup) { return@coroutineScope null }
 
-		runArrays.forEach { runs ->
-			val job: Deferred<Boolean> = async(Dispatchers.Main, CoroutineStart.LAZY) {
+		withContext(Dispatchers.Main) {
+			arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
+				MtSpokaneMapItems.difficultRuns).forEach { runs ->
 				runs.forEach {
-					if (checkIfOnSpecificRun(it, location)) {
-						return@async true
-					}
+					if (it.locationInsidePolygons(location)) { return@withContext it }
 				}
-				return@async false
-			}
-			job.start()
-			if (job.await()) {
-				return@coroutineScope true
 			}
 		}
-		return@coroutineScope false
+
+		return@coroutineScope null
 	}
 
-	@MainThread
-	private fun checkIfOnSpecificRun(mapItem: MapItem, location: Location): Boolean {
-		if (mapItem.pointInsidePolygon(location)) {
-			if (mapItem.name != "") {
-				if (mapItem.name == this@Locations.currentRun) {
-					Log.d("checkIfOnSpecificRun", "Still on ${mapItem.name}")
-				} else {
-					Log.d("checkIfOnSpecificRun", "On run: ${mapItem.name}")
-					this@Locations.currentRun = mapItem.name
-				}
-				return true
+	fun checkIfOnRun(location: Location): MapItem? {
+
+		arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
+			MtSpokaneMapItems.difficultRuns).forEach { runDifficulty ->
+			runDifficulty.forEach {
+				if (it.locationInsidePoints(location)) { return it }
 			}
 		}
-		return false
+
+		return null
 	}
 
 	private enum class VerticalDirection {
