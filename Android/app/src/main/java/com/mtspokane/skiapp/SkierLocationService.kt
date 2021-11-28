@@ -22,7 +22,7 @@ import android.graphics.drawable.Drawable
 import androidx.appcompat.content.res.AppCompatResources
 
 
-class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
+class SkierLocationService: Service(), LocationListener {
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 		Log.v("SkierLocationService", "onStartCommand called!")
@@ -31,9 +31,9 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 		val notification: Notification = createNotification("", null)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-			this.startForeground(SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+			this.startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
 		} else {
-			this.startForeground(SERVICE_ID, notification)
+			this.startForeground(TRACKING_SERVICE_ID, notification)
 		}
 
 		Log.d("SkierLocationService", "Started foreground service")
@@ -47,7 +47,7 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 
 		this.createNotificationChannels()
 
-		val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
 				2F, this)
@@ -57,10 +57,10 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 	private fun createNotificationChannels() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-			val trackingNotificationChannel = NotificationChannel(TRACKING_CHANNEL_ID, this.getString(R.string.tracking_notification_channel_name),
+			val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID, this.getString(R.string.tracking_notification_channel_name),
 				NotificationManager.IMPORTANCE_DEFAULT)
 
-			val progressNotificationChannel = NotificationChannel(PROGRESS_CHANNEL_ID, this.getString(R.string.progress_notification_channel_name),
+			val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID, this.getString(R.string.progress_notification_channel_name),
 				NotificationManager.IMPORTANCE_DEFAULT)
 
 			val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -71,9 +71,29 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 		}
 	}
 
+	@SuppressLint("MissingPermission")
 	override fun onDestroy() {
 		Log.v("SkierLocationService", "onDestroy called!")
 		super.onDestroy()
+
+		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		locationManager.removeUpdates(this)
+
+		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+		notificationManager.cancel(TRACKING_SERVICE_ID)
+
+		val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			val builder = Notification.Builder(this, NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
+				"Activity Summary", NotificationManager.IMPORTANCE_DEFAULT).id)
+			builder.setSmallIcon(R.drawable.icon_fg)
+			builder.setShowWhen(true)
+			builder.setContentTitle("Tap here to view your activity summary")
+			builder.build()
+		} else {
+			Notification() // TODO Notification pre Oreo
+		}
+
+		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 
 		// TODO Add code here to notify user.
 	}
@@ -88,7 +108,6 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
 			this.stopSelf()
 		}
-
 
 		// Check if our skier is on a run, chairlift, or other.
 		//this.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
@@ -126,7 +145,7 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 		val notification: Notification = createNotification(title, bitmap)
 
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		notificationManager.notify(SERVICE_ID, notification)
+		notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
 	private fun createPendingIntent(): PendingIntent {
@@ -143,7 +162,8 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 		val pendingIntent: PendingIntent = this.createPendingIntent()
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = Notification.Builder(this, NotificationChannel(TRACKING_CHANNEL_ID, "Location", NotificationManager.IMPORTANCE_DEFAULT).id)
+			val builder = Notification.Builder(this, NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
+				"Location", NotificationManager.IMPORTANCE_DEFAULT).id)
 			builder.setSmallIcon(R.drawable.icon_fg)
 			builder.setShowWhen(false)
 			builder.setContentTitle(this.getString(R.string.tracking_notice))
@@ -166,11 +186,13 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 
 	companion object {
 
-		const val SERVICE_ID = 29500
+		const val TRACKING_SERVICE_ID = 29500
 
-		const val TRACKING_CHANNEL_ID = "skiAppTracker"
+		const val ACTIVITY_SUMMARY_ID = 592
 
-		const val PROGRESS_CHANNEL_ID = "skiAppProgress"
+		const val TRACKING_SERVICE_CHANNEL_ID = "skiAppTracker"
+
+		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
 
 		fun checkIfRunning(activity: MapsActivity): Boolean {
 
@@ -197,7 +219,7 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 				Bitmap.Config.ARGB_8888)
 
 			val canvas = Canvas(bitmap)
-			drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight())
+			drawable.setBounds(0, 0, canvas.width, canvas.height)
 			drawable.draw(canvas)
 
 			return bitmap
