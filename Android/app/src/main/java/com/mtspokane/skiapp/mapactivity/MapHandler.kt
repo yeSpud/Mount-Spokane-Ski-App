@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp
+package com.mtspokane.skiapp.mapactivity
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -19,6 +19,8 @@ import com.google.maps.android.data.kml.KmlPolygon
 import com.google.maps.android.ktx.addPolygon
 import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
+import com.mtspokane.skiapp.BuildConfig
+import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
@@ -91,21 +93,24 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading easy polylines")
 					MtSpokaneMapItems.easyRuns = loadPolylines(this@MapHandler.map!!, R.raw.easy,
-						this@MapHandler.activity!!, R.color.easy, 3f, R.drawable.ic_easy)
+						this@MapHandler.activity!!, R.color.easy, 3f, R.drawable.ic_easy
+					)
 					Log.v(tag, "Finished loading easy run polylines")},
 
 				// Load in the moderate runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading moderate polylines")
 					MtSpokaneMapItems.moderateRuns = loadPolylines(this@MapHandler.map!!, R.raw.moderate,
-						this@MapHandler.activity!!, R.color.moderate, 2f, R.drawable.ic_moderate)
+						this@MapHandler.activity!!, R.color.moderate, 2f, R.drawable.ic_moderate
+					)
 					Log.v(tag, "Finished loading moderate run polylines")},
 
 				// Load in the difficult runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading difficult polylines")
 					MtSpokaneMapItems.difficultRuns = loadPolylines(this@MapHandler.map!!, R.raw.difficult,
-						this@MapHandler.activity!!, R.color.difficult, 1f, R.drawable.ic_difficult)
+						this@MapHandler.activity!!, R.color.difficult, 1f, R.drawable.ic_difficult
+					)
 					Log.v(tag, "Finished loading difficult polylines")}
 			)
 

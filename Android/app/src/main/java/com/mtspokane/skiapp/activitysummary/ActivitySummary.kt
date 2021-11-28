@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp
+package com.mtspokane.skiapp.activitysummary
 
 import android.app.Activity
 import android.os.Bundle
@@ -14,7 +14,8 @@ class ActivitySummary: Activity() {
 		this.binding = ActivitySummaryBinding.inflate(this.layoutInflater)
 		this.setContentView(this.binding.root)
 
-		this.actionBar!!.setTitle(R.string.activity_summary_title)
+		// Be sure to show the action bar.
+		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
 		// TODO
 	}

@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp
+package com.mtspokane.skiapp.mapactivity
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -15,6 +15,10 @@ import android.view.MenuItem
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
+import com.mtspokane.skiapp.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.BuildConfig
+import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.skierlocation.InAppSkierLocation
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import kotlinx.coroutines.CoroutineStart
@@ -37,6 +41,9 @@ class MapsActivity : FragmentActivity() {
 		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(this.layoutInflater)
 		this.setContentView(binding.root)
+
+		// Be sure to show the action bar.
+		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
 		this.mapHandler = MapHandler(this)
 		this.inAppLocationHandler = InAppSkierLocation(this.mapHandler!!, this)

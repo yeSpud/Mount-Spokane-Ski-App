@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp
+package com.mtspokane.skiapp.skierlocation
 
 import android.content.Intent
 import android.location.Location
@@ -9,7 +9,10 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
+import com.mtspokane.skiapp.*
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.mapactivity.MapHandler
+import com.mtspokane.skiapp.mapactivity.MapsActivity
 import kotlinx.coroutines.*
 
 class InAppSkierLocation(private var mapHandler: MapHandler?, private var activity: MapsActivity?) : LocationListener {
@@ -60,23 +63,28 @@ class InAppSkierLocation(private var mapHandler: MapHandler?, private var activi
 
 			val other = Locations.checkIfOnOtherAsync(location)
 			if (other != null) {
-				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_other, other.name)
+				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(
+					R.string.current_other, other.name)
 				return@async
 			}
 
 			val chairlift = Locations.checkIfOnChairliftAsync(location)
 			if (chairlift != null) {
-				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_chairlift, chairlift.name)
+				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(
+					R.string.current_chairlift, chairlift.name)
 				return@async
 			}
 
 			val run = Locations.checkIfOnRunAsync(location)
 			if (run != null) {
-				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.current_run, run.name)
+				this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(
+					R.string.current_run, run.name)
 				return@async
 			}
 
-			this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(R.string.app_name)
+			this@InAppSkierLocation.activity!!.actionBar!!.title = this@InAppSkierLocation.activity!!.getString(
+				R.string.app_name
+			)
 		}.start()
 	}
 

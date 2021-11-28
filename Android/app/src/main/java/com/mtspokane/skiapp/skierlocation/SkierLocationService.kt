@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp
+package com.mtspokane.skiapp.skierlocation
 
 import android.annotation.SuppressLint
 import android.app.*
@@ -22,6 +22,10 @@ import android.graphics.drawable.Drawable
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
+import com.mtspokane.skiapp.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.Locations
+import com.mtspokane.skiapp.mapactivity.MapsActivity
+import com.mtspokane.skiapp.R
 import kotlin.reflect.KClass
 
 
@@ -60,10 +64,12 @@ class SkierLocationService: Service(), LocationListener {
 	private fun createNotificationChannels() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-			val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
+			val trackingNotificationChannel = NotificationChannel(
+				TRACKING_SERVICE_CHANNEL_ID,
 				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
-			val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
+			val progressNotificationChannel = NotificationChannel(
+				ACTIVITY_SUMMARY_CHANNEL_ID,
 				this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
 			val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -88,7 +94,8 @@ class SkierLocationService: Service(), LocationListener {
 		val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class)
 
 		val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID, true,
+			val builder = this.getNotificationBuilder(
+				ACTIVITY_SUMMARY_CHANNEL_ID, true,
 				R.string.activity_notification_text, pendingIntent)
 			builder.build()
 		} else {
@@ -158,7 +165,8 @@ class SkierLocationService: Service(), LocationListener {
 		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class)
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID, false,
+			val builder = this.getNotificationBuilder(
+				TRACKING_SERVICE_CHANNEL_ID, false,
 				R.string.tracking_notice, pendingIntent)
 			builder.setContentText(title)
 			if (iconBitmap != null) {
