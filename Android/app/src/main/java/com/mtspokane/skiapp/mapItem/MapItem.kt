@@ -6,7 +6,7 @@ import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.tan
 
-open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)/*: Parcelable*/ {
+open class MapItem(val name: String, @DrawableRes private var icon: Int? = null) {
 
 	internal var points: Array<Array<Pair<Double, Double>>> = emptyArray()
 
@@ -77,47 +77,7 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 		return false
 	}
 
-	/*
-	 * Parcel stuff below.
-	 */
-
-	/*
-	constructor(parcel: Parcel) : this(parcel.readString()!!, parcel.readValue(Int::class.java.classLoader) as? Int) {
-		val readArray = parcel.readArray(Array::class.java.classLoader)
-		try {
-			val testArray = readArray as Array<Array<Pair<Double, Double>>>
-			this.points = testArray
-		} catch (e: ClassCastException) {
-			e.printStackTrace()
-		}
-	}
-
-	override fun writeToParcel(parcel: Parcel, flags: Int) {
-		parcel.writeString(this.name)
-		parcel.writeValue(this.icon)
-		parcel.writeArray(this.points)
-	}
-
-	override fun describeContents(): Int {
-		return this.hashCode()
-	} */
-
 	companion object {
-
-		/*
-		@JvmField
-		val CREATOR = object: Parcelable.Creator<MapItem> {
-			override fun createFromParcel(parcel: Parcel): MapItem {
-				return MapItem(parcel)
-			}
-
-			override fun newArray(size: Int): Array<MapItem?> {
-				return arrayOfNulls(size)
-			}
-		} */
-		/*
-		 * End parcel stuff.
-		 */
 
 		/**
 		 * Copyright 2008, 2013 Google Inc.

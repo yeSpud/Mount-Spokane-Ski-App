@@ -11,7 +11,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.mapItem.MtSpokaneUIMapItems
 import android.app.NotificationManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -24,9 +24,6 @@ import androidx.appcompat.content.res.AppCompatResources
 
 class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 
-	/*
-	 * Runs every time the service is started.
-	 */
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
@@ -36,15 +33,13 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			this.startForeground(SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
 		} else {
-			startForeground(SERVICE_ID, notification)
+			this.startForeground(SERVICE_ID, notification)
 		}
 
+		Log.d("SkierLocationService", "Started foreground service")
 		return START_NOT_STICKY
 	}
 
-	/*
-	 * Runs only once (supposedly?)
-	 */
 	@SuppressLint("MissingPermission")
 	override fun onCreate() {
 		Log.v("SkierLocationService", "onCreate called!")
@@ -86,14 +81,15 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 	override fun onLocationChanged(location: Location) {
 
 		// If we are not on the mountain stop the tracking.
-		if (MtSpokaneMapItems.skiAreaBounds == null) {
+		if (MtSpokaneUIMapItems.lightSKiAreaBounds == null) {
 			this.stopSelf()
-		} else if (!MtSpokaneMapItems.skiAreaBounds!!.hasPoints) {
+		} else if (!MtSpokaneUIMapItems.lightSKiAreaBounds!!.hasPoints) {
 			this.stopSelf()
-		} else if (MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
+		} else if (MtSpokaneUIMapItems.lightSKiAreaBounds!!.locationInsidePoints(location)) {
 			this.stopSelf()
 		}
 
+		/*
 		// Check if our skier is on a run, chairlift, or other.
 		//this.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
@@ -117,6 +113,7 @@ class SkierLocationService: Service(), LocationListener { // FIXME Leaks memory?
 
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
 		//}.start()
+		 */
 	}
 
 	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
