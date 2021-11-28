@@ -1,7 +1,9 @@
 package com.mtspokane.skiapp
 
+import android.content.Intent
 import android.location.Location
 import android.location.LocationListener
+import android.os.Build
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.LatLng
@@ -39,6 +41,18 @@ class InAppSkierLocation(private var mapHandler: MapHandler?, private var activi
 
 			// Otherwise just update the LatLng location.
 			this.locationMarker!!.position = LatLng(location.latitude, location.longitude)
+		}
+
+		// Check if the location service has already been started.
+		if (!SkierLocationService.checkIfRunning(this.activity!!)) {
+
+			val serviceIntent = Intent(this.activity!!, SkierLocationService::class.java)
+
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				this.activity!!.startForegroundService(serviceIntent)
+			} else {
+				this.activity!!.startService(serviceIntent)
+			}
 		}
 
 		// Check if our skier is on a run, chairlift, or other.

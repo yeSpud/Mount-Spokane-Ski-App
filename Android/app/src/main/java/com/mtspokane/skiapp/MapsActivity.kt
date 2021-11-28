@@ -4,10 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
 import android.view.Menu
@@ -115,18 +113,6 @@ class MapsActivity : FragmentActivity() {
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
 				2F, this.inAppLocationHandler!!)
-		}
-
-		// Check if the location service has already been started.
-		if (!SkierLocationService.checkIfRunning(this)) {
-
-			val serviceIntent = Intent(this, SkierLocationService::class.java)
-
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				this.startForegroundService(serviceIntent)
-			} else {
-				this.startService(serviceIntent)
-			}
 		}
 	}
 
