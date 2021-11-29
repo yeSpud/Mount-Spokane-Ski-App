@@ -1,6 +1,7 @@
 package com.mtspokane.skiapp.activitysummary
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -14,13 +15,15 @@ import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 
 class ActivitySummary: Activity() {
 
-	private lateinit var binding: ActivitySummaryBinding
+	private lateinit var container: LinearLayout
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		this.binding = ActivitySummaryBinding.inflate(this.layoutInflater)
-		this.setContentView(this.binding.root)
+		val binding: ActivitySummaryBinding = ActivitySummaryBinding.inflate(this.layoutInflater)
+		this.setContentView(binding.root)
+
+		this.container = binding.container
 
 		// Be sure to show the action bar.
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
@@ -41,7 +44,7 @@ class ActivitySummary: Activity() {
 	private fun addActivity(activity: SkiingActivity) {
 
 		val view = createActivityView(activity)
-		this.binding.container.addView(view)
+		this.container.addView(view)
 	}
 
 	private fun createActivityView(activity: SkiingActivity): LinearLayout {
@@ -63,33 +66,23 @@ class ActivitySummary: Activity() {
 		linearLayout.addView(imageView)
 
 
-		val nameView = TextView(this)
 		val nameLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
 			45, 5)
-		nameView.layoutParams = nameLayoutParams
-		nameView.maxWidth = 249
-		nameView.textSize = 20F
-		nameView.text = activity.name
+		val nameView = this.createTextView(nameLayoutParams, maxWidth = 249, textSize = 20F, text = activity.name)
 		linearLayout.addView(nameView)
 
 
-		val timeView = TextView(this)
 		val timeLayoutParams = this.createLayoutParameters(0, 45, 5)
 		val weightLayoutParams = TableRow.LayoutParams(timeLayoutParams)
 		weightLayoutParams.weight = 10F
-		timeView.layoutParams = weightLayoutParams
-		timeView.minWidth = 64
-		timeView.textSize = 12F
-		timeView.text = " - ${activity.location.time}" // TODO Convert this from unix epoch to actual time
+		val timeView = this.createTextView(weightLayoutParams, minWidth = 64, textSize = 12F,
+			text = " - ${activity.location.time}") // TODO Convert this from unix epoch to actual time
 		linearLayout.addView(timeView)
 
 
-		val arrowTextView = TextView(this)
 		val arrowLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
 			45, 0)
-		arrowTextView.layoutParams = arrowLayoutParams
-		arrowTextView.text = this.getText(R.string.arrow)
-		arrowTextView.textSize = 35F
+		val arrowTextView = this.createTextView(arrowLayoutParams, textSize = 35F, text = this.getText(R.string.arrow))
 		linearLayout.addView(arrowTextView)
 
 		return linearLayout
@@ -99,5 +92,20 @@ class ActivitySummary: Activity() {
 		val layoutParameter: ViewGroup.MarginLayoutParams = ViewGroup.MarginLayoutParams(width, height)
 		layoutParameter.marginEnd = marginEnd
 		return layoutParameter
+	}
+
+	private fun createTextView(layoutParams: ViewGroup.LayoutParams, minWidth: Int = 0,
+	                           maxWidth: Int = Int.MAX_VALUE, textSize: Float, text: CharSequence): TextView {
+
+		val textView = TextView(this)
+		textView.layoutParams = layoutParams
+		textView.minWidth = minWidth
+		textView.maxWidth = maxWidth
+		textView.textSize = textSize
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			textView.setTextColor(this.getColor(R.color.white))
+		}
+		textView.text = text
+		return textView
 	}
 }
