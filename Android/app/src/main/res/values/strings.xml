@@ -31,4 +31,9 @@
 
     <!-- Activity summary -->
     <string name="activity_summary_title">Activity Summary</string>
+
+    <!-- Skiing activity layout -->
+    <string name="icon_description">Location icon</string>
+    <string name="arrow"><![CDATA[>]]></string>
+
 </resources>

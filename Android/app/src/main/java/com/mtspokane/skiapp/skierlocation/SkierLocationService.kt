@@ -26,6 +26,7 @@ import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.Locations
 import com.mtspokane.skiapp.mapactivity.MapsActivity
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activitysummary.SkiingActivity
 import kotlin.reflect.KClass
 
 
@@ -102,6 +103,7 @@ class SkierLocationService: Service(), LocationListener {
 			Notification() // TODO Notification pre Oreo
 		}
 
+		SkiingActivity.writeActivitiesToFile()
 		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 	}
 
@@ -119,18 +121,21 @@ class SkierLocationService: Service(), LocationListener {
 		val other = Locations.checkIfOnOther(location)
 		if (other != null) {
 			this.updateNotification(this.getString(R.string.current_other, other.name), other.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(other.name, location, other.getIcon()))
 			return
 		}
 
 		val chairlift = Locations.checkIfOnChairlift(location)
 		if (chairlift != null) {
 			this.updateNotification(this.getString(R.string.current_chairlift, chairlift.name), chairlift.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(chairlift.name, location, chairlift.getIcon()))
 			return
 		}
 
 		val run = Locations.checkIfOnRun(location)
 		if (run != null) {
 			this.updateNotification(this.getString(R.string.current_run, run.name), run.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(run.name, location, run.getIcon()))
 			return
 		}
 
@@ -151,6 +156,7 @@ class SkierLocationService: Service(), LocationListener {
 		notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
+	@SuppressLint("UnspecifiedImmutableFlag")
 	private fun createPendingIntent(`class`: KClass<*>): PendingIntent {
 		val notificationIntent = Intent(this, `class`.java)
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

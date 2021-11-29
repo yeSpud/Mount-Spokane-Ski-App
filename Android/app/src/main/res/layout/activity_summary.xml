@@ -3,18 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".activitysummary.ActivitySummary">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="?attr/colorPrimaryVariant">
-
         <ScrollView
-            android:id="@+id/container"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <LinearLayout
+                android:id="@+id/container"
+                android:background="?attr/colorPrimaryVariant"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
         </ScrollView>
 
-    </LinearLayout>
 </layout>
