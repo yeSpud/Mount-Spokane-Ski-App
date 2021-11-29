@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp.activitysummary
 
 import android.app.Activity
-import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -56,8 +55,7 @@ class ActivitySummary: Activity() {
 
 
 		val imageView = ImageView(this)
-		val imageLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.MATCH_PARENT,
-			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 5)
+		val imageLayoutParams = this.createLayoutParameters(45, 45, 5)
 		imageView.layoutParams = imageLayoutParams
 		imageView.contentDescription = this.getText(R.string.icon_description)
 		if (activity.icon != null) {
@@ -67,23 +65,30 @@ class ActivitySummary: Activity() {
 
 
 		val nameLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
-			45, 5)
-		val nameView = this.createTextView(nameLayoutParams, maxWidth = 249, textSize = 20F, text = activity.name)
+			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 5)
+		//val nameView = this.createTextView(nameLayoutParams, maxWidth = 249, textSize = 20F, text = activity.name)
+		val nameView = this.createTextView(nameLayoutParams, 20F, activity.name)
 		linearLayout.addView(nameView)
 
 
-		val timeLayoutParams = this.createLayoutParameters(0, 45, 5)
+		val timeLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
+			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 5)
 		val weightLayoutParams = TableRow.LayoutParams(timeLayoutParams)
 		weightLayoutParams.weight = 10F
-		val timeView = this.createTextView(weightLayoutParams, minWidth = 64, textSize = 12F,
-			text = " - ${activity.location.time}") // TODO Convert this from unix epoch to actual time
+		//val timeView = this.createTextView(weightLayoutParams, minWidth = 64, textSize = 12F, text = " - ${activity.location.time}")
+		val timeView = this.createTextView(weightLayoutParams, 12F, " - ${activity.location.time}") // TODO Convert this from unix epoch to actual time
 		linearLayout.addView(timeView)
 
 
+		/*
 		val arrowLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
-			45, 0)
-		val arrowTextView = this.createTextView(arrowLayoutParams, textSize = 35F, text = this.getText(R.string.arrow))
-		linearLayout.addView(arrowTextView)
+			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 0)
+		//val arrowTextView = this.createTextView(arrowLayoutParams, textSize = 35F, text = this.getText(R.string.arrow))
+		val arrowTextView = TextView(this)
+		arrowTextView.layoutParams = arrowLayoutParams
+		arrowTextView.textSize = 30F
+		arrowTextView.text = this.getText(R.string.arrow)
+		linearLayout.addView(arrowTextView) */ // TODO Disable this for now until a launcher is needed.
 
 		return linearLayout
 	}
@@ -94,17 +99,11 @@ class ActivitySummary: Activity() {
 		return layoutParameter
 	}
 
-	private fun createTextView(layoutParams: ViewGroup.LayoutParams, minWidth: Int = 0,
-	                           maxWidth: Int = Int.MAX_VALUE, textSize: Float, text: CharSequence): TextView {
+	private fun createTextView(layoutParams: ViewGroup.LayoutParams, textSize: Float, text: CharSequence): TextView {
 
 		val textView = TextView(this)
 		textView.layoutParams = layoutParams
-		textView.minWidth = minWidth
-		textView.maxWidth = maxWidth
 		textView.textSize = textSize
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			textView.setTextColor(this.getColor(R.color.white))
-		}
 		textView.text = text
 		return textView
 	}
