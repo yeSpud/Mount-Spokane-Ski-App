@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
+import android.os.Process
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -16,8 +17,8 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activitysummary.SkiingActivity
 import com.mtspokane.skiapp.skierlocation.InAppSkierLocation
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
@@ -35,12 +36,18 @@ class MapsActivity : FragmentActivity() {
 
 	private var nightRunsOnly = false
 
+	var locationEnabled = false
+	private set
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
 		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(this.layoutInflater)
 		this.setContentView(binding.root)
+
+		this.locationEnabled = this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
+			Process.myUid()) == PackageManager.PERMISSION_GRANTED
 
 		// Be sure to show the action bar.
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
@@ -72,12 +79,21 @@ class MapsActivity : FragmentActivity() {
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
 		this.menuInflater.inflate(R.menu.menu, menu)
-		if (BuildConfig.DEBUG) {
-			val activitySummary = menu.findItem(R.id.activity_summary)
-			activitySummary.isVisible = true
-			activitySummary.isEnabled = true
-		}
 		return super.onCreateOptionsMenu(menu)
+	}
+
+	override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+
+		val activitySummary = menu.findItem(R.id.activity_summary)
+		if (this.locationEnabled) {
+			activitySummary.isVisible = true
+			activitySummary.isEnabled = SkiingActivity.Activities.isNotEmpty()
+		} else {
+			activitySummary.isVisible = false
+			activitySummary.isEnabled = false
+		}
+
+		return super.onPrepareOptionsMenu(menu)
 	}
 
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {

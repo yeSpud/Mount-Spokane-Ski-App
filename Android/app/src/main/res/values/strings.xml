@@ -27,7 +27,7 @@
     <string name="show_intermediate">Show Intermediate Runs</string>
     <string name="show_advanced">Show Advanced Runs</string>
     <string name="night_runs">Only Show Night Runs</string>
-    <string name="activity_summary">Launch activity summary</string>
+    <string name="activity_summary">View activity summary</string>
 
     <!-- Activity summary -->
     <string name="activity_summary_title">Activity Summary</string>

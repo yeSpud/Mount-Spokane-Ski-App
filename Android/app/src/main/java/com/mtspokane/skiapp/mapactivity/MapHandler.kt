@@ -1,10 +1,7 @@
 package com.mtspokane.skiapp.mapactivity
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
-import android.os.Process
 import android.util.Log
 import androidx.annotation.*
 import androidx.core.content.res.ResourcesCompat
@@ -123,8 +120,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 			// If this permission isn't granted then that's fine too.
 			withContext(Dispatchers.Main) {
 				Log.v("onMapReady", "Checking location permissions...")
-				if (this@MapHandler.activity!!.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION,
-						Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
+				if (this@MapHandler.activity!!.locationEnabled) {
 					this@MapHandler.setupLocation()
 				} else {
 
