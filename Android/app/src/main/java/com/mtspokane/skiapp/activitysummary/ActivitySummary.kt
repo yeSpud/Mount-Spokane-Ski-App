@@ -86,7 +86,7 @@ class ActivitySummary: Activity() {
 		weightLayoutParams.weight = 10F
 		//val timeView = this.createTextView(weightLayoutParams, minWidth = 64, textSize = 12F, text = " - ${activity.location.time}")
 		val time = convertMillisecondsToTime(activity.time)
-		val timeView = this.createTextView(weightLayoutParams, 12F, time) // TODO Convert this from unix epoch to actual time
+		val timeView = this.createTextView(weightLayoutParams, 12F, time)
 		linearLayout.addView(timeView)
 
 

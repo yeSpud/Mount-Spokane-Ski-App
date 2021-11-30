@@ -46,8 +46,8 @@
     <item
         android:id="@+id/activity_summary"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="5"
         android:title="@string/activity_summary"
-        android:visible="false" />
+        android:visible="true" />
 </menu>

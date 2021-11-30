@@ -18,7 +18,6 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activitysummary.SkiingActivity
 import com.mtspokane.skiapp.skierlocation.InAppSkierLocation
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
@@ -78,17 +77,8 @@ class MapsActivity : FragmentActivity() {
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
-		this.menuInflater.inflate(R.menu.menu, menu)
+		this.menuInflater.inflate(R.menu.maps_menu, menu)
 		return super.onCreateOptionsMenu(menu)
-	}
-
-	override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-
-		val activitySummary = menu.findItem(R.id.activity_summary)
-		activitySummary.isVisible = this.locationEnabled
-		activitySummary.isEnabled = this.locationEnabled
-
-		return super.onPrepareOptionsMenu(menu)
 	}
 
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {

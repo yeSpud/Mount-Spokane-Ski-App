@@ -2,7 +2,7 @@ package com.mtspokane.skiapp.mapItem
 
 object MtSpokaneMapItems {
 
-	var skiAreaBounds: UIMapItem? = null // FIXME Leaks memory!
+	var skiAreaBounds: UIMapItem? = null
 
 	val other: Array<UIMapItem?> = arrayOfNulls(6) // TODO Account for parking lots and tubing area...
 
