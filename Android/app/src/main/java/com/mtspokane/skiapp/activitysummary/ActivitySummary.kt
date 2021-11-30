@@ -3,6 +3,8 @@ package com.mtspokane.skiapp.activitysummary
 import android.app.Activity
 import android.os.Build
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -45,6 +47,22 @@ class ActivitySummary: Activity() {
 
 		// If all else fails just load from the current activities array.
 		this.loadActivities(SkiingActivity.Activities.toTypedArray())
+	}
+
+	override fun onCreateOptionsMenu(menu: Menu): Boolean {
+		this.menuInflater.inflate(R.menu.summary_menu, menu)
+		return super.onCreateOptionsMenu(menu)
+	}
+
+	override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+		when (item.itemId) {
+			R.id.open -> // TODO
+			R.id.export -> // TODO
+			R.id.share -> // TODO
+		}
+
+		return super.onOptionsItemSelected(item)
 	}
 
 	private fun loadActivities(activities: Array<SkiingActivity>) {

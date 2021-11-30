@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".activitysummary.ActivitySummary">
+
+    <item
+        android:id="@+id/open"
+        android:checkable="false"
+        android:enabled="true"
+        android:orderInCategory="0"
+        android:title="Open other summary"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/export"
+        android:checkable="false"
+        android:enabled="false"
+        android:orderInCategory="1"
+        android:title="Export to local storage"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/share"
+        android:checkable="false"
+        android:enabled="false"
+        android:orderInCategory="2"
+        android:title="Share"
+        android:visible="true" />
+
+</menu>

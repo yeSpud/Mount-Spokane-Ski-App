@@ -10,7 +10,9 @@
         <entry key="app/src/main/res/layout/activity_summary.xml" value="0.165" />
         <entry key="app/src/main/res/layout/skiing_activity.xml" value="0.1" />
         <entry key="app/src/main/res/layout/skiing_activity_layout.xml" value="0.25" />
+        <entry key="app/src/main/res/menu/maps_menu.xml" value="0.34791666666666665" />
         <entry key="app/src/main/res/menu/menu.xml" value="0.34791666666666665" />
+        <entry key="app/src/main/res/menu/summary_menu.xml" value="0.34791666666666665" />
       </map>
     </option>
   </component>
