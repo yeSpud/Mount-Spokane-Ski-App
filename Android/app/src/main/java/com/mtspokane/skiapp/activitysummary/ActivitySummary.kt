@@ -33,13 +33,22 @@ class ActivitySummary: Activity() {
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
 		if (this.intent.extras != null) {
-			// TODO Load activities from file passed in as an extra.
-		} else {
-			this.addAllActivities(SkiingActivity.Activities.toTypedArray())
+
+			val filename: String? = this.intent.extras!!.getString("file")
+
+			if (filename != null) {
+				val activities: Array<SkiingActivity> = SkiingActivity.readFromFile(this, filename)
+				this.loadActivities(activities)
+				return
+			}
 		}
+
+		// If all else fails just load from the current activities array.
+		this.loadActivities(SkiingActivity.Activities.toTypedArray())
 	}
 
-	private fun addAllActivities(activities: Array<SkiingActivity>) {
+	private fun loadActivities(activities: Array<SkiingActivity>) {
+		this.container.removeAllViews()
 		activities.forEach {
 			val view: LinearLayout = createActivityView(it)
 			this.container.addView(view)

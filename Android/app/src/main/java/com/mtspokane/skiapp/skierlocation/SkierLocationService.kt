@@ -53,6 +53,8 @@ class SkierLocationService: Service(), LocationListener {
 		Log.v("SkierLocationService", "onCreate called!")
 		super.onCreate()
 
+		SkiingActivity.populateActivitiesArray(this)
+
 		this.createNotificationChannels()
 
 		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -92,7 +94,9 @@ class SkierLocationService: Service(), LocationListener {
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 		notificationManager.cancel(TRACKING_SERVICE_ID)
 
-		val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class)
+		val file: String = SkiingActivity.writeActivitiesToFile(this)
+
+		val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, file)
 
 		val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			val builder = this.getNotificationBuilder(
@@ -103,7 +107,6 @@ class SkierLocationService: Service(), LocationListener {
 			Notification() // TODO Notification pre Oreo
 		}
 
-		SkiingActivity.writeActivitiesToFile(this)
 		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 	}
 
@@ -157,8 +160,13 @@ class SkierLocationService: Service(), LocationListener {
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")
-	private fun createPendingIntent(`class`: KClass<*>): PendingIntent {
+	private fun createPendingIntent(`class`: KClass<*>, filename: String? = null): PendingIntent {
 		val notificationIntent = Intent(this, `class`.java)
+
+		if (filename != null) {
+			notificationIntent.putExtra("file", filename)
+		}
+
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 		} else {
@@ -171,8 +179,7 @@ class SkierLocationService: Service(), LocationListener {
 		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class)
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = this.getNotificationBuilder(
-				TRACKING_SERVICE_CHANNEL_ID, false,
+			val builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID, false,
 				R.string.tracking_notice, pendingIntent)
 			builder.setContentText(title)
 			if (iconBitmap != null) {

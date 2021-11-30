@@ -85,13 +85,8 @@ class MapsActivity : FragmentActivity() {
 	override fun onPrepareOptionsMenu(menu: Menu): Boolean {
 
 		val activitySummary = menu.findItem(R.id.activity_summary)
-		if (this.locationEnabled) {
-			activitySummary.isVisible = true
-			activitySummary.isEnabled = SkiingActivity.Activities.isNotEmpty()
-		} else {
-			activitySummary.isVisible = false
-			activitySummary.isEnabled = false
-		}
+		activitySummary.isVisible = this.locationEnabled
+		activitySummary.isEnabled = this.locationEnabled
 
 		return super.onPrepareOptionsMenu(menu)
 	}

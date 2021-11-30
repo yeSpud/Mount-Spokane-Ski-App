@@ -3,6 +3,7 @@ package com.mtspokane.skiapp.activitysummary
 import android.content.Context
 import android.location.Location
 import android.os.Build
+import android.util.Log
 import androidx.annotation.DrawableRes
 import org.json.JSONArray
 import org.json.JSONObject
@@ -10,31 +11,70 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
-class SkiingActivity(val name: String, location: Location, @DrawableRes val icon: Int?) {
+class SkiingActivity {
 
-	val accuracy: Float = location.accuracy
+	val name: String
 
-	val altitude: Double = location.altitude
+	@DrawableRes
+	val icon: Int?
 
-	val altitudeAccuracy: Float? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-		location.verticalAccuracyMeters
-	} else {
-		null
+	val accuracy: Float
+
+	val altitude: Double
+
+	val altitudeAccuracy: Float?
+
+	val latitude: Double
+
+	val longitude: Double
+
+	val speed: Float
+
+	val speedAccuracy: Float?
+
+	val time: Long
+
+	constructor(name: String, location: Location, @DrawableRes icon: Int?) {
+		this.name = name
+		this.icon = icon
+
+		this.accuracy = location.accuracy
+		this.altitude = location.altitude
+
+		this.altitudeAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			location.verticalAccuracyMeters
+		} else {
+			null
+		}
+
+		this.latitude = location.latitude
+		this.longitude = location.longitude
+		this.speed = location.speed
+
+		this.speedAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			location.speedAccuracyMetersPerSecond
+		} else {
+			null
+		}
+
+		this.time = location.time
 	}
 
-	val latitude: Double = location.latitude
+	constructor(name: String, @DrawableRes icon: Int?, accuracy: Float, altitude: Double,
+	            altitudeAccuracy: Float?, latitude: Double, longitude: Double, speed: Float,
+	            speedAccuracy: Float?, time: Long) {
 
-	val longitude: Double = location.longitude
-
-	val speed: Float = location.speed
-
-	val speedAccuracy: Float? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-		location.speedAccuracyMetersPerSecond
-	} else {
-		null
+		this.name = name
+		this.icon = icon
+		this.accuracy = accuracy
+		this.altitude = altitude
+		this.altitudeAccuracy = altitudeAccuracy
+		this.latitude = latitude
+		this.longitude = longitude
+		this.speed = speed
+		this.speedAccuracy = speedAccuracy
+		this.time = time
 	}
-
-	val time: Long = location.time
 
 	companion object  {
 
@@ -51,7 +91,7 @@ class SkiingActivity(val name: String, location: Location, @DrawableRes val icon
 		private const val SPEED_ACCURACY = "speedacc"
 		private const val TIME = "time"
 
-		fun writeActivitiesToFile(context: Context) {
+		fun writeActivitiesToFile(context: Context): String {
 
 			val jsonArray = JSONArray()
 			Activities.forEach {
@@ -79,15 +119,76 @@ class SkiingActivity(val name: String, location: Location, @DrawableRes val icon
 			val jsonObject = JSONObject()
 			jsonObject.put(date, jsonArray)
 
-			context.openFileOutput("$date.json", Context.MODE_PRIVATE).use {
+			val filename = "$date.json"
+			context.openFileOutput(filename, Context.MODE_PRIVATE).use {
 				it.write(jsonObject.toString().toByteArray())
 			}
+
+			return filename
 		}
 
 		fun readFromFile(context: Context, filename: String): Array<SkiingActivity> {
-			// TODO
 
-			return arrayOf(SkiingActivity("foo", Location("gps"), null))
+			val arrayList = ArrayList<SkiingActivity>(0)
+
+			context.openFileInput(filename).bufferedReader().useLines {
+				val string = it.fold("") { _, inText -> inText }
+
+				val json = JSONObject(string)
+				val jsonArray: JSONArray = json.getJSONArray(json.keys().next())
+
+				val count = jsonArray.length()
+				for (i in 0 until count) {
+					val jsonObject: JSONObject = jsonArray.getJSONObject(i)
+
+					val name: String = jsonObject.getString(NAME)
+
+					val iconLocation: String? = jsonObject.opt(ICON) as String?
+					val icon: Int? = if (iconLocation != null) {
+						context.resources.getIdentifier(iconLocation, "drawable", context.packageName)
+					} else {
+						null
+					}
+
+					val accuracy: Float = parseFloat(jsonObject, ACCURACY)!!
+					val altitude: Double = jsonObject.optDouble(ALTITUDE)
+					val altitudeAccuracy: Float? = parseFloat(jsonObject, ALTITUDE_ACCURACY)
+					val latitude: Double = jsonObject.optDouble(LATITUDE)
+					val longitude: Double = jsonObject.optDouble(LONGITUDE)
+					val speed: Float = parseFloat(jsonObject, SPEED)!!
+					val speedAccuracy: Float? = parseFloat(jsonObject, SPEED_ACCURACY)
+					val time: Long = jsonObject.optLong(TIME)
+
+					val activity = SkiingActivity(name, icon, accuracy, altitude, altitudeAccuracy,
+						latitude, longitude, speed, speedAccuracy, time)
+					arrayList.add(activity)
+				}
+			}
+
+			return arrayList.toTypedArray()
+		}
+
+		private fun parseFloat(jsonObject: JSONObject, key: String): Float? {
+			return when (val accuracyAny = jsonObject.opt(key)) {
+				is Float -> accuracyAny
+				is Int -> accuracyAny.toFloat()
+				is Double -> accuracyAny.toFloat()
+				else -> {
+					Log.w("parseFloat", "Unable to load accuracy")
+					null
+				}
+			}
+		}
+
+		fun populateActivitiesArray(context: Context) {
+
+			val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+			val date: String = dateFormat.format(Date())
+			val filename = "$date.json"
+
+			val array: Array<SkiingActivity> = readFromFile(context, filename)
+
+			Activities.addAll(array)
 		}
 	}
 }
