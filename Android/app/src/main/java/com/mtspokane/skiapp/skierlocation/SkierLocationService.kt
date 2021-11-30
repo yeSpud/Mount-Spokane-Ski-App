@@ -67,7 +67,7 @@ class SkierLocationService: Service(), LocationListener {
 
 			val trackingNotificationChannel = NotificationChannel(
 				TRACKING_SERVICE_CHANNEL_ID,
-				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
 
 			val progressNotificationChannel = NotificationChannel(
 				ACTIVITY_SUMMARY_CHANNEL_ID,
@@ -103,7 +103,7 @@ class SkierLocationService: Service(), LocationListener {
 			Notification() // TODO Notification pre Oreo
 		}
 
-		SkiingActivity.writeActivitiesToFile()
+		SkiingActivity.writeActivitiesToFile(this)
 		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 	}
 

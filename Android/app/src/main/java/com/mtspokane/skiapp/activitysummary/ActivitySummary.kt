@@ -1,6 +1,7 @@
 package com.mtspokane.skiapp.activitysummary
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -11,6 +12,10 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.setPadding
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class ActivitySummary: Activity() {
 
@@ -36,14 +41,9 @@ class ActivitySummary: Activity() {
 
 	private fun addAllActivities(activities: Array<SkiingActivity>) {
 		activities.forEach {
-			this.addActivity(it)
+			val view: LinearLayout = createActivityView(it)
+			this.container.addView(view)
 		}
-	}
-
-	private fun addActivity(activity: SkiingActivity) {
-
-		val view = createActivityView(activity)
-		this.container.addView(view)
 	}
 
 	private fun createActivityView(activity: SkiingActivity): LinearLayout {
@@ -76,7 +76,8 @@ class ActivitySummary: Activity() {
 		val weightLayoutParams = TableRow.LayoutParams(timeLayoutParams)
 		weightLayoutParams.weight = 10F
 		//val timeView = this.createTextView(weightLayoutParams, minWidth = 64, textSize = 12F, text = " - ${activity.location.time}")
-		val timeView = this.createTextView(weightLayoutParams, 12F, " - ${activity.location.time}") // TODO Convert this from unix epoch to actual time
+		val time = convertMillisecondsToTime(activity.time)
+		val timeView = this.createTextView(weightLayoutParams, 12F, time) // TODO Convert this from unix epoch to actual time
 		linearLayout.addView(timeView)
 
 
@@ -100,11 +101,29 @@ class ActivitySummary: Activity() {
 	}
 
 	private fun createTextView(layoutParams: ViewGroup.LayoutParams, textSize: Float, text: CharSequence): TextView {
-
 		val textView = TextView(this)
 		textView.layoutParams = layoutParams
 		textView.textSize = textSize
 		textView.text = text
 		return textView
+	}
+
+	companion object {
+
+		private fun convertMillisecondsToTime(milliseconds: Long): String { // TODO Optimize
+			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm:ss")
+				val instant: Instant = Instant.ofEpochMilli(milliseconds)
+				val date: LocalDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+				val timeString: String = formatter.format(date)
+				/*
+				if (timeString[0] == '0') {
+					timeString.replaceFirst("0", "")
+				} */
+				timeString
+			} else {
+				"$milliseconds" // TODO Convert for apis less than Oreo
+			}
+		}
 	}
 }
