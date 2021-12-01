@@ -57,9 +57,11 @@ class ActivitySummary: Activity() {
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
 		when (item.itemId) {
-			R.id.open -> // TODO
-			R.id.export -> // TODO
-			R.id.share -> // TODO
+			R.id.open -> {
+				// TODO
+			}
+			// R.id.export -> // TODO
+			// R.id.share -> // TODO
 		}
 
 		return super.onOptionsItemSelected(item)
@@ -93,7 +95,6 @@ class ActivitySummary: Activity() {
 
 		val nameLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
 			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 5)
-		//val nameView = this.createTextView(nameLayoutParams, maxWidth = 249, textSize = 20F, text = activity.name)
 		val nameView = this.createTextView(nameLayoutParams, 20F, activity.name)
 		linearLayout.addView(nameView)
 
@@ -102,7 +103,6 @@ class ActivitySummary: Activity() {
 			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 5)
 		val weightLayoutParams = TableRow.LayoutParams(timeLayoutParams)
 		weightLayoutParams.weight = 10F
-		//val timeView = this.createTextView(weightLayoutParams, minWidth = 64, textSize = 12F, text = " - ${activity.location.time}")
 		val time = convertMillisecondsToTime(activity.time)
 		val timeView = this.createTextView(weightLayoutParams, 12F, time)
 		linearLayout.addView(timeView)

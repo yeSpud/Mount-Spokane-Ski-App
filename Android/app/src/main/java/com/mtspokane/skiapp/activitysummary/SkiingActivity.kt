@@ -113,10 +113,8 @@ class SkiingActivity {
 				jsonArray.put(jsonEntry)
 			}
 
-			val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-			val date: String = dateFormat.format(Date())
-
 			val jsonObject = JSONObject()
+			val date: String = getDate("yyyy-MM-dd")
 			jsonObject.put(date, jsonArray)
 
 			val filename = "$date.json"
@@ -182,13 +180,17 @@ class SkiingActivity {
 
 		fun populateActivitiesArray(context: Context) {
 
-			val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-			val date: String = dateFormat.format(Date())
+			val date: String = getDate("yyyy-MM-dd")
 			val filename = "$date.json"
 
 			val array: Array<SkiingActivity> = readFromFile(context, filename)
 
 			Activities.addAll(array)
+		}
+
+		private fun getDate(format: String): String {
+			val dateFormat = SimpleDateFormat(format, Locale.US)
+			return dateFormat.format(Date())
 		}
 	}
 }

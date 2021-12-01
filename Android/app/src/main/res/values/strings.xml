@@ -36,4 +36,12 @@
     <string name="icon_description">Location icon</string>
     <string name="arrow"><![CDATA[>]]></string>
 
+    <!-- Summary menu -->
+    <string name="open_summary">Open other summary</string>
+    <string name="export">Export to local storage</string>
+    <string name="share">Share</string>
+
+    <!-- File selection -->
+    <string name="select_file">Select file</string>
+
 </resources>
