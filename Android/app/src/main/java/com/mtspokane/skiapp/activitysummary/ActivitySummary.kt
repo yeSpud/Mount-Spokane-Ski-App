@@ -1,6 +1,6 @@
 package com.mtspokane.skiapp.activitysummary
 
-import android.app.Activity
+import android.app.AlertDialog
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
@@ -12,6 +12,7 @@ import android.widget.TableRow
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.setPadding
+import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import java.time.Instant
@@ -19,9 +20,13 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-class ActivitySummary: Activity() {
+class ActivitySummary: FragmentActivity() {
 
 	private lateinit var container: LinearLayout
+
+	private val fileSelectionDialog: FileSelectionDialog = FileSelectionDialog()
+
+	private lateinit var creditDialog: AlertDialog
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -30,6 +35,11 @@ class ActivitySummary: Activity() {
 		this.setContentView(binding.root)
 
 		this.container = binding.container
+
+		val creditDialogBuilder = AlertDialog.Builder(this)
+		creditDialogBuilder.setView(R.layout.icon_credits)
+		creditDialogBuilder.setPositiveButton(R.string.close_button) { dialog, _ -> dialog.dismiss() }
+		this.creditDialog = creditDialogBuilder.create()
 
 		// Be sure to show the action bar.
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
@@ -57,20 +67,16 @@ class ActivitySummary: Activity() {
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
 		when (item.itemId) {
-			R.id.open -> {
-				// TODO
-			}
+			R.id.open -> this.fileSelectionDialog.show(this.supportFragmentManager, "onOptionsItemSelected")
 			// R.id.export -> // TODO
 			// R.id.share -> // TODO
-			R.id.credits -> {
-				// TODO
-			}
+			R.id.credits -> this.creditDialog.show()
 		}
 
 		return super.onOptionsItemSelected(item)
 	}
 
-	private fun loadActivities(activities: Array<SkiingActivity>) {
+	fun loadActivities(activities: Array<SkiingActivity>) {
 		this.container.removeAllViews()
 		activities.forEach {
 			val view: LinearLayout = createActivityView(it)

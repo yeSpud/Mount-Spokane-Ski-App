@@ -178,7 +178,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 							val icon: Int = when (name) {
 								//"Lodge 1" ->  // TODO Lodge icon
 								//"Lodge 2" -> // TODO Lodge icon
-								//"Yurt" -> // TODO Yurt icon
+								"Yurt" -> R.drawable.ic_yurt
 								//"Vista House" -> // TODO Vista house icon
 								"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
 								else -> Log.w(tag, "$name does not have an icon")
