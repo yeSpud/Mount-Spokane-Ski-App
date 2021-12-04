@@ -1,10 +1,7 @@
-package com.mtspokane.skiapp
+package com.mtspokane.skiapp.mapactivity
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
-import android.os.Process
 import android.util.Log
 import androidx.annotation.*
 import androidx.core.content.res.ResourcesCompat
@@ -19,6 +16,8 @@ import com.google.maps.android.data.kml.KmlPolygon
 import com.google.maps.android.ktx.addPolygon
 import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
+import com.mtspokane.skiapp.BuildConfig
+import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
@@ -84,28 +83,31 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading chairlift polylines")
 					MtSpokaneMapItems.chairlifts = loadPolylines(this@MapHandler.map!!, R.raw.lifts,
-						this@MapHandler.activity!!, R.color.chairlift, 4f) // TODO Chairlift icon
+						this@MapHandler.activity!!, R.color.chairlift, 4f, R.drawable.ic_chairlift)
 					Log.v(tag, "Finished loading chairlift polylines")},
 
 				// Load in the easy runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading easy polylines")
 					MtSpokaneMapItems.easyRuns = loadPolylines(this@MapHandler.map!!, R.raw.easy,
-						this@MapHandler.activity!!, R.color.easy, 3f, R.drawable.ic_easy)
+						this@MapHandler.activity!!, R.color.easy, 3f, R.drawable.ic_easy
+					)
 					Log.v(tag, "Finished loading easy run polylines")},
 
 				// Load in the moderate runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading moderate polylines")
 					MtSpokaneMapItems.moderateRuns = loadPolylines(this@MapHandler.map!!, R.raw.moderate,
-						this@MapHandler.activity!!, R.color.moderate, 2f, R.drawable.ic_moderate)
+						this@MapHandler.activity!!, R.color.moderate, 2f, R.drawable.ic_moderate
+					)
 					Log.v(tag, "Finished loading moderate run polylines")},
 
 				// Load in the difficult runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading difficult polylines")
 					MtSpokaneMapItems.difficultRuns = loadPolylines(this@MapHandler.map!!, R.raw.difficult,
-						this@MapHandler.activity!!, R.color.difficult, 1f, R.drawable.ic_difficult)
+						this@MapHandler.activity!!, R.color.difficult, 1f, R.drawable.ic_difficult
+					)
 					Log.v(tag, "Finished loading difficult polylines")}
 			)
 
@@ -118,8 +120,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 			// If this permission isn't granted then that's fine too.
 			withContext(Dispatchers.Main) {
 				Log.v("onMapReady", "Checking location permissions...")
-				if (this@MapHandler.activity!!.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION,
-						Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
+				if (this@MapHandler.activity!!.locationEnabled) {
 					this@MapHandler.setupLocation()
 				} else {
 
@@ -173,6 +174,16 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 								0.5F, R.color.other_polygon_fill, Color.MAGENTA, 8F)
 
 							val item = UIMapItem(name, polygon)
+
+							val icon: Int = when (name) {
+								//"Lodge 1" ->  // TODO Lodge icon
+								//"Lodge 2" -> // TODO Lodge icon
+								"Yurt" -> R.drawable.ic_yurt
+								//"Vista House" -> // TODO Vista house icon
+								"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
+								else -> Log.w(tag, "$name does not have an icon")
+							}
+							item.setIcon(icon)
 
 							MtSpokaneMapItems.other[otherIndex] = item
 							otherIndex++

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".activitysummary.ActivitySummary">
+
+    <item
+        android:id="@+id/open"
+        android:checkable="false"
+        android:enabled="true"
+        android:orderInCategory="0"
+        android:title="@string/open_summary"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/export"
+        android:checkable="false"
+        android:enabled="false"
+        android:orderInCategory="1"
+        android:title="@string/export"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/share"
+        android:checkable="false"
+        android:enabled="false"
+        android:orderInCategory="2"
+        android:title="@string/share"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/credits"
+        android:checkable="false"
+        android:enabled="true"
+        android:orderInCategory="3"
+        android:title="@string/credits"
+        android:visible="true" />
+
+</menu>

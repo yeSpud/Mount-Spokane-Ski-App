@@ -1,19 +1,24 @@
-package com.mtspokane.skiapp
+package com.mtspokane.skiapp.mapactivity
 
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.fragment.app.FragmentActivity
 import android.os.Bundle
+import android.os.Process
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
+import com.mtspokane.skiapp.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.skierlocation.InAppSkierLocation
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import kotlinx.coroutines.CoroutineStart
@@ -30,12 +35,21 @@ class MapsActivity : FragmentActivity() {
 
 	private var nightRunsOnly = false
 
+	var locationEnabled = false
+	private set
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
 		// Setup data binding.
-		val binding = ActivityMapsBinding.inflate(layoutInflater)
-		setContentView(binding.root)
+		val binding = ActivityMapsBinding.inflate(this.layoutInflater)
+		this.setContentView(binding.root)
+
+		this.locationEnabled = this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
+			Process.myUid()) == PackageManager.PERMISSION_GRANTED
+
+		// Be sure to show the action bar.
+		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
 		this.mapHandler = MapHandler(this)
 		this.inAppLocationHandler = InAppSkierLocation(this.mapHandler!!, this)
@@ -63,7 +77,7 @@ class MapsActivity : FragmentActivity() {
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
-		this.menuInflater.inflate(R.menu.menu, menu)
+		this.menuInflater.inflate(R.menu.maps_menu, menu)
 		return super.onCreateOptionsMenu(menu)
 	}
 
@@ -86,6 +100,10 @@ class MapsActivity : FragmentActivity() {
 					MtSpokaneMapItems.moderateRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
 					MtSpokaneMapItems.difficultRuns.forEach{ it.togglePolyLineVisibility(it.defaultVisibility, checked) }
 					this.nightRunsOnly = checked
+				}
+				R.id.activity_summary -> {
+					val intent = Intent(this, ActivitySummary::class.java)
+					this.startActivity(intent)
 				}
 			}
 		}

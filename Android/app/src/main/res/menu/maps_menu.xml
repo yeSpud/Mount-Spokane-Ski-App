@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".mapactivity.MapsActivity">
 
     <item
         android:id="@+id/chairlift"
@@ -40,4 +42,12 @@
         android:enabled="true"
         android:orderInCategory="4"
         android:title="@string/night_runs" />
+
+    <item
+        android:id="@+id/activity_summary"
+        android:checkable="false"
+        android:enabled="true"
+        android:orderInCategory="5"
+        android:title="@string/activity_summary"
+        android:visible="true" />
 </menu>

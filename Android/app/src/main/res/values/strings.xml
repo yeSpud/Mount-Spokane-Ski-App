@@ -27,4 +27,30 @@
     <string name="show_intermediate">Show Intermediate Runs</string>
     <string name="show_advanced">Show Advanced Runs</string>
     <string name="night_runs">Only Show Night Runs</string>
+    <string name="activity_summary">View activity summary</string>
+
+    <!-- Activity summary -->
+    <string name="activity_summary_title">Activity Summary</string>
+
+    <!-- Skiing activity layout -->
+    <string name="icon_description">Location icon</string>
+    <string name="arrow"><![CDATA[>]]></string>
+
+    <!-- Summary menu -->
+    <string name="open_summary">Open other summary</string>
+    <string name="export">Export to local storage</string>
+    <string name="share">Share</string>
+    <string name="credits">Icon credits</string>
+
+    <!-- Icon credits -->
+    <string name="chairlift_icon_description">Chairlift icon</string>
+    <string name="chairlift_icon_credits">Ski Lift by MiNo from NounProject.com</string>
+    <string name="yurt_icon_description">Yurt icon</string>
+    <string name="yurt_credits">Yurt by Grégory Montigny from NounProject.com</string>
+    <string name="close_button">Close</string>
+
+    <!-- File selection -->
+    <string name="select_file">Select a file</string>
+    <string name="cancel">Cancel</string>
+
 </resources>

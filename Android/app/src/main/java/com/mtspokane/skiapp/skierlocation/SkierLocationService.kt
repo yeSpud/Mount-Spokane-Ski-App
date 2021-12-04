@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp
+package com.mtspokane.skiapp.skierlocation
 
 import android.annotation.SuppressLint
 import android.app.*
@@ -19,7 +19,15 @@ import androidx.annotation.DrawableRes
 import android.graphics.drawable.BitmapDrawable
 
 import android.graphics.drawable.Drawable
+import androidx.annotation.RequiresApi
+import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
+import com.mtspokane.skiapp.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.Locations
+import com.mtspokane.skiapp.mapactivity.MapsActivity
+import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activitysummary.SkiingActivity
+import kotlin.reflect.KClass
 
 
 class SkierLocationService: Service(), LocationListener {
@@ -28,7 +36,7 @@ class SkierLocationService: Service(), LocationListener {
 		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
 
-		val notification: Notification = createNotification("", null)
+		val notification: Notification = createPersistentNotification("", null)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			this.startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
@@ -45,6 +53,8 @@ class SkierLocationService: Service(), LocationListener {
 		Log.v("SkierLocationService", "onCreate called!")
 		super.onCreate()
 
+		SkiingActivity.populateActivitiesArray(this)
+
 		this.createNotificationChannels()
 
 		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -57,10 +67,12 @@ class SkierLocationService: Service(), LocationListener {
 	private fun createNotificationChannels() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-			val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
-				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+			val trackingNotificationChannel = NotificationChannel(
+				TRACKING_SERVICE_CHANNEL_ID,
+				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
 
-			val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
+			val progressNotificationChannel = NotificationChannel(
+				ACTIVITY_SUMMARY_CHANNEL_ID,
 				this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
 			val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -82,12 +94,14 @@ class SkierLocationService: Service(), LocationListener {
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 		notificationManager.cancel(TRACKING_SERVICE_ID)
 
+		val file: String = SkiingActivity.writeActivitiesToFile(this)
+
+		val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, file)
+
 		val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = Notification.Builder(this, NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
-				this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT).id)
-			builder.setSmallIcon(R.drawable.icon_fg)
-			builder.setShowWhen(true)
-			builder.setContentTitle(this.getText(R.string.activity_notification_text))
+			val builder = this.getNotificationBuilder(
+				ACTIVITY_SUMMARY_CHANNEL_ID, true,
+				R.string.activity_notification_text, pendingIntent)
 			builder.build()
 		} else {
 			Notification() // TODO Notification pre Oreo
@@ -110,18 +124,21 @@ class SkierLocationService: Service(), LocationListener {
 		val other = Locations.checkIfOnOther(location)
 		if (other != null) {
 			this.updateNotification(this.getString(R.string.current_other, other.name), other.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(other.name, location, other.getIcon()))
 			return
 		}
 
 		val chairlift = Locations.checkIfOnChairlift(location)
 		if (chairlift != null) {
 			this.updateNotification(this.getString(R.string.current_chairlift, chairlift.name), chairlift.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(chairlift.name, location, chairlift.getIcon()))
 			return
 		}
 
 		val run = Locations.checkIfOnRun(location)
 		if (run != null) {
 			this.updateNotification(this.getString(R.string.current_run, run.name), run.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(run.name, location, run.getIcon()))
 			return
 		}
 
@@ -136,14 +153,20 @@ class SkierLocationService: Service(), LocationListener {
 			null
 		}
 
-		val notification: Notification = createNotification(title, bitmap)
+		val notification: Notification = createPersistentNotification(title, bitmap)
 
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 		notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
-	private fun createPendingIntent(): PendingIntent {
-		val notificationIntent = Intent(this, MapsActivity::class.java)
+	@SuppressLint("UnspecifiedImmutableFlag")
+	private fun createPendingIntent(`class`: KClass<*>, filename: String? = null): PendingIntent {
+		val notificationIntent = Intent(this, `class`.java)
+
+		if (filename != null) {
+			notificationIntent.putExtra("file", filename)
+		}
+
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 		} else {
@@ -151,18 +174,14 @@ class SkierLocationService: Service(), LocationListener {
 		}
 	}
 
-	private fun createNotification(title: String, iconBitmap: Bitmap?): Notification {
+	private fun createPersistentNotification(title: String, iconBitmap: Bitmap?): Notification {
 
-		val pendingIntent: PendingIntent = this.createPendingIntent()
+		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class)
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = Notification.Builder(this, NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
-				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT).id)
-			builder.setSmallIcon(R.drawable.icon_fg)
-			builder.setShowWhen(false)
-			builder.setContentTitle(this.getString(R.string.tracking_notice))
+			val builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID, false,
+				R.string.tracking_notice, pendingIntent)
 			builder.setContentText(title)
-			builder.setContentIntent(pendingIntent)
 			if (iconBitmap != null) {
 				builder.setLargeIcon(iconBitmap)
 			}
@@ -170,6 +189,17 @@ class SkierLocationService: Service(), LocationListener {
 		} else {
 			Notification() // TODO Notification pre Oreo
 		}
+	}
+
+	@RequiresApi(Build.VERSION_CODES.O)
+	private fun getNotificationBuilder(channelId: String, showTime: Boolean, @StringRes titleText: Int,
+	                                   pendingIntent: PendingIntent): Notification.Builder {
+
+		return Notification.Builder(this, channelId)
+			.setSmallIcon(R.drawable.icon_fg)
+			.setShowWhen(showTime)
+			.setContentTitle(this.getString(titleText))
+			.setContentIntent(pendingIntent)
 	}
 
 	override fun onBind(intent: Intent?): IBinder? {
