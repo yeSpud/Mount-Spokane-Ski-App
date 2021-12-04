@@ -1,5 +1,6 @@
 package com.mtspokane.skiapp.activitysummary
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.os.Build
 import android.os.Bundle
@@ -12,7 +13,6 @@ import android.widget.TableRow
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.setPadding
-import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import java.time.Instant
@@ -20,11 +20,11 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-class ActivitySummary: FragmentActivity() {
+class ActivitySummary: Activity() {
 
 	private lateinit var container: LinearLayout
 
-	private val fileSelectionDialog: FileSelectionDialog = FileSelectionDialog()
+	private lateinit var fileSelectionDialog: FileSelectionDialog
 
 	private lateinit var creditDialog: AlertDialog
 
@@ -35,6 +35,8 @@ class ActivitySummary: FragmentActivity() {
 		this.setContentView(binding.root)
 
 		this.container = binding.container
+
+		this.fileSelectionDialog = FileSelectionDialog(this)
 
 		val creditDialogBuilder = AlertDialog.Builder(this)
 		creditDialogBuilder.setView(R.layout.icon_credits)
@@ -67,7 +69,7 @@ class ActivitySummary: FragmentActivity() {
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
 		when (item.itemId) {
-			R.id.open -> this.fileSelectionDialog.show(this.supportFragmentManager, "onOptionsItemSelected")
+			R.id.open -> this.fileSelectionDialog.showDialog()
 			// R.id.export -> // TODO
 			// R.id.share -> // TODO
 			R.id.credits -> this.creditDialog.show()

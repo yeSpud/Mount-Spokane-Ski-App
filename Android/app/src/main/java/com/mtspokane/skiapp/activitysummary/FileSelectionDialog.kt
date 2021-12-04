@@ -1,60 +1,48 @@
 package com.mtspokane.skiapp.activitysummary
 
 import android.app.AlertDialog
-import android.app.Dialog
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.fragment.app.DialogFragment
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import java.io.File
 
-class FileSelectionDialog : DialogFragment() {
+class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(activity) {
 
-	override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+	fun showDialog() {
 
-		val builder: AlertDialog.Builder = AlertDialog.Builder(this.activity)
+		val binding: FileSelectionBinding = FileSelectionBinding.inflate(this.layoutInflater)
 
-		val layoutInflater: LayoutInflater = LayoutInflater.from(this.activity)
+		val alertDialogBuilder = Builder(this.context)
+		alertDialogBuilder.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
+		alertDialogBuilder.setView(binding.root)
 
-		val view: View = layoutInflater.inflate(R.layout.file_selection, null)
+		val dialog: AlertDialog = alertDialogBuilder.create()
 
-		val filesListView: LinearLayout = view.findViewById(R.id.files)
+		val files: Array<File> = this.context.filesDir.listFiles()!!
+		files.forEach { file ->
 
-		val files: Array<File> = this.requireActivity().filesDir.listFiles()!!
-		files.forEach {
+			if (file.name.matches(fileRegex)) {
 
-			if (it.name.matches(fileRegex)) {
+				val textView = TextView(this.context)
+				textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+					ViewGroup.LayoutParams.WRAP_CONTENT)
+				textView.text = file.name
+				textView.textSize = 25.0F
+				textView.setOnClickListener {
 
-				val fileEntry: TextView = createFileView(it)
-				filesListView.addView(fileEntry)
+					val activities: Array<SkiingActivity> = SkiingActivity.readFromFile(this.context, file.name)
+
+					this.activity.loadActivities(activities)
+
+					dialog.dismiss()
+				}
+
+				binding.files.addView(textView)
 			}
 		}
 
-		builder.setView(view)
-		builder.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
-		return builder.create()
-	}
-
-	private fun createFileView(file: File): TextView {
-
-		val textView = TextView(this.activity)
-		textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-		textView.text = file.name
-		textView.textSize = 25.0F
-		textView.setOnClickListener {
-
-			val activities: Array<SkiingActivity> = SkiingActivity.readFromFile(this.requireActivity(), file.name)
-
-			(this.requireActivity() as ActivitySummary).loadActivities(activities)
-
-			this.dismiss()
-		}
-
-		return textView
+		dialog.show()
 	}
 
 	companion object {
