@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp.mapItem
 
 import android.location.Location
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
 import com.google.android.gms.maps.model.LatLng

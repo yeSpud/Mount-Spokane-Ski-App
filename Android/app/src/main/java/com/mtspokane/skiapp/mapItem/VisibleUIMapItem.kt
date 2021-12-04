@@ -9,8 +9,7 @@ class VisibleUIMapItem(name: String, private var polyline: Array<Polyline>, @Dra
 	var defaultVisibility = true
 		private set
 
-	var nightOnlyVisibility = false
-		private set
+	private var nightOnlyVisibility = false
 
 	fun addAdditionalPolyLine(polyline: Polyline) {
 

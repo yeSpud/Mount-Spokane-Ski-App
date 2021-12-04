@@ -70,8 +70,12 @@ class ActivitySummary: Activity() {
 
 		when (item.itemId) {
 			R.id.open -> this.fileSelectionDialog.showDialog()
-			// R.id.export -> // TODO
-			// R.id.share -> // TODO
+			R.id.export_json -> // TODO
+			R.id.export_geojson -> // TODO
+			R.id.export_kml -> // TODO
+			R.id.share_json -> // TODO
+			R.id.share_geojson -> // TODO
+			R.id.share_kml -> // TODO
 			R.id.credits -> this.creditDialog.show()
 		}
 

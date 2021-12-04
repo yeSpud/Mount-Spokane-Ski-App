@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.annotation.DrawableRes
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -191,6 +192,18 @@ class SkiingActivity {
 		private fun getDate(format: String): String {
 			val dateFormat = SimpleDateFormat(format, Locale.US)
 			return dateFormat.format(Date())
+		}
+
+		fun getJsonFile(): File {
+			// TODO
+		}
+
+		fun getGeoJsonFile(): File {
+			// TODO
+		}
+
+		fun getKmlFile(): File {
+			// TODO
 		}
 	}
 }

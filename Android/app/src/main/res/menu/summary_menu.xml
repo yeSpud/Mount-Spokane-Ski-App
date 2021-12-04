@@ -14,18 +14,78 @@
     <item
         android:id="@+id/export"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="1"
         android:title="@string/export"
-        android:visible="true" />
+        android:visible="true">
+
+        <menu>
+
+            <item
+                android:id="@+id/export_json"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="0"
+                android:title="Export as JSON"
+                android:visible="true" />
+
+            <item
+                android:id="@+id/export_geojson"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="1"
+                android:title="Export as GeoJSON"
+                android:visible="true" />
+
+            <item
+                android:id="@+id/export_kml"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="2"
+                android:title="Export as KML"
+                android:visible="true" />
+
+        </menu>
+
+    </item>
 
     <item
         android:id="@+id/share"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="2"
         android:title="@string/share"
-        android:visible="true" />
+        android:visible="true">
+
+        <menu>
+
+            <item
+                android:id="@+id/share_json"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="0"
+                android:title="Share as JSON"
+                android:visible="true" />
+
+            <item
+                android:id="@+id/share_geojson"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="1"
+                android:title="Share as GeoJSON"
+                android:visible="true" />
+
+            <item
+                android:id="@+id/share_kml"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="2"
+                android:title="Share as KML"
+                android:visible="true" />
+
+        </menu>
+
+    </item>
 
     <item
         android:id="@+id/credits"
