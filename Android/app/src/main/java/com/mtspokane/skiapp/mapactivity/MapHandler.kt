@@ -83,7 +83,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading chairlift polylines")
 					MtSpokaneMapItems.chairlifts = loadPolylines(this@MapHandler.map!!, R.raw.lifts,
-						this@MapHandler.activity!!, R.color.chairlift, 4f) // TODO Chairlift icon
+						this@MapHandler.activity!!, R.color.chairlift, 4f, R.drawable.ic_chairlift)
 					Log.v(tag, "Finished loading chairlift polylines")},
 
 				// Load in the easy runs kml file, and iterate though each placemark.
@@ -174,6 +174,16 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 								0.5F, R.color.other_polygon_fill, Color.MAGENTA, 8F)
 
 							val item = UIMapItem(name, polygon)
+
+							val icon: Int = when (name) {
+								//"Lodge 1" ->  // TODO Lodge icon
+								//"Lodge 2" -> // TODO Lodge icon
+								//"Yurt" -> // TODO Yurt icon
+								//"Vista House" -> // TODO Vista house icon
+								"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
+								else -> Log.w(tag, "$name does not have an icon")
+							}
+							item.setIcon(icon)
 
 							MtSpokaneMapItems.other[otherIndex] = item
 							otherIndex++

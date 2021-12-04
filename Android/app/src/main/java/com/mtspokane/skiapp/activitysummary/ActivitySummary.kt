@@ -62,6 +62,9 @@ class ActivitySummary: Activity() {
 			}
 			// R.id.export -> // TODO
 			// R.id.share -> // TODO
+			R.id.credits -> {
+				// TODO
+			}
 		}
 
 		return super.onOptionsItemSelected(item)

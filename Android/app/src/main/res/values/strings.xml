@@ -40,6 +40,7 @@
     <string name="open_summary">Open other summary</string>
     <string name="export">Export to local storage</string>
     <string name="share">Share</string>
+    <string name="credits">Icon credits</string>
 
     <!-- File selection -->
     <string name="select_file">Select file</string>
