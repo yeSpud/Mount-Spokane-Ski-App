@@ -26,7 +26,7 @@
                 android:checkable="false"
                 android:enabled="true"
                 android:orderInCategory="0"
-                android:title="Export as JSON"
+                android:title="@string/export_json"
                 android:visible="true" />
 
             <item
@@ -34,7 +34,7 @@
                 android:checkable="false"
                 android:enabled="true"
                 android:orderInCategory="1"
-                android:title="Export as GeoJSON"
+                android:title="@string/export_geojson"
                 android:visible="true" />
 
             <item
@@ -42,7 +42,7 @@
                 android:checkable="false"
                 android:enabled="true"
                 android:orderInCategory="2"
-                android:title="Export as KML"
+                android:title="@string/export_kml"
                 android:visible="true" />
 
         </menu>
@@ -64,7 +64,7 @@
                 android:checkable="false"
                 android:enabled="true"
                 android:orderInCategory="0"
-                android:title="Share as JSON"
+                android:title="@string/share_json"
                 android:visible="true" />
 
             <item
@@ -72,7 +72,7 @@
                 android:checkable="false"
                 android:enabled="true"
                 android:orderInCategory="1"
-                android:title="Share as GeoJSON"
+                android:title="@string/share_geojson"
                 android:visible="true" />
 
             <item
@@ -80,7 +80,7 @@
                 android:checkable="false"
                 android:enabled="true"
                 android:orderInCategory="2"
-                android:title="Share as KML"
+                android:title="@string/share_kml"
                 android:visible="true" />
 
         </menu>

@@ -1,6 +1,8 @@
 package com.mtspokane.skiapp.activitysummary
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.util.Log
@@ -8,6 +10,7 @@ import androidx.annotation.DrawableRes
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.io.FileNotFoundException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -92,6 +95,8 @@ class SkiingActivity {
 		private const val SPEED_ACCURACY = "speedacc"
 		private const val TIME = "time"
 
+		const val WRITE_CODE = 509
+
 		fun writeActivitiesToFile(context: Context): String {
 
 			val jsonArray = JSONArray()
@@ -115,7 +120,7 @@ class SkiingActivity {
 			}
 
 			val jsonObject = JSONObject()
-			val date: String = getDate("yyyy-MM-dd")
+			val date: String = getDate()
 			jsonObject.put(date, jsonArray)
 
 			val filename = "$date.json"
@@ -181,7 +186,7 @@ class SkiingActivity {
 
 		fun populateActivitiesArray(context: Context) {
 
-			val date: String = getDate("yyyy-MM-dd")
+			val date: String = getDate()
 			val filename = "$date.json"
 
 			val array: Array<SkiingActivity> = readFromFile(context, filename)
@@ -189,21 +194,47 @@ class SkiingActivity {
 			Activities.addAll(array)
 		}
 
-		private fun getDate(format: String): String {
-			val dateFormat = SimpleDateFormat(format, Locale.US)
+		fun getDate(): String {
+			val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 			return dateFormat.format(Date())
 		}
 
-		fun getJsonFile(): File {
+		fun exportJsonFile(activity: Activity, filename: String) {
+
+			createNewFileSAF(activity, filename, "application/json")
+		}
+
+		fun exportGeoJsonFile(activity: Activity, filename: String) {
+			// TODO convert json file to geojson and write it using SAF
+
+			createNewFileSAF(activity, "${getDate()}.geojson", "application/json")
+		}
+
+		fun exportKmlFile(activity: Activity, filename: String) {
+			// TODO convert json file to kml and write it using SAF
+
+			createNewFileSAF(activity, "${getDate()}.kml", "application/vnd.google-earth.kml+xml")
+		}
+
+		fun shareJsonFile(context: Context, filename: String) {
 			// TODO
 		}
 
-		fun getGeoJsonFile(): File {
+		fun shareGeoJsonFile(context: Context, filename: String) {
 			// TODO
 		}
 
-		fun getKmlFile(): File {
+		fun shareKmlFile(context: Context, filename: String) {
 			// TODO
+		}
+
+		private fun createNewFileSAF(activity: Activity, filename: String, mimeType: String) {
+
+			val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+			intent.type = mimeType
+			intent.putExtra(Intent.EXTRA_TITLE, filename)
+
+			activity.startActivityForResult(intent, WRITE_CODE, null)
 		}
 	}
 }

@@ -2,15 +2,13 @@ package com.mtspokane.skiapp.activitysummary
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TableRow
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.setPadding
 import com.mtspokane.skiapp.R
@@ -27,6 +25,8 @@ class ActivitySummary: Activity() {
 	private lateinit var fileSelectionDialog: FileSelectionDialog
 
 	private lateinit var creditDialog: AlertDialog
+
+	private var loadedFile: String = "${SkiingActivity.getDate()}.json"
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -53,6 +53,7 @@ class ActivitySummary: Activity() {
 			if (filename != null) {
 				val activities: Array<SkiingActivity> = SkiingActivity.readFromFile(this, filename)
 				this.loadActivities(activities)
+				this.loadedFile = filename
 				return
 			}
 		}
@@ -70,16 +71,30 @@ class ActivitySummary: Activity() {
 
 		when (item.itemId) {
 			R.id.open -> this.fileSelectionDialog.showDialog()
-			R.id.export_json -> // TODO
-			R.id.export_geojson -> // TODO
-			R.id.export_kml -> // TODO
-			R.id.share_json -> // TODO
-			R.id.share_geojson -> // TODO
-			R.id.share_kml -> // TODO
+			R.id.export_json -> SkiingActivity.exportJsonFile(this, this.loadedFile)
+			R.id.export_geojson -> SkiingActivity.exportGeoJsonFile(this, this.loadedFile)
+			R.id.export_kml -> SkiingActivity.exportKmlFile(this, this.loadedFile)
+			R.id.share_json -> SkiingActivity.shareJsonFile(this, this.loadedFile)
+			R.id.share_geojson -> SkiingActivity.shareGeoJsonFile(this, this.loadedFile)
+			R.id.share_kml -> SkiingActivity.shareKmlFile(this, this.loadedFile)
 			R.id.credits -> this.creditDialog.show()
 		}
 
 		return super.onOptionsItemSelected(item)
+	}
+
+	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+		super.onActivityResult(requestCode, resultCode, data)
+
+		if (requestCode == SkiingActivity.WRITE_CODE) {
+			val toast: Toast = if (resultCode == RESULT_OK) {
+				Toast.makeText(this, "Successfully exported file!", Toast.LENGTH_SHORT)
+			} else {
+				Toast.makeText(this, "Unable to export file!", Toast.LENGTH_LONG)
+			}
+			toast.show()
+		}
+
 	}
 
 	fun loadActivities(activities: Array<SkiingActivity>) {
