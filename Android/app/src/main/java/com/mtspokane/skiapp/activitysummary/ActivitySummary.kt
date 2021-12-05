@@ -3,6 +3,7 @@ package com.mtspokane.skiapp.activitysummary
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -93,13 +94,22 @@ class ActivitySummary: Activity() {
 		super.onActivityResult(requestCode, resultCode, data)
 
 		if (resultCode == RESULT_OK) {
+
+			if (data == null) {
+				return
+			}
+
+			val fileUri: Uri = data.data ?: return
+
 			when (requestCode) {
 				WRITE_JSON_CODE -> {
 					val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
-					SkiingActivity.writeToExportFile(this.contentResolver, data!!.data!!, json.toString(4))
+					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, json.toString(4))
 				}
 				WRITE_GEOJSON_CODE -> {
-					// TODO Write geojson to file
+					val fileJson: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
+					val geoJson: JSONObject = SkiingActivity.convertJsonToGeoJson(fileJson)
+					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, geoJson.toString(4))
 				}
 				WRITE_KML_CODE -> {
 					// TODO Write kml to file
@@ -107,10 +117,7 @@ class ActivitySummary: Activity() {
 				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}
 
-		} else {
-			Toast.makeText(this, "Unable to export file!", Toast.LENGTH_LONG).show()
 		}
-
 	}
 
 	fun loadActivities(activities: Array<SkiingActivity>) {

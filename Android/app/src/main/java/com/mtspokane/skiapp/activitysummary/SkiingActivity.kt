@@ -219,6 +219,62 @@ class SkiingActivity {
 			return dateFormat.format(Date())
 		}
 
+		fun createNewFileSAF(activity: Activity, filename: String, mimeType: String, fileCode: Int) {
+
+			val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+			intent.type = mimeType
+			intent.putExtra(Intent.EXTRA_TITLE, filename)
+
+			activity.startActivityForResult(intent, fileCode, null)
+		}
+
+		fun convertJsonToGeoJson(json: JSONObject): JSONObject {
+
+			val geoJson = JSONObject()
+
+			geoJson.put("type", "FeatureCollection")
+
+			val key: String = json.keys().next()
+			val jsonArray: JSONArray = json.getJSONArray(key)
+
+			val featureArray = JSONArray()
+
+			val count = jsonArray.length()
+			for (i in 0 until count) {
+
+				val featureEntry = JSONObject()
+				featureEntry.put("type", "Feature")
+
+				val jsonEntry: JSONObject = jsonArray.getJSONObject(i)
+
+				val geometryJson = JSONObject()
+				geometryJson.put("type", "Point")
+
+				val coordinateJson = JSONArray()
+				coordinateJson.put(0, jsonEntry.getDouble(LATITUDE))
+				coordinateJson.put(1, jsonEntry.getDouble(LONGITUDE))
+				coordinateJson.put(2, jsonEntry.getDouble(ALTITUDE))
+				geometryJson.put("coordinates", coordinateJson)
+				featureEntry.put("geometry", geometryJson)
+
+				val propertiesJson = JSONObject()
+				propertiesJson.put(NAME, jsonEntry.getString(NAME))
+				propertiesJson.put(ICON, jsonEntry.opt(ICON))
+				propertiesJson.put(ACCURACY, jsonEntry.opt(ACCURACY))
+				propertiesJson.put(ALTITUDE_ACCURACY, jsonEntry.opt(ALTITUDE_ACCURACY))
+				propertiesJson.put(SPEED, jsonEntry.opt(SPEED))
+				propertiesJson.put(SPEED_ACCURACY, jsonEntry.opt(SPEED_ACCURACY))
+				propertiesJson.put(TIME, jsonEntry.opt(TIME))
+				featureEntry.put("properties", propertiesJson)
+
+				featureArray.put(featureEntry)
+			}
+
+			geoJson.put("features", featureArray)
+
+			return geoJson
+		}
+
 		fun shareJsonFile(context: Context, filename: String) {
 			// TODO
 		}
@@ -229,15 +285,6 @@ class SkiingActivity {
 
 		fun shareKmlFile(context: Context, filename: String) {
 			// TODO
-		}
-
-		fun createNewFileSAF(activity: Activity, filename: String, mimeType: String, fileCode: Int) {
-
-			val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-			intent.type = mimeType
-			intent.putExtra(Intent.EXTRA_TITLE, filename)
-
-			activity.startActivityForResult(intent, fileCode, null)
 		}
 	}
 }
