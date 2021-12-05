@@ -31,9 +31,10 @@ class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(a
 				textView.textSize = 25.0F
 				textView.setOnClickListener {
 
-					val activities: Array<SkiingActivity> = SkiingActivity.readFromFile(this.context, file.name)
+					val activities: Array<SkiingActivity> = SkiingActivity.readSkiingActivitiesFromFile(this.context, file.name)
 
 					this.activity.loadActivities(activities)
+					this.activity.loadedFile = file.name
 
 					dialog.dismiss()
 				}

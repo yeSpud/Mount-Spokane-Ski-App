@@ -201,9 +201,9 @@ class SkierLocationService: Service(), LocationListener {
 
 	companion object {
 
-		const val TRACKING_SERVICE_ID = 29500
+		const val TRACKING_SERVICE_ID = 69
 
-		const val ACTIVITY_SUMMARY_ID = 592
+		const val ACTIVITY_SUMMARY_ID = 420
 
 		const val TRACKING_SERVICE_CHANNEL_ID = "skiAppTracker"
 

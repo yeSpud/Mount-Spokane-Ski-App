@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.setPadding
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
+import org.json.JSONObject
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -26,7 +28,7 @@ class ActivitySummary: Activity() {
 
 	private lateinit var creditDialog: AlertDialog
 
-	private var loadedFile: String = "${SkiingActivity.getDate()}.json"
+	var loadedFile: String = "${SkiingActivity.getDate()}.json"
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -51,7 +53,8 @@ class ActivitySummary: Activity() {
 			val filename: String? = this.intent.extras!!.getString("file")
 
 			if (filename != null) {
-				val activities: Array<SkiingActivity> = SkiingActivity.readFromFile(this, filename)
+				val activities: Array<SkiingActivity> = SkiingActivity
+					.readSkiingActivitiesFromFile(this, filename)
 				this.loadActivities(activities)
 				this.loadedFile = filename
 				return
@@ -71,9 +74,12 @@ class ActivitySummary: Activity() {
 
 		when (item.itemId) {
 			R.id.open -> this.fileSelectionDialog.showDialog()
-			R.id.export_json -> SkiingActivity.exportJsonFile(this, this.loadedFile)
-			R.id.export_geojson -> SkiingActivity.exportGeoJsonFile(this, this.loadedFile)
-			R.id.export_kml -> SkiingActivity.exportKmlFile(this, this.loadedFile)
+			R.id.export_json -> SkiingActivity.createNewFileSAF(this, this.loadedFile,
+				"application/json", WRITE_JSON_CODE)
+			R.id.export_geojson -> SkiingActivity.createNewFileSAF(this,
+				"${SkiingActivity.getDate()}.geojson", "application/json", WRITE_GEOJSON_CODE)
+			R.id.export_kml -> SkiingActivity.createNewFileSAF(this,
+				"${SkiingActivity.getDate()}.kml", "application/vnd.google-earth.kml+xml", WRITE_KML_CODE)
 			R.id.share_json -> SkiingActivity.shareJsonFile(this, this.loadedFile)
 			R.id.share_geojson -> SkiingActivity.shareGeoJsonFile(this, this.loadedFile)
 			R.id.share_kml -> SkiingActivity.shareKmlFile(this, this.loadedFile)
@@ -86,13 +92,23 @@ class ActivitySummary: Activity() {
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 		super.onActivityResult(requestCode, resultCode, data)
 
-		if (requestCode == SkiingActivity.WRITE_CODE) {
-			val toast: Toast = if (resultCode == RESULT_OK) {
-				Toast.makeText(this, "Successfully exported file!", Toast.LENGTH_SHORT)
-			} else {
-				Toast.makeText(this, "Unable to export file!", Toast.LENGTH_LONG)
+		if (resultCode == RESULT_OK) {
+			when (requestCode) {
+				WRITE_JSON_CODE -> {
+					val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
+					SkiingActivity.writeToExportFile(this.contentResolver, data!!.data!!, json.toString(4))
+				}
+				WRITE_GEOJSON_CODE -> {
+					// TODO Write geojson to file
+				}
+				WRITE_KML_CODE -> {
+					// TODO Write kml to file
+				}
+				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}
-			toast.show()
+
+		} else {
+			Toast.makeText(this, "Unable to export file!", Toast.LENGTH_LONG).show()
 		}
 
 	}
@@ -166,6 +182,12 @@ class ActivitySummary: Activity() {
 	}
 
 	companion object {
+
+		const val WRITE_JSON_CODE = 509
+
+		const val WRITE_GEOJSON_CODE = 666
+
+		const val WRITE_KML_CODE = 1250
 
 		private fun convertMillisecondsToTime(milliseconds: Long): String { // TODO Optimize
 			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
