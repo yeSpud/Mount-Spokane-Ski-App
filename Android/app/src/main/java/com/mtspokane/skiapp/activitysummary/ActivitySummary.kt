@@ -13,6 +13,7 @@ import android.view.MenuItem
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.isNotEmpty
 import androidx.core.view.setPadding
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
@@ -71,6 +72,17 @@ class ActivitySummary: Activity() {
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
 		this.menuInflater.inflate(R.menu.summary_menu, menu)
 		return super.onCreateOptionsMenu(menu)
+	}
+
+	override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+
+		val shareMenu: MenuItem = menu.findItem(R.id.share)
+		val exportMenu: MenuItem = menu.findItem(R.id.export)
+
+		shareMenu.isEnabled = this.container.isNotEmpty()
+		exportMenu.isEnabled = this.container.isNotEmpty()
+
+		return super.onPrepareOptionsMenu(menu)
 	}
 
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {
