@@ -77,10 +77,12 @@ class ActivitySummary: Activity() {
 			R.id.open -> this.fileSelectionDialog.showDialog()
 			R.id.export_json -> SkiingActivity.createNewFileSAF(this, this.loadedFile,
 				"application/json", WRITE_JSON_CODE)
-			R.id.export_geojson -> SkiingActivity.createNewFileSAF(this,
-				"${SkiingActivity.getDate()}.geojson", "application/json", WRITE_GEOJSON_CODE)
-			R.id.export_kml -> SkiingActivity.createNewFileSAF(this,
-				"${SkiingActivity.getDate()}.kml", "application/vnd.google-earth.kml+xml", WRITE_KML_CODE)
+			R.id.export_geojson -> SkiingActivity.createNewFileSAF(this, this.loadedFile
+				.replace("json", "geojson"), "application/geojson",
+				WRITE_GEOJSON_CODE)
+			R.id.export_kml -> SkiingActivity.createNewFileSAF(this, this.loadedFile
+				.replace("json", "kml"), "application/vnd.google-earth.kml+xml",
+				WRITE_KML_CODE)
 			R.id.share_json -> SkiingActivity.shareJsonFile(this, this.loadedFile)
 			R.id.share_geojson -> SkiingActivity.shareGeoJsonFile(this, this.loadedFile)
 			R.id.share_kml -> SkiingActivity.shareKmlFile(this, this.loadedFile)
