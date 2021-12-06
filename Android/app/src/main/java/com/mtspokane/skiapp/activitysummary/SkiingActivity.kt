@@ -251,8 +251,8 @@ class SkiingActivity {
 				geometryJson.put("type", "Point")
 
 				val coordinateJson = JSONArray()
-				coordinateJson.put(0, jsonEntry.getDouble(LATITUDE))
-				coordinateJson.put(1, jsonEntry.getDouble(LONGITUDE))
+				coordinateJson.put(0, jsonEntry.getDouble(LONGITUDE))
+				coordinateJson.put(1, jsonEntry.getDouble(LATITUDE))
 				coordinateJson.put(2, jsonEntry.getDouble(ALTITUDE))
 				geometryJson.put("coordinates", coordinateJson)
 				featureEntry.put("geometry", geometryJson)
