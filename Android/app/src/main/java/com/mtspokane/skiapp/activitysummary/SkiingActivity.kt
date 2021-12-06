@@ -10,8 +10,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.core.content.FileProvider
-import androidx.core.net.toUri
-import com.mtspokane.skiapp.BuildConfig
+import com.mtspokane.skiapp.R
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -279,18 +278,17 @@ class SkiingActivity {
 			return geoJson
 		}
 
-		fun shareFile(context: Context, filename: String, mimeType: String) {
+		fun shareFile(context: Context, file: File, mimeType: String) {
 
-			val file = File(context.filesDir, filename)
-			val provierString = "${context.packageName}.provider"
-			Log.v("shareFIle", "Provider string: $provierString")
-			val fileUri: Uri = FileProvider.getUriForFile(context, provierString, file)
+			val providerString = "${context.packageName}.provider"
+			Log.v("shareFIle", "Provider string: $providerString")
+			val fileUri: Uri = FileProvider.getUriForFile(context, providerString, file)
 
 			val sharingIntent = Intent(Intent.ACTION_SEND)
 			sharingIntent.type = mimeType
 			sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
 
-			val chooserIntent = Intent.createChooser(sharingIntent, "Share file using") // TODO Move to string
+			val chooserIntent = Intent.createChooser(sharingIntent, context.getText(R.string.share_description))
 			context.startActivity(chooserIntent)
 		}
 	}

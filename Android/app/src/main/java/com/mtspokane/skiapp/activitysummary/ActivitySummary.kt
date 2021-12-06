@@ -2,6 +2,7 @@ package com.mtspokane.skiapp.activitysummary
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -16,6 +17,7 @@ import androidx.core.view.setPadding
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import org.json.JSONObject
+import java.io.File
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -79,8 +81,25 @@ class ActivitySummary: Activity() {
 				JSON_MIME_TYPE, WRITE_JSON_CODE)
 			R.id.export_geojson -> SkiingActivity.createNewFileSAF(this, this.loadedFile
 				.replace("json", "geojson"), GEOJSON_MIME_TYPE, WRITE_GEOJSON_CODE)
-			R.id.share_json -> SkiingActivity.shareFile(this, this.loadedFile, JSON_MIME_TYPE)
-			R.id.share_geojson -> SkiingActivity.shareFile(this, this.loadedFile, JSON_MIME_TYPE)
+			R.id.share_json -> {
+				val file = File(this.filesDir, this.loadedFile)
+				SkiingActivity.shareFile(this, file, JSON_MIME_TYPE)
+			}
+			R.id.share_geojson -> {
+
+				val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
+				val geojson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
+
+				val tmpFileName = this.loadedFile.replace("json", "geojson")
+				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use { it
+					.write(geojson.toString(4).toByteArray()) }
+
+				val tmpFile = File(this.filesDir, tmpFileName)
+
+				SkiingActivity.shareFile(this, tmpFile, JSON_MIME_TYPE)
+
+				tmpFile.delete()
+			}
 			R.id.credits -> this.creditDialog.show()
 		}
 

@@ -44,6 +44,7 @@
     <string name="share">Share current activity</string>
     <string name="share_json">Share current activity as JSON</string>
     <string name="share_geojson">Share current activity as GeoJSON</string>
+    <string name="share_description">Share file using</string>
     <string name="credits">Icon credits</string>
 
     <!-- Icon credits -->
