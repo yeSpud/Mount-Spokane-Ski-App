@@ -41,11 +41,9 @@
     <string name="export">Export to local storage</string>
     <string name="export_json">Export current activity as JSON</string>
     <string name="export_geojson">Export current activity as GeoJSON</string>
-    <string name="export_kml">Export current activity as KML</string>
     <string name="share">Share current activity</string>
     <string name="share_json">Share current activity as JSON</string>
     <string name="share_geojson">Share current activity as GeoJSON</string>
-    <string name="share_kml">Share current activity as KML</string>
     <string name="credits">Icon credits</string>
 
     <!-- Icon credits -->

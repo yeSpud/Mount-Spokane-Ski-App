@@ -37,14 +37,6 @@
                 android:title="@string/export_geojson"
                 android:visible="true" />
 
-            <item
-                android:id="@+id/export_kml"
-                android:checkable="false"
-                android:enabled="true"
-                android:orderInCategory="2"
-                android:title="@string/export_kml"
-                android:visible="true" />
-
         </menu>
 
     </item>
@@ -52,7 +44,7 @@
     <item
         android:id="@+id/share"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="2"
         android:title="@string/share"
         android:visible="true">
@@ -73,14 +65,6 @@
                 android:enabled="true"
                 android:orderInCategory="1"
                 android:title="@string/share_geojson"
-                android:visible="true" />
-
-            <item
-                android:id="@+id/share_kml"
-                android:checkable="false"
-                android:enabled="true"
-                android:orderInCategory="2"
-                android:title="@string/share_kml"
                 android:visible="true" />
 
         </menu>

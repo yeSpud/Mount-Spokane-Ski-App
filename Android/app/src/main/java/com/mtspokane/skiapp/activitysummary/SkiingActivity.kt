@@ -9,8 +9,12 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.core.content.FileProvider
+import androidx.core.net.toUri
+import com.mtspokane.skiapp.BuildConfig
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.io.FileInputStream
 import java.io.OutputStream
 import java.text.SimpleDateFormat
@@ -275,16 +279,19 @@ class SkiingActivity {
 			return geoJson
 		}
 
-		fun shareJsonFile(context: Context, filename: String) {
-			// TODO
-		}
+		fun shareFile(context: Context, filename: String, mimeType: String) {
 
-		fun shareGeoJsonFile(context: Context, filename: String) {
-			// TODO
-		}
+			val file = File(context.filesDir, filename)
+			val provierString = "${context.packageName}.provider"
+			Log.v("shareFIle", "Provider string: $provierString")
+			val fileUri: Uri = FileProvider.getUriForFile(context, provierString, file)
 
-		fun shareKmlFile(context: Context, filename: String) {
-			// TODO
+			val sharingIntent = Intent(Intent.ACTION_SEND)
+			sharingIntent.type = mimeType
+			sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
+
+			val chooserIntent = Intent.createChooser(sharingIntent, "Share file using") // TODO Move to string
+			context.startActivity(chooserIntent)
 		}
 	}
 }

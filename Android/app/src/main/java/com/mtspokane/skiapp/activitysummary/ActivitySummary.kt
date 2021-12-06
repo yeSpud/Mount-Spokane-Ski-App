@@ -76,16 +76,11 @@ class ActivitySummary: Activity() {
 		when (item.itemId) {
 			R.id.open -> this.fileSelectionDialog.showDialog()
 			R.id.export_json -> SkiingActivity.createNewFileSAF(this, this.loadedFile,
-				"application/json", WRITE_JSON_CODE)
+				JSON_MIME_TYPE, WRITE_JSON_CODE)
 			R.id.export_geojson -> SkiingActivity.createNewFileSAF(this, this.loadedFile
-				.replace("json", "geojson"), "application/geojson",
-				WRITE_GEOJSON_CODE)
-			R.id.export_kml -> SkiingActivity.createNewFileSAF(this, this.loadedFile
-				.replace("json", "kml"), "application/vnd.google-earth.kml+xml",
-				WRITE_KML_CODE)
-			R.id.share_json -> SkiingActivity.shareJsonFile(this, this.loadedFile)
-			R.id.share_geojson -> SkiingActivity.shareGeoJsonFile(this, this.loadedFile)
-			R.id.share_kml -> SkiingActivity.shareKmlFile(this, this.loadedFile)
+				.replace("json", "geojson"), GEOJSON_MIME_TYPE, WRITE_GEOJSON_CODE)
+			R.id.share_json -> SkiingActivity.shareFile(this, this.loadedFile, JSON_MIME_TYPE)
+			R.id.share_geojson -> SkiingActivity.shareFile(this, this.loadedFile, JSON_MIME_TYPE)
 			R.id.credits -> this.creditDialog.show()
 		}
 
@@ -102,19 +97,14 @@ class ActivitySummary: Activity() {
 			}
 
 			val fileUri: Uri = data.data ?: return
+			val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
 
 			when (requestCode) {
-				WRITE_JSON_CODE -> {
-					val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
-					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, json.toString(4))
-				}
+				WRITE_JSON_CODE -> SkiingActivity.writeToExportFile(this.contentResolver, fileUri,
+					json.toString(4))
 				WRITE_GEOJSON_CODE -> {
-					val fileJson: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
-					val geoJson: JSONObject = SkiingActivity.convertJsonToGeoJson(fileJson)
+					val geoJson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
 					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, geoJson.toString(4))
-				}
-				WRITE_KML_CODE -> {
-					// TODO Write kml to file
 				}
 				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}
@@ -192,11 +182,13 @@ class ActivitySummary: Activity() {
 
 	companion object {
 
-		const val WRITE_JSON_CODE = 509
+		private const val JSON_MIME_TYPE = "application/json"
 
-		const val WRITE_GEOJSON_CODE = 666
+		private const val GEOJSON_MIME_TYPE = "application/geojson"
 
-		const val WRITE_KML_CODE = 1250
+		private const val WRITE_JSON_CODE = 509
+
+		private const val WRITE_GEOJSON_CODE = 666
 
 		private fun convertMillisecondsToTime(milliseconds: Long): String { // TODO Optimize
 			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
