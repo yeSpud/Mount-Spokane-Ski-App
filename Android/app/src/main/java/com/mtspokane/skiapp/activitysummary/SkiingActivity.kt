@@ -161,6 +161,10 @@ class SkiingActivity {
 
 			val arrayList = ArrayList<SkiingActivity>(0)
 
+			if (!context.fileList().contains(filename)) {
+				return arrayList.toTypedArray()
+			}
+
 			val json = readJsonFromFile(context, filename)
 
 			val jsonArray: JSONArray = json.getJSONArray(json.keys().next())

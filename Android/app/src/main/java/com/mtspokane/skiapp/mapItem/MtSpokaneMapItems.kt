@@ -4,7 +4,7 @@ object MtSpokaneMapItems {
 
 	var skiAreaBounds: UIMapItem? = null
 
-	val other: Array<UIMapItem?> = arrayOfNulls(6) // TODO Account for parking lots and tubing area...
+	val other: Array<UIMapItem?> = arrayOfNulls(9)
 
 	var isSetup = false
 

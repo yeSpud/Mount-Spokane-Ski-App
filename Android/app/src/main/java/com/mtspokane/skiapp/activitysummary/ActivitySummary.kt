@@ -5,13 +5,15 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TableRow
+import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isNotEmpty
 import androidx.core.view.setPadding
@@ -19,10 +21,8 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import org.json.JSONObject
 import java.io.File
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ActivitySummary: Activity() {
 
@@ -160,7 +160,7 @@ class ActivitySummary: Activity() {
 
 
 		val imageView = ImageView(this)
-		val imageLayoutParams = this.createLayoutParameters(45, 45, 5)
+		val imageLayoutParams = this.createLayoutParameters(45, 45)
 		imageView.layoutParams = imageLayoutParams
 		imageView.contentDescription = this.getText(R.string.icon_description)
 		if (activity.icon != null) {
@@ -170,36 +170,27 @@ class ActivitySummary: Activity() {
 
 
 		val nameLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
-			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 5)
+			ViewGroup.MarginLayoutParams.WRAP_CONTENT)
 		val nameView = this.createTextView(nameLayoutParams, 20F, activity.name)
 		linearLayout.addView(nameView)
 
 
 		val timeLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
-			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 5)
+			ViewGroup.MarginLayoutParams.WRAP_CONTENT)
 		val weightLayoutParams = TableRow.LayoutParams(timeLayoutParams)
 		weightLayoutParams.weight = 10F
-		val time = convertMillisecondsToTime(activity.time)
+		val timeFormatter = SimpleDateFormat("hh:mm:ss", Locale.US)
+		val date = Date(activity.time)
+		val time: String = timeFormatter.format(date)
 		val timeView = this.createTextView(weightLayoutParams, 12F, time)
 		linearLayout.addView(timeView)
-
-
-		/*
-		val arrowLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
-			ViewGroup.MarginLayoutParams.WRAP_CONTENT, 0)
-		//val arrowTextView = this.createTextView(arrowLayoutParams, textSize = 35F, text = this.getText(R.string.arrow))
-		val arrowTextView = TextView(this)
-		arrowTextView.layoutParams = arrowLayoutParams
-		arrowTextView.textSize = 30F
-		arrowTextView.text = this.getText(R.string.arrow)
-		linearLayout.addView(arrowTextView) */ // TODO Disable this for now until a launcher is needed.
 
 		return linearLayout
 	}
 
-	private fun createLayoutParameters(width: Int, height: Int, marginEnd: Int): ViewGroup.MarginLayoutParams {
+	private fun createLayoutParameters(width: Int, height: Int): ViewGroup.MarginLayoutParams {
 		val layoutParameter: ViewGroup.MarginLayoutParams = ViewGroup.MarginLayoutParams(width, height)
-		layoutParameter.marginEnd = marginEnd
+		layoutParameter.marginEnd = 5
 		return layoutParameter
 	}
 
@@ -220,21 +211,5 @@ class ActivitySummary: Activity() {
 		private const val WRITE_JSON_CODE = 509
 
 		private const val WRITE_GEOJSON_CODE = 666
-
-		private fun convertMillisecondsToTime(milliseconds: Long): String { // TODO Optimize
-			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm:ss")
-				val instant: Instant = Instant.ofEpochMilli(milliseconds)
-				val date: LocalDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
-				val timeString: String = formatter.format(date)
-				/*
-				if (timeString[0] == '0') {
-					timeString.replaceFirst("0", "")
-				} */
-				timeString
-			} else {
-				"$milliseconds" // TODO Convert for apis less than Oreo
-			}
-		}
 	}
 }
