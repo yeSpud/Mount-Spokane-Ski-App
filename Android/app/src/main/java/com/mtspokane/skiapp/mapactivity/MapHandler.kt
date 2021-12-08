@@ -170,8 +170,9 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 							// Load the other polygons as normal.
 
-							val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon.outerBoundaryCoordinates,
-								0.5F, R.color.other_polygon_fill, Color.MAGENTA, 8F)
+							val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon
+								.outerBoundaryCoordinates, 0.5F, R.color.other_polygon_fill,
+								Color.MAGENTA, 8F)
 
 							val item = UIMapItem(name, polygon)
 
@@ -181,8 +182,8 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 								"Yurt" -> R.drawable.ic_yurt
 								"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
 								"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
-								"Lodge 1 Parking Lot" -> R.drawable.ic_missing // TODO Parking lot icon
-								"Lodge 2 Parking Lot" -> R.drawable.ic_missing // TODO Parking lot icon
+								"Lodge 1 Parking Lot" -> R.drawable.ic_parking
+								"Lodge 2 Parking Lot" -> R.drawable.ic_parking
 								"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
 								else -> {
 									Log.w(tag, "$name does not have an icon")

@@ -52,6 +52,8 @@
     <string name="chairlift_icon_credits">Ski Lift by MiNo from NounProject.com</string>
     <string name="yurt_icon_description">Yurt icon</string>
     <string name="yurt_credits">Yurt by Grégory Montigny from NounProject.com</string>
+    <string name="parking_icon_description">Parking icon</string>
+    <string name="parking_icon_credits">Parking licensed under Apache License 2.0</string>
     <string name="close_button">Close</string>
 
     <!-- File selection -->
