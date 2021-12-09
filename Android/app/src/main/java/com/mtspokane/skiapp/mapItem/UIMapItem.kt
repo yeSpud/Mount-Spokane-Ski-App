@@ -12,6 +12,10 @@ open class UIMapItem(name: String, initialPolygon: Polygon? = null, @DrawableRes
 
 	private var polygons: Array<Polygon> = emptyArray()
 
+	open fun destroyUIItems() {
+		this.polygons = emptyArray()
+	}
+
 	@MainThread
 	fun addAdditionalPolygon(polygon: Polygon) {
 

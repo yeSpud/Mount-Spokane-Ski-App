@@ -62,6 +62,7 @@ class MapsActivity : FragmentActivity() {
 	}
 
 	override fun onDestroy() {
+		Log.v("MapsActivity", "onDestroy has been called!")
 		super.onDestroy()
 
 		// Reset the in app location handler.
@@ -71,6 +72,9 @@ class MapsActivity : FragmentActivity() {
 		// Reset the map handler.
 		this.mapHandler!!.destroy()
 		this.mapHandler = null
+		
+		// Remove UI items from MtSpokaneMapItems.
+		MtSpokaneMapItems.destroyUIItems()
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {

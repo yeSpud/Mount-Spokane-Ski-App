@@ -11,6 +11,11 @@ class VisibleUIMapItem(name: String, private var polyline: Array<Polyline>, @Dra
 
 	private var nightOnlyVisibility = false
 
+	override fun destroyUIItems() {
+		super.destroyUIItems()
+		this.polyline = emptyArray()
+	}
+
 	fun addAdditionalPolyLine(polyline: Polyline) {
 
 		val array: Array<Polyline> = Array(this.polyline.size + 1) {

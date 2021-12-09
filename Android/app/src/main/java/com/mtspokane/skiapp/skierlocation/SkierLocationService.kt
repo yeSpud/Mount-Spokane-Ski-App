@@ -86,7 +86,7 @@ class SkierLocationService : Service(), LocationListener {
 
 	@SuppressLint("MissingPermission")
 	override fun onDestroy() {
-		Log.v("SkierLocationService", "onDestroy called!")
+		Log.v("SkierLocationService", "onDestroy has been called!")
 		super.onDestroy()
 
 		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -105,6 +105,8 @@ class SkierLocationService : Service(), LocationListener {
 		val notification: Notification = builder.build()
 
 		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
+
+		MtSpokaneMapItems.reset()
 	}
 
 	override fun onLocationChanged(location: Location) {
