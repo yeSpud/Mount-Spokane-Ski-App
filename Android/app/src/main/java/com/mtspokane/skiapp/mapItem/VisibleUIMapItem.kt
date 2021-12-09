@@ -4,7 +4,7 @@ import androidx.annotation.DrawableRes
 import com.google.android.gms.maps.model.Polyline
 
 class VisibleUIMapItem(name: String, private var polyline: Array<Polyline>, @DrawableRes icon: Int? = null,
-                       private val isNightRun: Boolean = false): UIMapItem(name, icon = icon) {
+	private val isNightRun: Boolean = false) : UIMapItem(name, icon = icon) {
 
 	var defaultVisibility = true
 		private set

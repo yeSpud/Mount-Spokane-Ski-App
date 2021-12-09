@@ -59,7 +59,8 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 					val lng2 = Math.toRadians(latLng.second)
 
 					// Offset longitudes by -lng1.
-					if (intersects(previousLatitude, lat2, wrap(lng2 - previousLongitude), locationLatitude, dLng3)) {
+					val wrappedValue: Double = wrap(lng2 - previousLongitude)
+					if (intersects(previousLatitude, lat2, wrappedValue, locationLatitude, dLng3)) {
 						++nIntersect
 					}
 					previousLatitude = lat2
@@ -118,7 +119,8 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 		 * See the License for the specific language governing permissions and
 		 * limitations under the License.
 		 */
-		private fun intersects(lat1: Double, lat2: Double, lng2: Double, lat3: Double, lng3: Double): Boolean {
+		private fun intersects(lat1: Double, lat2: Double, lng2: Double, lat3: Double, lng3: Double):
+				Boolean {
 
 			// Both ends on the same side of lng3.
 			if ((lng3 >= 0 && lng3 >= lng2) || (lng3 < 0 && lng3 < lng2)) {

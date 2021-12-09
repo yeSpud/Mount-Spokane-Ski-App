@@ -1,36 +1,39 @@
 package com.mtspokane.skiapp.skierlocation
 
 import android.annotation.SuppressLint
-import android.app.*
+import android.app.ActivityManager
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import android.app.NotificationManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import androidx.annotation.DrawableRes
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
-import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.Locations
-import com.mtspokane.skiapp.mapactivity.MapsActivity
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.activitysummary.SkiingActivity
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.mapactivity.MapsActivity
 import kotlin.reflect.KClass
 
-
-class SkierLocationService: Service(), LocationListener {
+class SkierLocationService : Service(), LocationListener {
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 		Log.v("SkierLocationService", "onStartCommand called!")
@@ -66,7 +69,6 @@ class SkierLocationService: Service(), LocationListener {
 		}
 	}
 
-
 	@RequiresApi(Build.VERSION_CODES.O)
 	private fun createNotificationChannels() {
 
@@ -77,7 +79,8 @@ class SkierLocationService: Service(), LocationListener {
 			this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		notificationManager.createNotificationChannels(listOf(trackingNotificationChannel, progressNotificationChannel))
+		notificationManager.createNotificationChannels(listOf(trackingNotificationChannel,
+				progressNotificationChannel))
 		Log.v("createNotificatnChnnls", "Created new notification channel")
 	}
 
@@ -97,7 +100,7 @@ class SkierLocationService: Service(), LocationListener {
 		val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, file)
 
 		val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
-			true,	R.string.activity_notification_text, pendingIntent)
+			true, R.string.activity_notification_text, pendingIntent)
 
 		val notification: Notification = builder.build()
 
@@ -184,7 +187,7 @@ class SkierLocationService: Service(), LocationListener {
 	}
 
 	private fun getNotificationBuilder(channelId: String, showTime: Boolean, @StringRes titleText: Int,
-	                                   pendingIntent: PendingIntent): NotificationCompat.Builder {
+		pendingIntent: PendingIntent): NotificationCompat.Builder {
 
 		return NotificationCompat.Builder(this, channelId)
 			.setSmallIcon(R.drawable.icon_fg)

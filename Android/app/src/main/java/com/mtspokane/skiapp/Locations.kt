@@ -6,7 +6,9 @@ import android.util.Log
 import androidx.annotation.AnyThread
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 object Locations {
 
@@ -62,7 +64,11 @@ object Locations {
 
 	fun checkIfOnOther(location: Location): MapItem? {
 
-		MtSpokaneMapItems.other.forEach { if (it != null && it.locationInsidePoints(location)) { return it } }
+		MtSpokaneMapItems.other.forEach {
+			if (it != null && it.locationInsidePoints(location)) {
+				return it
+			}
+		}
 
 		return null
 	}
@@ -71,7 +77,7 @@ object Locations {
 	suspend fun checkIfOnChairliftAsync(location: Location): MapItem? = coroutineScope {
 
 		val numberOfChecks = 6
-		val minimumConfidenceValue: Double = 4.0/numberOfChecks
+		val minimumConfidenceValue: Double = 4.0 / numberOfChecks
 		var currentConfidence = 0
 
 		this@Locations.updateLocationVDirection(location)
@@ -107,7 +113,7 @@ object Locations {
 	fun checkIfOnChairlift(location: Location): MapItem? {
 
 		val numberOfChecks = 6
-		val minimumConfidenceValue: Double = 4.0/numberOfChecks
+		val minimumConfidenceValue: Double = 4.0 / numberOfChecks
 		var currentConfidence = 0
 
 		this@Locations.updateLocationVDirection(location)
@@ -177,13 +183,17 @@ object Locations {
 	@AnyThread
 	suspend fun checkIfOnRunAsync(location: Location): MapItem? = coroutineScope {
 
-		if (!MtSpokaneMapItems.isSetup) { return@coroutineScope null }
+		if (!MtSpokaneMapItems.isSetup) {
+			return@coroutineScope null
+		}
 
 		withContext(Dispatchers.Main) {
-			arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
-				MtSpokaneMapItems.difficultRuns).forEach { runs ->
+			arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns, MtSpokaneMapItems
+				.difficultRuns).forEach { runs ->
 				runs.forEach {
-					if (it.locationInsidePolygons(location)) { return@withContext it }
+					if (it.locationInsidePolygons(location)) {
+						return@withContext it
+					}
 				}
 			}
 		}
@@ -193,10 +203,12 @@ object Locations {
 
 	fun checkIfOnRun(location: Location): MapItem? {
 
-		arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
-			MtSpokaneMapItems.difficultRuns).forEach { runDifficulty ->
+		arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns, MtSpokaneMapItems
+			.difficultRuns).forEach { runDifficulty ->
 			runDifficulty.forEach {
-				if (it.locationInsidePoints(location)) { return it }
+				if (it.locationInsidePoints(location)) {
+					return it
+				}
 			}
 		}
 

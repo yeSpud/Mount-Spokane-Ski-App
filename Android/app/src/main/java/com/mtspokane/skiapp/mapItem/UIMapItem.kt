@@ -7,7 +7,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polygon
 import com.google.maps.android.ktx.utils.contains
 
-open class UIMapItem(name: String, initialPolygon: Polygon? = null, @DrawableRes icon: Int? = null) : MapItem(name, icon) {
+open class UIMapItem(name: String, initialPolygon: Polygon? = null, @DrawableRes icon: Int? = null) :
+	MapItem(name, icon) {
 
 	private var polygons: Array<Polygon> = emptyArray()
 

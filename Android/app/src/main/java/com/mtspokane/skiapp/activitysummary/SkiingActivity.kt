@@ -17,7 +17,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.OutputStream
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import kotlin.collections.ArrayList
 
 class SkiingActivity {
@@ -70,8 +71,8 @@ class SkiingActivity {
 	}
 
 	constructor(name: String, @DrawableRes icon: Int?, accuracy: Float, altitude: Double,
-	            altitudeAccuracy: Float?, latitude: Double, longitude: Double, speed: Float,
-	            speedAccuracy: Float?, time: Long) {
+		altitudeAccuracy: Float?, latitude: Double, longitude: Double, speed: Float,
+		        speedAccuracy: Float?, time: Long) {
 
 		this.name = name
 		this.icon = icon
@@ -85,7 +86,7 @@ class SkiingActivity {
 		this.time = time
 	}
 
-	companion object  {
+	companion object {
 
 		val Activities: ArrayList<SkiingActivity> = ArrayList(0)
 
@@ -137,12 +138,10 @@ class SkiingActivity {
 		fun writeToExportFile(contentResolver: ContentResolver, uri: Uri, outText: String) {
 
 			val outputStream: OutputStream = contentResolver.openOutputStream(uri)!!
-			outputStream.use {
-				it.write(outText.toByteArray())
-			}
+			outputStream.use { it.write(outText.toByteArray()) }
 		}
 
-		fun readJsonFromFile(context: Context, filename: String) : JSONObject {
+		fun readJsonFromFile(context: Context, filename: String): JSONObject {
 
 			var json = JSONObject()
 			val fileInputStream: FileInputStream = context.openFileInput(filename)

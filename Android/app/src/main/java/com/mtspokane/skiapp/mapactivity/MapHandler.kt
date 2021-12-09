@@ -1,15 +1,27 @@
 package com.mtspokane.skiapp.mapactivity
 
+import android.Manifest
+import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Build
 import android.util.Log
-import androidx.annotation.*
+import androidx.annotation.AnyThread
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
+import androidx.annotation.MainThread
+import androidx.annotation.RawRes
+import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Polygon
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.data.kml.KmlLineString
 import com.google.maps.android.data.kml.KmlPlacemark
 import com.google.maps.android.data.kml.KmlPolygon
@@ -21,9 +33,14 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
-class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
+class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 	var map: GoogleMap? = null
 
@@ -66,8 +83,8 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 			.zoom(14.414046F)
 			.build()
 		this.map!!.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-		this.map!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728, -117.133402),
-			LatLng(47.943674, -117.092470)))
+		this.map!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728,
+			-117.133402), LatLng(47.943674, -117.092470)))
 		this.map!!.setMaxZoomPreference(20F)
 		this.map!!.setMinZoomPreference(13F)
 
@@ -84,31 +101,32 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					Log.v(tag, "Started loading chairlift polylines")
 					MtSpokaneMapItems.chairlifts = loadPolylines(this@MapHandler.map!!, R.raw.lifts,
 						this@MapHandler.activity!!, R.color.chairlift, 4f, R.drawable.ic_chairlift)
-					Log.v(tag, "Finished loading chairlift polylines")},
+					Log.v(tag, "Finished loading chairlift polylines")
+				},
 
 				// Load in the easy runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading easy polylines")
 					MtSpokaneMapItems.easyRuns = loadPolylines(this@MapHandler.map!!, R.raw.easy,
-						this@MapHandler.activity!!, R.color.easy, 3f, R.drawable.ic_easy
-					)
-					Log.v(tag, "Finished loading easy run polylines")},
+						this@MapHandler.activity!!, R.color.easy, 3f, R.drawable.ic_easy)
+					Log.v(tag, "Finished loading easy run polylines")
+				},
 
 				// Load in the moderate runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading moderate polylines")
 					MtSpokaneMapItems.moderateRuns = loadPolylines(this@MapHandler.map!!, R.raw.moderate,
-						this@MapHandler.activity!!, R.color.moderate, 2f, R.drawable.ic_moderate
-					)
-					Log.v(tag, "Finished loading moderate run polylines")},
+						this@MapHandler.activity!!, R.color.moderate, 2f, R.drawable.ic_moderate)
+					Log.v(tag, "Finished loading moderate run polylines")
+				},
 
 				// Load in the difficult runs kml file, and iterate though each placemark.
 				async(Dispatchers.IO) {
 					Log.v(tag, "Started loading difficult polylines")
 					MtSpokaneMapItems.difficultRuns = loadPolylines(this@MapHandler.map!!, R.raw.difficult,
-						this@MapHandler.activity!!, R.color.difficult, 1f, R.drawable.ic_difficult
-					)
-					Log.v(tag, "Finished loading difficult polylines")}
+						this@MapHandler.activity!!, R.color.difficult, 1f, R.drawable.ic_difficult)
+					Log.v(tag, "Finished loading difficult polylines")
+				}
 			)
 
 			// Wait for all the polylines to load before checking permissions.
@@ -124,8 +142,19 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 					this@MapHandler.setupLocation()
 				} else {
 
+					// Setup the location popup dialog.
+					val alertDialogBuilder: AlertDialog.Builder =
+						AlertDialog.Builder(this@MapHandler.activity!!)
+					alertDialogBuilder.setTitle(R.string.alert_title)
+					alertDialogBuilder.setMessage(R.string.alert_message)
+					alertDialogBuilder.setPositiveButton(R.string.alert_ok) { _, _ ->
+						ActivityCompat.requestPermissions(this@MapHandler.activity!!,
+							arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), MapsActivity.permissionValue)
+					}
+
 					// Show the info popup about location.
-					this@MapHandler.activity!!.locationPopupDialog.show()
+					val locationDialog = alertDialogBuilder.create()
+					locationDialog.show()
 				}
 			}
 		}.start()
@@ -245,16 +274,17 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 	}
 
 	companion object {
-		
-		private fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: MapsActivity): Iterable<KmlPlacemark> {
+
+		private fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: MapsActivity):
+				Iterable<KmlPlacemark> {
 			val kml = kmlLayer(map, file, activity)
 			return kml.placemarks
 		}
 
 		@AnyThread
 		private suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
-		                                  @ColorRes color: Int, zIndex: Float, @DrawableRes icon:
-		                                          Int? = null): Array<VisibleUIMapItem> = coroutineScope {
+			@ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int? = null):
+				Array<VisibleUIMapItem> = coroutineScope {
 
 			val hashMap: HashMap<String, VisibleUIMapItem> = HashMap()
 
@@ -331,7 +361,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 		@AnyThread
 		private suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
-		                                 @ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>) = coroutineScope { // TODO Optimize this
+			@ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>) = coroutineScope { // TODO Optimize this
 
 			val hashMap: HashMap<String, ArrayList<Polygon>> = HashMap()
 
@@ -374,7 +404,7 @@ class MapHandler(private var activity: MapsActivity?): OnMapReadyCallback {
 
 		@MainThread
 		private suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
-		                            fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon = coroutineScope {
+			fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon = coroutineScope {
 			return@coroutineScope map.addPolygon {
 				addAll(points)
 				clickable(false)

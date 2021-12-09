@@ -19,12 +19,13 @@ import androidx.core.view.isNotEmpty
 import androidx.core.view.setPadding
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
-import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import org.json.JSONObject
 
-class ActivitySummary: Activity() {
+class ActivitySummary : Activity() {
 
 	private lateinit var container: LinearLayout
 
@@ -91,8 +92,9 @@ class ActivitySummary: Activity() {
 			R.id.open -> this.fileSelectionDialog.showDialog()
 			R.id.export_json -> SkiingActivity.createNewFileSAF(this, this.loadedFile,
 				JSON_MIME_TYPE, WRITE_JSON_CODE)
-			R.id.export_geojson -> SkiingActivity.createNewFileSAF(this, this.loadedFile
-				.replace("json", "geojson"), GEOJSON_MIME_TYPE, WRITE_GEOJSON_CODE)
+			R.id.export_geojson -> SkiingActivity.createNewFileSAF(
+				this, this.loadedFile.replace("json", "geojson"),
+				GEOJSON_MIME_TYPE, WRITE_GEOJSON_CODE)
 			R.id.share_json -> {
 				val file = File(this.filesDir, this.loadedFile)
 				SkiingActivity.shareFile(this, file, JSON_MIME_TYPE)
@@ -103,8 +105,9 @@ class ActivitySummary: Activity() {
 				val geojson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
 
 				val tmpFileName = this.loadedFile.replace("json", "geojson")
-				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use { it
-					.write(geojson.toString(4).toByteArray()) }
+				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use {
+					it.write(geojson.toString(4).toByteArray())
+				}
 
 				val tmpFile = File(this.filesDir, tmpFileName)
 
@@ -131,11 +134,14 @@ class ActivitySummary: Activity() {
 			val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
 
 			when (requestCode) {
-				WRITE_JSON_CODE -> SkiingActivity.writeToExportFile(this.contentResolver, fileUri,
-					json.toString(4))
+				WRITE_JSON_CODE -> SkiingActivity.writeToExportFile(
+					this.contentResolver, fileUri,
+					json.toString(4)
+				)
 				WRITE_GEOJSON_CODE -> {
 					val geoJson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
-					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, geoJson.toString(4))
+					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, geoJson
+						.toString(4))
 				}
 				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}
@@ -154,7 +160,8 @@ class ActivitySummary: Activity() {
 	private fun createActivityView(activity: SkiingActivity): LinearLayout {
 
 		val linearLayout = LinearLayout(this)
-		linearLayout.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+		linearLayout.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+			LinearLayout.LayoutParams.WRAP_CONTENT)
 		linearLayout.orientation = LinearLayout.HORIZONTAL
 		linearLayout.setPadding(10)
 
@@ -194,7 +201,8 @@ class ActivitySummary: Activity() {
 		return layoutParameter
 	}
 
-	private fun createTextView(layoutParams: ViewGroup.LayoutParams, textSize: Float, text: CharSequence): TextView {
+	private fun createTextView(layoutParams: ViewGroup.LayoutParams, textSize: Float,
+	                           text: CharSequence): TextView {
 		val textView = TextView(this)
 		textView.layoutParams = layoutParams
 		textView.textSize = textSize
