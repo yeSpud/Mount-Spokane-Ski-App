@@ -17,7 +17,7 @@
 
     <!-- Notification stuff -->
     <string name="tracking_notification_channel_name">Location Tracking</string>
-    <string name="tracking_notice">Tracking your location…</string>
+    <string name="tracking_notice">Tracking your location</string>
     <string name="activity_summary_notification_channel_name">Activity Summary</string>
     <string name="activity_notification_text">Tap here to view your activity summary</string>
 
@@ -39,7 +39,12 @@
     <!-- Summary menu -->
     <string name="open_summary">Open other summary</string>
     <string name="export">Export to local storage</string>
-    <string name="share">Share</string>
+    <string name="export_json">Export current activity as JSON</string>
+    <string name="export_geojson">Export current activity as GeoJSON</string>
+    <string name="share">Share current activity</string>
+    <string name="share_json">Share current activity as JSON</string>
+    <string name="share_geojson">Share current activity as GeoJSON</string>
+    <string name="share_description">Share file using</string>
     <string name="credits">Icon credits</string>
 
     <!-- Icon credits -->
@@ -47,6 +52,8 @@
     <string name="chairlift_icon_credits">Ski Lift by MiNo from NounProject.com</string>
     <string name="yurt_icon_description">Yurt icon</string>
     <string name="yurt_credits">Yurt by Grégory Montigny from NounProject.com</string>
+    <string name="parking_icon_description">Parking icon</string>
+    <string name="parking_icon_credits">Parking licensed under Apache License 2.0</string>
     <string name="close_button">Close</string>
 
     <!-- File selection -->

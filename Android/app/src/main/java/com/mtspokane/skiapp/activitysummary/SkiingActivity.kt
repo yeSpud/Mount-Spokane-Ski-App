@@ -1,14 +1,24 @@
 package com.mtspokane.skiapp.activitysummary
 
+import android.app.Activity
+import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.core.content.FileProvider
+import com.mtspokane.skiapp.R
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileInputStream
+import java.io.OutputStream
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import kotlin.collections.ArrayList
 
 class SkiingActivity {
@@ -61,8 +71,8 @@ class SkiingActivity {
 	}
 
 	constructor(name: String, @DrawableRes icon: Int?, accuracy: Float, altitude: Double,
-	            altitudeAccuracy: Float?, latitude: Double, longitude: Double, speed: Float,
-	            speedAccuracy: Float?, time: Long) {
+		altitudeAccuracy: Float?, latitude: Double, longitude: Double, speed: Float,
+		        speedAccuracy: Float?, time: Long) {
 
 		this.name = name
 		this.icon = icon
@@ -76,7 +86,7 @@ class SkiingActivity {
 		this.time = time
 	}
 
-	companion object  {
+	companion object {
 
 		val Activities: ArrayList<SkiingActivity> = ArrayList(0)
 
@@ -114,7 +124,7 @@ class SkiingActivity {
 			}
 
 			val jsonObject = JSONObject()
-			val date: String = getDate("yyyy-MM-dd")
+			val date: String = getDate()
 			jsonObject.put(date, jsonArray)
 
 			val filename = "$date.json"
@@ -125,42 +135,64 @@ class SkiingActivity {
 			return filename
 		}
 
-		fun readFromFile(context: Context, filename: String): Array<SkiingActivity> {
+		fun writeToExportFile(contentResolver: ContentResolver, uri: Uri, outText: String) {
+
+			val outputStream: OutputStream = contentResolver.openOutputStream(uri)!!
+			outputStream.use { it.write(outText.toByteArray()) }
+		}
+
+		fun readJsonFromFile(context: Context, filename: String): JSONObject {
+
+			var json = JSONObject()
+			val fileInputStream: FileInputStream = context.openFileInput(filename)
+			fileInputStream.bufferedReader().useLines {
+
+				val string = it.fold("") { _, inText -> inText }
+
+				json = JSONObject(string)
+			}
+			fileInputStream.close()
+
+			return json
+		}
+
+		fun readSkiingActivitiesFromFile(context: Context, filename: String): Array<SkiingActivity> {
 
 			val arrayList = ArrayList<SkiingActivity>(0)
 
-			context.openFileInput(filename).bufferedReader().useLines {
-				val string = it.fold("") { _, inText -> inText }
+			if (!context.fileList().contains(filename)) {
+				return arrayList.toTypedArray()
+			}
 
-				val json = JSONObject(string)
-				val jsonArray: JSONArray = json.getJSONArray(json.keys().next())
+			val json = readJsonFromFile(context, filename)
 
-				val count = jsonArray.length()
-				for (i in 0 until count) {
-					val jsonObject: JSONObject = jsonArray.getJSONObject(i)
+			val jsonArray: JSONArray = json.getJSONArray(json.keys().next())
 
-					val name: String = jsonObject.getString(NAME)
+			val count = jsonArray.length()
+			for (i in 0 until count) {
+				val jsonObject: JSONObject = jsonArray.getJSONObject(i)
 
-					val iconLocation: String? = jsonObject.opt(ICON) as String?
-					val icon: Int? = if (iconLocation != null) {
-						context.resources.getIdentifier(iconLocation, "drawable", context.packageName)
-					} else {
-						null
-					}
+				val name: String = jsonObject.getString(NAME)
 
-					val accuracy: Float = parseFloat(jsonObject, ACCURACY)!!
-					val altitude: Double = jsonObject.optDouble(ALTITUDE)
-					val altitudeAccuracy: Float? = parseFloat(jsonObject, ALTITUDE_ACCURACY)
-					val latitude: Double = jsonObject.optDouble(LATITUDE)
-					val longitude: Double = jsonObject.optDouble(LONGITUDE)
-					val speed: Float = parseFloat(jsonObject, SPEED)!!
-					val speedAccuracy: Float? = parseFloat(jsonObject, SPEED_ACCURACY)
-					val time: Long = jsonObject.optLong(TIME)
-
-					val activity = SkiingActivity(name, icon, accuracy, altitude, altitudeAccuracy,
-						latitude, longitude, speed, speedAccuracy, time)
-					arrayList.add(activity)
+				val iconLocation: String? = jsonObject.opt(ICON) as String?
+				val icon: Int? = if (iconLocation != null) {
+					context.resources.getIdentifier(iconLocation, "drawable", context.packageName)
+				} else {
+					null
 				}
+
+				val accuracy: Float = parseFloat(jsonObject, ACCURACY)!!
+				val altitude: Double = jsonObject.optDouble(ALTITUDE)
+				val altitudeAccuracy: Float? = parseFloat(jsonObject, ALTITUDE_ACCURACY)
+				val latitude: Double = jsonObject.optDouble(LATITUDE)
+				val longitude: Double = jsonObject.optDouble(LONGITUDE)
+				val speed: Float = parseFloat(jsonObject, SPEED)!!
+				val speedAccuracy: Float? = parseFloat(jsonObject, SPEED_ACCURACY)
+				val time: Long = jsonObject.optLong(TIME)
+
+				val activity = SkiingActivity(name, icon, accuracy, altitude, altitudeAccuracy,
+					latitude, longitude, speed, speedAccuracy, time)
+				arrayList.add(activity)
 			}
 
 			return arrayList.toTypedArray()
@@ -180,17 +212,87 @@ class SkiingActivity {
 
 		fun populateActivitiesArray(context: Context) {
 
-			val date: String = getDate("yyyy-MM-dd")
+			val date: String = getDate()
 			val filename = "$date.json"
 
-			val array: Array<SkiingActivity> = readFromFile(context, filename)
+			val array: Array<SkiingActivity> = readSkiingActivitiesFromFile(context, filename)
 
 			Activities.addAll(array)
 		}
 
-		private fun getDate(format: String): String {
-			val dateFormat = SimpleDateFormat(format, Locale.US)
+		fun getDate(): String {
+			val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 			return dateFormat.format(Date())
+		}
+
+		fun createNewFileSAF(activity: Activity, filename: String, mimeType: String, fileCode: Int) {
+
+			val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+			intent.type = mimeType
+			intent.putExtra(Intent.EXTRA_TITLE, filename)
+
+			activity.startActivityForResult(intent, fileCode, null)
+		}
+
+		fun convertJsonToGeoJson(json: JSONObject): JSONObject {
+
+			val geoJson = JSONObject()
+
+			geoJson.put("type", "FeatureCollection")
+
+			val key: String = json.keys().next()
+			val jsonArray: JSONArray = json.getJSONArray(key)
+
+			val featureArray = JSONArray()
+
+			val count = jsonArray.length()
+			for (i in 0 until count) {
+
+				val featureEntry = JSONObject()
+				featureEntry.put("type", "Feature")
+
+				val jsonEntry: JSONObject = jsonArray.getJSONObject(i)
+
+				val geometryJson = JSONObject()
+				geometryJson.put("type", "Point")
+
+				val coordinateJson = JSONArray()
+				coordinateJson.put(0, jsonEntry.getDouble(LONGITUDE))
+				coordinateJson.put(1, jsonEntry.getDouble(LATITUDE))
+				coordinateJson.put(2, jsonEntry.getDouble(ALTITUDE))
+				geometryJson.put("coordinates", coordinateJson)
+				featureEntry.put("geometry", geometryJson)
+
+				val propertiesJson = JSONObject()
+				propertiesJson.put(NAME, jsonEntry.getString(NAME))
+				propertiesJson.put(ICON, jsonEntry.opt(ICON))
+				propertiesJson.put(ACCURACY, jsonEntry.opt(ACCURACY))
+				propertiesJson.put(ALTITUDE_ACCURACY, jsonEntry.opt(ALTITUDE_ACCURACY))
+				propertiesJson.put(SPEED, jsonEntry.opt(SPEED))
+				propertiesJson.put(SPEED_ACCURACY, jsonEntry.opt(SPEED_ACCURACY))
+				propertiesJson.put(TIME, jsonEntry.opt(TIME))
+				featureEntry.put("properties", propertiesJson)
+
+				featureArray.put(featureEntry)
+			}
+
+			geoJson.put("features", featureArray)
+
+			return geoJson
+		}
+
+		fun shareFile(context: Context, file: File, mimeType: String) {
+
+			val providerString = "${context.packageName}.provider"
+			Log.v("shareFIle", "Provider string: $providerString")
+			val fileUri: Uri = FileProvider.getUriForFile(context, providerString, file)
+
+			val sharingIntent = Intent(Intent.ACTION_SEND)
+			sharingIntent.type = mimeType
+			sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
+
+			val chooserIntent = Intent.createChooser(sharingIntent, context.getText(R.string.share_description))
+			context.startActivity(chooserIntent)
 		}
 	}
 }

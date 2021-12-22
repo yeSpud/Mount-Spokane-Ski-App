@@ -7,11 +7,14 @@
         <entry key="app/src/main/res/drawable/ic_customchairlifticon.xml" value="0.20885416666666667" />
         <entry key="app/src/main/res/drawable/ic_difficult.xml" value="10.0" />
         <entry key="app/src/main/res/drawable/ic_easy.xml" value="0.3640625" />
+        <entry key="app/src/main/res/drawable/ic_missing.xml" value="0.3640625" />
         <entry key="app/src/main/res/drawable/ic_moderate.xml" value="0.3640625" />
+        <entry key="app/src/main/res/drawable/ic_parking_front.xml" value="0.5" />
         <entry key="app/src/main/res/drawable/ic_ski_patrol_icon.xml" value="0.30092592592592593" />
         <entry key="app/src/main/res/drawable/ic_yurt.xml" value="0.3640625" />
         <entry key="app/src/main/res/layout/activity_maps.xml" value="0.19270833333333334" />
         <entry key="app/src/main/res/layout/activity_summary.xml" value="0.165" />
+        <entry key="app/src/main/res/layout/file_format_picker.xml" value="0.3242753623188406" />
         <entry key="app/src/main/res/layout/file_selection.xml" value="0.317481884057971" />
         <entry key="app/src/main/res/layout/icon_credits.xml" value="0.25" />
         <entry key="app/src/main/res/layout/skiing_activity.xml" value="0.1" />
@@ -19,6 +22,7 @@
         <entry key="app/src/main/res/menu/maps_menu.xml" value="0.34791666666666665" />
         <entry key="app/src/main/res/menu/menu.xml" value="0.34791666666666665" />
         <entry key="app/src/main/res/menu/summary_menu.xml" value="0.34791666666666665" />
+        <entry key="app/src/main/res/xml/provider_paths.xml" value="0.32563405797101447" />
       </map>
     </option>
   </component>

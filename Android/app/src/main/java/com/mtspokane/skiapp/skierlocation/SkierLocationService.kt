@@ -1,36 +1,39 @@
 package com.mtspokane.skiapp.skierlocation
 
 import android.annotation.SuppressLint
-import android.app.*
+import android.app.ActivityManager
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import android.app.NotificationManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import androidx.annotation.DrawableRes
-import android.graphics.drawable.BitmapDrawable
-
-import android.graphics.drawable.Drawable
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
-import com.mtspokane.skiapp.activitysummary.ActivitySummary
+import androidx.core.app.NotificationCompat
 import com.mtspokane.skiapp.Locations
-import com.mtspokane.skiapp.mapactivity.MapsActivity
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.activitysummary.SkiingActivity
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.mapactivity.MapsActivity
 import kotlin.reflect.KClass
 
-
-class SkierLocationService: Service(), LocationListener {
+class SkierLocationService : Service(), LocationListener {
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 		Log.v("SkierLocationService", "onStartCommand called!")
@@ -55,7 +58,9 @@ class SkierLocationService: Service(), LocationListener {
 
 		SkiingActivity.populateActivitiesArray(this)
 
-		this.createNotificationChannels()
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			this.createNotificationChannels()
+		}
 
 		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -64,28 +69,24 @@ class SkierLocationService: Service(), LocationListener {
 		}
 	}
 
+	@RequiresApi(Build.VERSION_CODES.O)
 	private fun createNotificationChannels() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-			val trackingNotificationChannel = NotificationChannel(
-				TRACKING_SERVICE_CHANNEL_ID,
-				this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
+		val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
+			this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
 
-			val progressNotificationChannel = NotificationChannel(
-				ACTIVITY_SUMMARY_CHANNEL_ID,
-				this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+		val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
+			this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
-			val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-			notificationManager.createNotificationChannels(listOf(trackingNotificationChannel, progressNotificationChannel))
-			Log.v("createNotificatnChnnls", "Created new notification channel")
-		} else {
-			// TODO Pre Android Oreo
-		}
+		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+		notificationManager.createNotificationChannels(listOf(trackingNotificationChannel,
+				progressNotificationChannel))
+		Log.v("createNotificatnChnnls", "Created new notification channel")
 	}
 
 	@SuppressLint("MissingPermission")
 	override fun onDestroy() {
-		Log.v("SkierLocationService", "onDestroy called!")
+		Log.v("SkierLocationService", "onDestroy has been called!")
 		super.onDestroy()
 
 		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -98,16 +99,14 @@ class SkierLocationService: Service(), LocationListener {
 
 		val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, file)
 
-		val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = this.getNotificationBuilder(
-				ACTIVITY_SUMMARY_CHANNEL_ID, true,
-				R.string.activity_notification_text, pendingIntent)
-			builder.build()
-		} else {
-			Notification() // TODO Notification pre Oreo
-		}
+		val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
+			true, R.string.activity_notification_text, pendingIntent)
+
+		val notification: Notification = builder.build()
 
 		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
+
+		MtSpokaneMapItems.reset()
 	}
 
 	override fun onLocationChanged(location: Location) {
@@ -178,24 +177,21 @@ class SkierLocationService: Service(), LocationListener {
 
 		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class)
 
-		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID, false,
-				R.string.tracking_notice, pendingIntent)
-			builder.setContentText(title)
-			if (iconBitmap != null) {
-				builder.setLargeIcon(iconBitmap)
-			}
-			builder.build()
-		} else {
-			Notification() // TODO Notification pre Oreo
+		val builder: NotificationCompat.Builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
+			false, R.string.tracking_notice, pendingIntent)
+		builder.setContentText(title)
+
+		if (iconBitmap != null) {
+			builder.setLargeIcon(iconBitmap)
 		}
+
+		return builder.build()
 	}
 
-	@RequiresApi(Build.VERSION_CODES.O)
 	private fun getNotificationBuilder(channelId: String, showTime: Boolean, @StringRes titleText: Int,
-	                                   pendingIntent: PendingIntent): Notification.Builder {
+		pendingIntent: PendingIntent): NotificationCompat.Builder {
 
-		return Notification.Builder(this, channelId)
+		return NotificationCompat.Builder(this, channelId)
 			.setSmallIcon(R.drawable.icon_fg)
 			.setShowWhen(showTime)
 			.setContentTitle(this.getString(titleText))
@@ -210,14 +206,15 @@ class SkierLocationService: Service(), LocationListener {
 
 	companion object {
 
-		const val TRACKING_SERVICE_ID = 29500
+		const val TRACKING_SERVICE_ID = 69
 
-		const val ACTIVITY_SUMMARY_ID = 592
+		const val ACTIVITY_SUMMARY_ID = 420
 
 		const val TRACKING_SERVICE_CHANNEL_ID = "skiAppTracker"
 
 		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
 
+		@Deprecated("Sniffing for running services is discouraged.")
 		fun checkIfRunning(activity: MapsActivity): Boolean {
 
 			val activityManager: ActivityManager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager

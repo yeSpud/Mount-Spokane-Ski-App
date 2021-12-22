@@ -14,18 +14,62 @@
     <item
         android:id="@+id/export"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="1"
         android:title="@string/export"
-        android:visible="true" />
+        android:visible="true">
+
+        <menu>
+
+            <item
+                android:id="@+id/export_json"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="0"
+                android:title="@string/export_json"
+                android:visible="true" />
+
+            <item
+                android:id="@+id/export_geojson"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="1"
+                android:title="@string/export_geojson"
+                android:visible="true" />
+
+        </menu>
+
+    </item>
 
     <item
         android:id="@+id/share"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="2"
         android:title="@string/share"
-        android:visible="true" />
+        android:visible="true">
+
+        <menu>
+
+            <item
+                android:id="@+id/share_json"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="0"
+                android:title="@string/share_json"
+                android:visible="true" />
+
+            <item
+                android:id="@+id/share_geojson"
+                android:checkable="false"
+                android:enabled="true"
+                android:orderInCategory="1"
+                android:title="@string/share_geojson"
+                android:visible="true" />
+
+        </menu>
+
+    </item>
 
     <item
         android:id="@+id/credits"
