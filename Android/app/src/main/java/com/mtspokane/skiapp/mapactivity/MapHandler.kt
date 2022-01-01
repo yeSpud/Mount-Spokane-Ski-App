@@ -3,6 +3,7 @@ package com.mtspokane.skiapp.mapactivity
 import android.Manifest
 import android.app.AlertDialog
 import android.graphics.Color
+import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.annotation.AnyThread
@@ -19,12 +20,14 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polygon
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.data.kml.KmlLineString
 import com.google.maps.android.data.kml.KmlPlacemark
 import com.google.maps.android.data.kml.KmlPolygon
+import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolygon
 import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
@@ -44,7 +47,14 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 	var map: GoogleMap? = null
 
+	private var locationMarker: Marker? = null
+
 	fun destroy() {
+		Log.v("MapHandler", "destroy has been called!")
+		if (this.locationMarker != null) {
+			this.locationMarker!!.remove()
+			this.locationMarker = null
+		}
 		this.map = null
 		this.activity = null
 	}
@@ -271,6 +281,22 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 		Log.v(tag, "Setting up location service...")
 		this@MapHandler.activity!!.setupLocationService()
+	}
+
+	fun updateMarkerLocation(location: Location) {
+
+		// If the marker hasn't been added to the map create a new one.
+		if (this.locationMarker == null) {
+			this.locationMarker = this.map!!.addMarker {
+				position(LatLng(location.latitude, location.longitude))
+				title(this@MapHandler.activity!!.resources.getString(R.string.your_location))
+			}
+		} else {
+
+			// Otherwise just update the LatLng location.
+			this.locationMarker!!.position = LatLng(location.latitude, location.longitude)
+		}
+
 	}
 
 	companion object {

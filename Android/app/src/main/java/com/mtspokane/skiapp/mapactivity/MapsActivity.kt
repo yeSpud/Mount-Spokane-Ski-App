@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -19,7 +20,9 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.skierlocation.Locations
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
+import com.mtspokane.skiapp.skierlocation.VisibleLocationUpdate
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -28,6 +31,8 @@ class MapsActivity : FragmentActivity() {
 
 	// Handler for managing the map object.
 	private var mapHandler: MapHandler? = null
+
+	private var locationChangeCallback: VisibleLocationUpdate? = null
 
 	// Boolean used to determine if only night runs are to be shown.
 	private var nightRunsOnly = false
@@ -56,11 +61,26 @@ class MapsActivity : FragmentActivity() {
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
 		mapFragment!!.getMapAsync(this.mapHandler!!)
+
+		this.locationChangeCallback = object : VisibleLocationUpdate {
+			override fun updateLocation(location: Location, locationString: String) {
+
+				if (this@MapsActivity.mapHandler != null) {
+					this@MapsActivity.mapHandler!!.updateMarkerLocation(location)
+				}
+
+				this@MapsActivity.actionBar!!.title = locationString
+			}
+		}
 	}
 
 	override fun onDestroy() {
 		Log.v("MapsActivity", "onDestroy has been called!")
 		super.onDestroy()
+
+		// Remove callback from locations.
+		Locations.visibleLocationUpdates.remove(this.locationChangeCallback)
+		this.locationChangeCallback = null
 
 		// Reset the map handler.
 		this.mapHandler!!.destroy()
@@ -156,8 +176,13 @@ class MapsActivity : FragmentActivity() {
 				} else {
 					this.startService(serviceIntent)
 				}
+			}
 
-				// TODO Add listener for map
+			// Add listener for map for a location change.
+			if (this.locationChangeCallback != null) {
+				if (!Locations.visibleLocationUpdates.contains(this.locationChangeCallback!!)) {
+					Locations.visibleLocationUpdates.add(this.locationChangeCallback!!)
+				}
 			}
 		}
 	}
