@@ -58,5 +58,14 @@
             android:label="@string/activity_summary_title"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
+
+        <activity
+            android:name=".debugview.DebugActivity"
+            android:exported="true"
+            android:label="@string/debug_view_title"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+
     </application>
 </manifest>

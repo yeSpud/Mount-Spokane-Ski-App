@@ -1,7 +1,9 @@
 package com.mtspokane.skiapp.mapactivity
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.Color
 import android.location.Location
 import android.os.Build
@@ -33,6 +35,7 @@ import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.debugview.DebugActivity
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
@@ -45,7 +48,7 @@ import kotlinx.coroutines.withContext
 
 class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
-	var map: GoogleMap? = null
+	private var map: GoogleMap? = null
 
 	private var locationMarker: Marker? = null
 
@@ -97,6 +100,12 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			-117.133402), LatLng(47.943674, -117.092470)))
 		this.map!!.setMaxZoomPreference(20F)
 		this.map!!.setMinZoomPreference(13F)
+
+		this.map!!.setOnMapLongClickListener {
+			Log.d("onMapLongClick", "Launching debug view")
+			val intent = Intent(this.activity!!, DebugActivity::class.java)
+			this.activity!!.startActivity(intent)
+		}
 
 		// Set the map to use satellite view.
 		this.map!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
