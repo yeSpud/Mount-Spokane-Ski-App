@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Process
 import android.util.Log
@@ -18,7 +19,7 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.skierlocation.InAppSkierLocation
+import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -27,9 +28,6 @@ class MapsActivity : FragmentActivity() {
 
 	// Handler for managing the map object.
 	private var mapHandler: MapHandler? = null
-
-	// Handler for managing the users location while within the app.
-	private var inAppLocationHandler: InAppSkierLocation? = null
 
 	// Boolean used to determine if only night runs are to be shown.
 	private var nightRunsOnly = false
@@ -52,9 +50,8 @@ class MapsActivity : FragmentActivity() {
 		// Be sure to show the action bar.
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
-		// Setup the map handler and the in app skier location handler.
+		// Setup the map handler.
 		this.mapHandler = MapHandler(this)
-		this.inAppLocationHandler = InAppSkierLocation(this.mapHandler!!, this)
 
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
@@ -64,10 +61,6 @@ class MapsActivity : FragmentActivity() {
 	override fun onDestroy() {
 		Log.v("MapsActivity", "onDestroy has been called!")
 		super.onDestroy()
-
-		// Reset the in app location handler.
-		this.inAppLocationHandler!!.destroy()
-		this.inAppLocationHandler = null
 
 		// Reset the map handler.
 		this.mapHandler!!.destroy()
@@ -147,13 +140,25 @@ class MapsActivity : FragmentActivity() {
 	}
 
 	@SuppressLint("MissingPermission")
-	fun showLocation() {
+	fun setupLocationService() {
 
 		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-				2F, this.inAppLocationHandler!!)
+
+			// Check if the location service has already been started.
+			if (!SkierLocationService.checkIfRunning(this)) {
+
+				val serviceIntent = Intent(this, SkierLocationService::class.java)
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+					this.startForegroundService(serviceIntent)
+				} else {
+					this.startService(serviceIntent)
+				}
+
+				// TODO Add listener for map
+			}
 		}
 	}
 

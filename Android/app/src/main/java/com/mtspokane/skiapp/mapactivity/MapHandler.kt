@@ -269,8 +269,8 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 		polygonLoads.awaitAll() // Wait for all loads to have finished...
 
-		Log.v(tag, "Showing location on map...")
-		this@MapHandler.activity!!.showLocation()
+		Log.v(tag, "Setting up location service...")
+		this@MapHandler.activity!!.setupLocationService()
 	}
 
 	companion object {
