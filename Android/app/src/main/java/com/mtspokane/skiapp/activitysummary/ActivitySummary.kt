@@ -151,9 +151,15 @@ class ActivitySummary : Activity() {
 
 	fun loadActivities(activities: Array<SkiingActivity>) {
 		this.container.removeAllViews()
+		var previousActivity: SkiingActivity? = null
 		activities.forEach {
-			val view: LinearLayout = createActivityView(it)
-			this.container.addView(view)
+
+			if (previousActivity == null || previousActivity!!.name != it.name) {
+
+				val view: LinearLayout = createActivityView(it)
+				this.container.addView(view)
+				previousActivity = it
+			}
 		}
 	}
 
