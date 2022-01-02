@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -13,18 +12,15 @@ import android.os.Process
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.ImageButton
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
-import com.mtspokane.skiapp.debugview.DebugActivity
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.skierlocation.Locations
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
-import com.mtspokane.skiapp.skierlocation.VisibleLocationUpdate
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -34,7 +30,7 @@ class MapsActivity : FragmentActivity() {
 	// Handler for managing the map object.
 	private var mapHandler: MapHandler? = null
 
-	private var locationChangeCallback: VisibleLocationUpdate? = null
+	private var locationChangeCallback: Locations.VisibleLocationUpdate? = null
 
 	// Boolean used to determine if only night runs are to be shown.
 	private var nightRunsOnly = false
@@ -64,11 +60,15 @@ class MapsActivity : FragmentActivity() {
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
 		mapFragment!!.getMapAsync(this.mapHandler!!)
 
-		this.locationChangeCallback = object : VisibleLocationUpdate {
-			override fun updateLocation(location: Location, locationString: String) {
+		this.locationChangeCallback = object : Locations.VisibleLocationUpdate {
+			override fun updateLocation(locationString: String) {
+
+				if (Locations.currentLocation == null) {
+					return
+				}
 
 				if (this@MapsActivity.mapHandler != null) {
-					this@MapsActivity.mapHandler!!.updateMarkerLocation(location)
+					this@MapsActivity.mapHandler!!.updateMarkerLocation(Locations.currentLocation!!)
 				}
 
 				this@MapsActivity.actionBar!!.title = locationString

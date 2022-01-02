@@ -1,56 +1,64 @@
 package com.mtspokane.skiapp.skierlocation
 
-import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Build
-import android.util.Log
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 
 object Locations {
 
-	private var previousLocation: Location? = null
+	var previousLocation: Location? = null
+	private set
+
+	var currentLocation: Location? = null
+	private set
+
+	var chairliftConfidence = 0
+	private set
 
 	var visibleLocationUpdates: ArrayList<VisibleLocationUpdate> = ArrayList(0)
 
-	private var vDirection: VerticalDirection = VerticalDirection.UNKNOWN
-
-	val canUseAccuracy = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-
-	private fun updateLocationVDirection(currentLocation: Location) {
-
-		if (previousLocation != null) {
-			if (currentLocation.altitude != 0.0 && previousLocation!!.altitude != 0.0) {
-				if (canUseAccuracy) {
-					vDirection = when {
-						(currentLocation.altitude - currentLocation.verticalAccuracyMeters) > (previousLocation!!.altitude + previousLocation!!.verticalAccuracyMeters) -> VerticalDirection.UP_CERTAIN
-						(currentLocation.altitude + currentLocation.verticalAccuracyMeters) < (previousLocation!!.altitude - previousLocation!!.verticalAccuracyMeters) -> VerticalDirection.DOWN_CERTAIN
-						currentLocation.altitude > previousLocation!!.altitude -> VerticalDirection.UP
-						currentLocation.altitude < previousLocation!!.altitude -> VerticalDirection.DOWN
-						else -> VerticalDirection.FLAT
-					}
-				} else {
-					Log.w("updateLocationDirection", "Device does not support altitude accuracy!")
-					vDirection = when {
-						currentLocation.altitude > previousLocation!!.altitude -> VerticalDirection.UP
-						currentLocation.altitude < previousLocation!!.altitude -> VerticalDirection.DOWN
-						else -> VerticalDirection.FLAT
-					}
-				}
-			} else {
-				vDirection = VerticalDirection.UNKNOWN
-			}
-		} else {
-			vDirection = VerticalDirection.UNKNOWN
-		}
-
-		previousLocation = currentLocation
+	fun updateLocations(newLocation: Location) {
+		this.previousLocation = this.currentLocation
+		this.currentLocation = newLocation
+		this.chairliftConfidence = 0
 	}
 
-	fun checkIfOnOther(location: Location): MapItem? {
+	fun getVerticalDirection(): VerticalDirection {
+
+		if (this.previousLocation == null || this.currentLocation == null) {
+			return VerticalDirection.UNKNOWN
+		}
+
+		if (this.currentLocation!!.altitude == 0.0 || this.previousLocation!!.altitude == 0.0) {
+			return VerticalDirection.UNKNOWN
+		}
+
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+			if ((this.currentLocation!!.altitude - this.currentLocation!!.verticalAccuracyMeters) > (this.previousLocation!!.altitude + this.previousLocation!!.verticalAccuracyMeters)) {
+				return VerticalDirection.UP_CERTAIN
+			} else if ((this.currentLocation!!.altitude + this.currentLocation!!.verticalAccuracyMeters) < (this.previousLocation!!.altitude - this.previousLocation!!.verticalAccuracyMeters)) {
+				return VerticalDirection.DOWN_CERTAIN
+			}
+		}
+
+		return when {
+			this.currentLocation!!.altitude > previousLocation!!.altitude -> VerticalDirection.UP
+			this.currentLocation!!.altitude < previousLocation!!.altitude -> VerticalDirection.DOWN
+			else -> VerticalDirection.FLAT
+		}
+	}
+
+	fun checkIfOnOther(): MapItem? {
+
+		if (this.currentLocation == null) {
+			return null
+		}
 
 		MtSpokaneMapItems.other.forEach {
-			if (it != null && it.locationInsidePoints(location)) {
+			if (it != null && it.locationInsidePoints(this.currentLocation!!)) {
 				return it
 			}
 		}
@@ -58,33 +66,30 @@ object Locations {
 		return null
 	}
 
-	fun checkIfOnChairlift(location: Location): MapItem? {
+	fun checkIfOnChairlift(): MapItem? {
 
-		val numberOfChecks = 6
-		val minimumConfidenceValue: Double = 4.0 / numberOfChecks
-		var currentConfidence = 0
-
-		updateLocationVDirection(location)
-
-		// Check altitude.
-		currentConfidence += getAltitudeConfidence()
-
-		// Check speed.
-		currentConfidence += getSpeedConfidence(location)
-
-		if (!MtSpokaneMapItems.isSetup) {
+		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
 			return null
 		}
 
+		val numberOfChecks = 6
+		val minimumConfidenceValue: Double = 4.0 / numberOfChecks
+
+		// Check altitude.
+		this.chairliftConfidence += getAltitudeConfidence()
+
+		// Check speed.
+		this.chairliftConfidence += getSpeedConfidence()
+
 		var potentialChairlift: MapItem? = null
 		MtSpokaneMapItems.chairlifts.forEach {
-			if (it.locationInsidePoints(location)) {
-				currentConfidence += 1
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				this.chairliftConfidence += 1
 				potentialChairlift = it
 			}
 		}
 
-		return if (currentConfidence / numberOfChecks >= minimumConfidenceValue) {
+		return if (this.chairliftConfidence / numberOfChecks >= minimumConfidenceValue) {
 			potentialChairlift
 		} else {
 			null
@@ -92,7 +97,7 @@ object Locations {
 	}
 
 	private fun getAltitudeConfidence(): Int {
-		return when (vDirection) {
+		return when (this.getVerticalDirection()) {
 			VerticalDirection.UP_CERTAIN -> 3
 			VerticalDirection.UP -> 2
 			VerticalDirection.FLAT -> 1
@@ -100,40 +105,49 @@ object Locations {
 		}
 	}
 
-	private fun getSpeedConfidence(location: Location): Int {
+	private fun getSpeedConfidence(): Int {
 
-		if (location.speed != 0.0F && previousLocation != null) {
+		if (this.currentLocation == null || this.previousLocation == null) {
+			return 0
+		}
 
-			// 500 feet per minute to meters per second.
-			val maxChairliftSpeed = 500.0F * 0.00508F
+		if (this.currentLocation!!.speed == 0.0F || this.previousLocation!!.speed == 0.0F) {
+			return 0
+		}
 
-			if (canUseAccuracy) {
-				if (location.speedAccuracyMetersPerSecond != 0.0F && previousLocation!!.speedAccuracyMetersPerSecond != 0.0F) {
-					return when {
-						location.speed + location.speedAccuracyMetersPerSecond <= maxChairliftSpeed -> 2
-						location.speed <= maxChairliftSpeed -> 1
-						else -> 0
-					}
-				}
-			} else {
-				Log.w("checkIfOnChairlift", "Device does not support speed accuracy!")
-				return if (location.speed <= maxChairliftSpeed) {
-					1
-				} else {
-					0
+
+		// 550 feet per minute to meters per second.
+		val maxChairliftSpeed = 550.0F * 0.00508F
+
+		// 150 feet per minute to meters per second.
+		val minChairliftSpeed = 150.0F * 0.00508F
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			if (this.currentLocation!!.speedAccuracyMetersPerSecond > 0.0F && this.previousLocation!!.speedAccuracyMetersPerSecond > 0.0F) {
+				 if ((this.currentLocation!!.speed - this.currentLocation!!.speedAccuracyMetersPerSecond >= minChairliftSpeed) && (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracyMetersPerSecond <= maxChairliftSpeed)) {
+					 return 2
 				}
 			}
 		}
 
-		return 0
+		return if (this.currentLocation!!.speed in minChairliftSpeed..maxChairliftSpeed) {
+			1
+		} else {
+			0
+		}
+
 	}
 
-	fun checkIfOnRun(location: Location): MapItem? {
+	fun checkIfOnRun(): MapItem? {
 
-		arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns, MtSpokaneMapItems
-			.difficultRuns).forEach { runDifficulty ->
+		if (this.currentLocation == null) {
+			return null
+		}
+
+		arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
+			MtSpokaneMapItems.difficultRuns).forEach { runDifficulty ->
 			runDifficulty.forEach {
-				if (it.locationInsidePoints(location)) {
+				if (it.locationInsidePoints(this.currentLocation!!)) {
 					return it
 				}
 			}
@@ -142,11 +156,11 @@ object Locations {
 		return null
 	}
 
-	private enum class VerticalDirection {
+	enum class VerticalDirection {
 		UP_CERTAIN, UP, FLAT, DOWN, DOWN_CERTAIN, UNKNOWN
 	}
-}
 
-interface VisibleLocationUpdate {
-	fun updateLocation(location: Location, locationString: String)
+	interface VisibleLocationUpdate {
+		fun updateLocation(locationString: String)
+	}
 }

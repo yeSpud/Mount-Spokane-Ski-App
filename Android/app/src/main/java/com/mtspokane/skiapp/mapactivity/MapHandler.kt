@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp.mapactivity
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color

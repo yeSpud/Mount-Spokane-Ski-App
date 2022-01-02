@@ -133,9 +133,15 @@
         android:layout_weight="0"
         android:text="@string/vertical_direction"/>
 
+    <TextView
+        android:id="@+id/chairlift_confidence"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/chairlift_confidence" />
+
     <fragment
         android:id="@+id/debug_map"
-        android:layout_weight="16"
+        android:layout_weight="18"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

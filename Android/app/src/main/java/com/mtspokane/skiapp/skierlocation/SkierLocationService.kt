@@ -112,6 +112,8 @@ class SkierLocationService : Service(), LocationListener {
 
 	override fun onLocationChanged(location: Location) {
 
+		Locations.updateLocations(location)
+
 		// If we are not on the mountain stop the tracking.
 		if (MtSpokaneMapItems.skiAreaBounds == null) {
 			this.stopSelf()
@@ -121,34 +123,34 @@ class SkierLocationService : Service(), LocationListener {
 			this.stopSelf()
 		}
 
-		val chairlift = Locations.checkIfOnChairlift(location)
+		val chairlift = Locations.checkIfOnChairlift()
 		if (chairlift != null) {
 			val chairliftText: String = this.getString(R.string.current_chairlift, chairlift.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(location, chairliftText) }
+			Locations.visibleLocationUpdates.forEach { it.updateLocation(chairliftText) }
 			this.updateNotification(chairliftText, chairlift.getIcon())
 			SkiingActivity.Activities.add(SkiingActivity(chairlift.name, location, chairlift.getIcon()))
 			return
 		}
 
-		val other = Locations.checkIfOnOther(location)
+		val other = Locations.checkIfOnOther()
 		if (other != null) {
 			val otherText: String = this.getString(R.string.current_other, other.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(location, otherText) }
+			Locations.visibleLocationUpdates.forEach { it.updateLocation(otherText) }
 			this.updateNotification(otherText, other.getIcon())
 			SkiingActivity.Activities.add(SkiingActivity(other.name, location, other.getIcon()))
 			return
 		}
 
-		val run = Locations.checkIfOnRun(location)
+		val run = Locations.checkIfOnRun()
 		if (run != null) {
 			val runText: String = this.getString(R.string.current_run, run.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(location, runText) }
+			Locations.visibleLocationUpdates.forEach { it.updateLocation(runText) }
 			this.updateNotification(runText, run.getIcon())
 			SkiingActivity.Activities.add(SkiingActivity(run.name, location, run.getIcon()))
 			return
 		}
 
-		Locations.visibleLocationUpdates.forEach { it.updateLocation(location, this.getString(R.string.app_name)) }
+		Locations.visibleLocationUpdates.forEach { it.updateLocation(this.getString(R.string.app_name)) }
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
 	}
 

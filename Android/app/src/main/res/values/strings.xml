@@ -79,5 +79,6 @@
     <string name="current_location_speed">Current location speed: %f</string>
     <string name="current_location_speed_accuracy">Current location speed accuracy: %f</string>
     <string name="vertical_direction">Vertical direction: %s</string>
+    <string name="chairlift_confidence">Chairlift confidence: %d / %d</string>
 
 </resources>
