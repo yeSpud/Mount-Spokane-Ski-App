@@ -15,6 +15,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.RawRes
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -101,10 +102,13 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 		this.map!!.setMaxZoomPreference(20F)
 		this.map!!.setMinZoomPreference(13F)
 
-		this.map!!.setOnMapLongClickListener {
-			Log.d("onMapLongClick", "Launching debug view")
-			val intent = Intent(this.activity!!, DebugActivity::class.java)
-			this.activity!!.startActivity(intent)
+
+		if (this.activity!!.locationEnabled) {
+			this.map!!.setOnMapLongClickListener {
+				Log.d("onMapLongClick", "Launching debug view")
+				val intent = Intent(this.activity!!, DebugActivity::class.java)
+				this.activity!!.startActivity(intent)
+			}
 		}
 
 		// Set the map to use satellite view.
@@ -310,14 +314,14 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 	companion object {
 
-		private fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: MapsActivity):
+		fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: FragmentActivity):
 				Iterable<KmlPlacemark> {
 			val kml = kmlLayer(map, file, activity)
 			return kml.placemarks
 		}
 
 		@AnyThread
-		private suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
+		suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: FragmentActivity,
 			@ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int? = null):
 				Array<VisibleUIMapItem> = coroutineScope {
 
@@ -374,7 +378,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			return@coroutineScope hashMap.values.toTypedArray()
 		}
 
-		private fun getARGB(activity: MapsActivity, @ColorRes color: Int): Int {
+		private fun getARGB(activity: FragmentActivity, @ColorRes color: Int): Int {
 			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 				activity.getColor(color)
 			} else {
@@ -382,7 +386,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			}
 		}
 
-		private fun getPlacemarkName(placemark: KmlPlacemark): String {
+		fun getPlacemarkName(placemark: KmlPlacemark): String {
 
 			return if (placemark.hasProperty("name")) {
 				placemark.getProperty("name")
@@ -395,7 +399,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 		}
 
 		@AnyThread
-		private suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
+		suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: FragmentActivity,
 			@ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>) = coroutineScope { // TODO Optimize this
 
 			val hashMap: HashMap<String, ArrayList<Polygon>> = HashMap()
@@ -438,7 +442,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 		}
 
 		@MainThread
-		private suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
+		suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
 			fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon = coroutineScope {
 			return@coroutineScope map.addPolygon {
 				addAll(points)
