@@ -211,7 +211,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 							val skiAreaBoundsPolygon: Polygon = addPolygonToMap(this@MapHandler.map!!,
 								kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
-								Color.MAGENTA, 1.0F)
+								Color.MAGENTA, 1.0F, BuildConfig.DEBUG)
 
 							val skiAreaBoundsMapItem = UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
 
@@ -223,7 +223,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 							val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon
 								.outerBoundaryCoordinates, 0.5F, R.color.other_polygon_fill,
-								Color.MAGENTA, 8F)
+								Color.MAGENTA, 8F, BuildConfig.DEBUG)
 
 							val item = UIMapItem(name, polygon)
 
@@ -399,7 +399,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 		@AnyThread
 		suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: FragmentActivity,
-			@ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>) = coroutineScope { // TODO Optimize this
+			@ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>, visible: Boolean = BuildConfig.DEBUG) = coroutineScope { // TODO Optimize this
 
 			val hashMap: HashMap<String, ArrayList<Polygon>> = HashMap()
 
@@ -413,7 +413,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 				val polygon: Polygon
 				withContext(Dispatchers.Main) {
 					polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates, 0.5F,
-						argb, argb, 8F)
+						argb, argb, 8F, visible)
 				}
 
 				val name: String = getPlacemarkName(it)
@@ -442,7 +442,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 		@MainThread
 		suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
-			fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon = coroutineScope {
+			fillColor: Int, strokeColor: Int, strokeWidth: Float, visible: Boolean): Polygon = coroutineScope {
 			return@coroutineScope map.addPolygon {
 				addAll(points)
 				clickable(false)
@@ -451,7 +451,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 				fillColor(fillColor)
 				strokeColor(strokeColor)
 				strokeWidth(strokeWidth)
-				visible(BuildConfig.DEBUG)
+				visible(visible)
 			}
 		}
 	}

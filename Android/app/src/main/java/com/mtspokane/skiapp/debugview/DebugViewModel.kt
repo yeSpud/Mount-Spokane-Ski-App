@@ -111,7 +111,7 @@ class DebugViewModel : ViewModel() {
 
 							val skiAreaBoundsPolygon: Polygon = MapHandler.addPolygonToMap(this@DebugViewModel.map!!,
 								kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
-								Color.MAGENTA, 1.0F)
+								Color.MAGENTA, 1.0F, true)
 
 							UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
 
@@ -120,7 +120,7 @@ class DebugViewModel : ViewModel() {
 							// Load the other polygons as normal.
 							val polygon: Polygon = MapHandler.addPolygonToMap(this@DebugViewModel.map!!,
 								kmlPolygon.outerBoundaryCoordinates, 0.5F, R.color.other_polygon_fill,
-								Color.MAGENTA, 8F)
+								Color.MAGENTA, 8F, true)
 
 							val item = UIMapItem(name, polygon)
 
@@ -155,7 +155,7 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading chairlift polygons")
 				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.lift_polygons, activity,
-					R.color.chairlift_polygon, emptyArray())
+					R.color.chairlift_polygon, emptyArray(), true)
 				Log.v(tag, "Finished loading chairlift polygons")
 			}.start()
 
@@ -163,7 +163,7 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading easy polygons")
 				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.easy_polygons, activity,
-					R.color.easy_polygon, emptyArray())
+					R.color.easy_polygon, emptyArray(), true)
 				Log.v(tag, "Finished loading easy polygons")
 			}.start()
 
@@ -171,7 +171,7 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading moderate polygons")
 				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.moderate_polygons, activity,
-					R.color.moderate_polygon, emptyArray())
+					R.color.moderate_polygon, emptyArray(), true)
 				Log.v(tag, "Finished loading moderate polygons")
 			}.start()
 
@@ -179,7 +179,7 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading difficult polygons")
 				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.difficult_polygons, activity,
-					R.color.difficult_polygon, emptyArray())
+					R.color.difficult_polygon, emptyArray(), true)
 				Log.v(tag, "Finished loading difficult polygons")
 			}.start()
 		}.start()
