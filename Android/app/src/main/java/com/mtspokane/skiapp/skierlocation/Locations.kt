@@ -1,5 +1,6 @@
 package com.mtspokane.skiapp.skierlocation
 
+import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Build
 import android.util.Log
@@ -14,7 +15,7 @@ object Locations {
 
 	private var vDirection: VerticalDirection = VerticalDirection.UNKNOWN
 
-	private val canUseAccuracy = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+	val canUseAccuracy = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
 	private fun updateLocationVDirection(currentLocation: Location) {
 

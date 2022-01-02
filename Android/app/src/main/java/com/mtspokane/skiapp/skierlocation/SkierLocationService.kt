@@ -121,21 +121,21 @@ class SkierLocationService : Service(), LocationListener {
 			this.stopSelf()
 		}
 
-		val other = Locations.checkIfOnOther(location)
-		if (other != null) {
-			val otherText: String = this.getString(R.string.current_other, other.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(location, otherText) }
-			this.updateNotification(otherText, other.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(other.name, location, other.getIcon()))
-			return
-		}
-
 		val chairlift = Locations.checkIfOnChairlift(location)
 		if (chairlift != null) {
 			val chairliftText: String = this.getString(R.string.current_chairlift, chairlift.name)
 			Locations.visibleLocationUpdates.forEach { it.updateLocation(location, chairliftText) }
 			this.updateNotification(chairliftText, chairlift.getIcon())
 			SkiingActivity.Activities.add(SkiingActivity(chairlift.name, location, chairlift.getIcon()))
+			return
+		}
+
+		val other = Locations.checkIfOnOther(location)
+		if (other != null) {
+			val otherText: String = this.getString(R.string.current_other, other.name)
+			Locations.visibleLocationUpdates.forEach { it.updateLocation(location, otherText) }
+			this.updateNotification(otherText, other.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(other.name, location, other.getIcon()))
 			return
 		}
 

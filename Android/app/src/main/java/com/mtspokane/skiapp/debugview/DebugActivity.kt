@@ -1,6 +1,7 @@
 package com.mtspokane.skiapp.debugview
 
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
@@ -29,9 +30,26 @@ class DebugActivity : FragmentActivity() {
 
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
-
 		this.locationChangeCallback = object : VisibleLocationUpdate {
 			override fun updateLocation(location: Location, locationString: String) {
+
+				binding.currentLocationName.text = locationString
+				binding.currentLocationAccuracy.text = this@DebugActivity.getString(R.string.current_location_accuracy, location.accuracy)
+				binding.currentLocationAltitude.text = this@DebugActivity.getString(R.string.current_location_altitude, location.altitude)
+				if (Locations.canUseAccuracy) {
+					binding.currentLocationAltitudeAccuracy.text = this@DebugActivity.getString(R.string.current_location_altitude_accuracy, location.verticalAccuracyMeters)
+				} else {
+					binding.currentLocationAltitudeAccuracy.text = this@DebugActivity.getString(R.string.current_location_altitude_accuracy, 0)
+				}
+
+				binding.currentLocationLatitude.text = this@DebugActivity.getString(R.string.current_location_latitude, location.latitude)
+				binding.currentLocationLongitude.text = this@DebugActivity.getString(R.string.current_location_longitude, location.longitude)
+				binding.currentLocationSpeed.text = this@DebugActivity.getString(R.string.current_location_speed, location.speed)
+				if (Locations.canUseAccuracy) {
+					binding.currentLocationSpeedAccuracy.text = this@DebugActivity.getString(R.string.current_location_speed_accuracy, location.speedAccuracyMetersPerSecond)
+				} else {
+					binding.currentLocationSpeedAccuracy.text = this@DebugActivity.getString(R.string.current_location_speed_accuracy, 0)
+				}
 
 				if (this@DebugActivity.viewModel.map != null) {
 
