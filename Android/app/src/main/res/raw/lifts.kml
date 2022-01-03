@@ -13,7 +13,7 @@
     <Placemark>
         <name>Chair 2: Illuminator</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin30</styleUrl>
+        <styleUrl>#msn_ylw-pushpin300</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -24,7 +24,7 @@
     <Placemark>
         <name>Chair 3: Parkway Express</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin30</styleUrl>
+        <styleUrl>#msn_ylw-pushpin300</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -45,7 +45,7 @@
     <Placemark>
         <name>Chair 5: Beginner&apos;s Luck</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin30</styleUrl>
+        <styleUrl>#msn_ylw-pushpin300</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>

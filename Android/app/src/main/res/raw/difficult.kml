@@ -88,7 +88,7 @@
     </Placemark>
     <Placemark>
         <name>Hourglass</name>
-        <styleUrl>#msn_ylw-pushpin10100</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1010</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -104,7 +104,7 @@
     </Placemark>
     <Placemark>
         <name>South Meadows</name>
-        <styleUrl>#msn_ylw-pushpin1010</styleUrl>
+        <styleUrl>#msn_ylw-pushpin10100</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -170,7 +170,7 @@
     </Placemark>
     <Placemark>
         <name>No Alibi</name>
-        <styleUrl>#msn_ylw-pushpin10100</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1010</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
