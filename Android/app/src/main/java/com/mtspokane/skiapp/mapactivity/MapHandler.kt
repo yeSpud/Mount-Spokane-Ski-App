@@ -236,6 +236,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 								"Lodge 1 Parking Lot" -> R.drawable.ic_parking
 								"Lodge 2 Parking Lot" -> R.drawable.ic_parking
 								"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
+								"Ski School" -> R.drawable.ic_missing // TODO Ski school icon
 								else -> {
 									Log.w(tag, "$name does not have an icon")
 									null
