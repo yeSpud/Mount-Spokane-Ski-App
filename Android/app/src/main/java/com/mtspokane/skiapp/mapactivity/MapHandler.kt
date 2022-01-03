@@ -2,7 +2,9 @@ package com.mtspokane.skiapp.mapactivity
 
 import android.Manifest
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.Color
+import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.annotation.AnyThread
@@ -12,6 +14,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.RawRes
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -19,17 +22,20 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polygon
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.data.kml.KmlLineString
 import com.google.maps.android.data.kml.KmlPlacemark
 import com.google.maps.android.data.kml.KmlPolygon
+import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolygon
 import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.debugview.DebugActivity
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
@@ -42,9 +48,16 @@ import kotlinx.coroutines.withContext
 
 class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
-	var map: GoogleMap? = null
+	private var map: GoogleMap? = null
+
+	private var locationMarker: Marker? = null
 
 	fun destroy() {
+		Log.v("MapHandler", "destroy has been called!")
+		if (this.locationMarker != null) {
+			this.locationMarker!!.remove()
+			this.locationMarker = null
+		}
 		this.map = null
 		this.activity = null
 	}
@@ -87,6 +100,15 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			-117.133402), LatLng(47.943674, -117.092470)))
 		this.map!!.setMaxZoomPreference(20F)
 		this.map!!.setMinZoomPreference(13F)
+
+
+		if (this.activity!!.locationEnabled) {
+			this.map!!.setOnMapLongClickListener {
+				Log.d("onMapLongClick", "Launching debug view")
+				val intent = Intent(this.activity!!, DebugActivity::class.java)
+				this.activity!!.startActivity(intent)
+			}
+		}
 
 		// Set the map to use satellite view.
 		this.map!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
@@ -189,7 +211,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 							val skiAreaBoundsPolygon: Polygon = addPolygonToMap(this@MapHandler.map!!,
 								kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
-								Color.MAGENTA, 1.0F)
+								Color.MAGENTA, 1.0F, BuildConfig.DEBUG)
 
 							val skiAreaBoundsMapItem = UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
 
@@ -201,7 +223,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 							val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon
 								.outerBoundaryCoordinates, 0.5F, R.color.other_polygon_fill,
-								Color.MAGENTA, 8F)
+								Color.MAGENTA, 8F, BuildConfig.DEBUG)
 
 							val item = UIMapItem(name, polygon)
 
@@ -269,20 +291,36 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 		polygonLoads.awaitAll() // Wait for all loads to have finished...
 
-		Log.v(tag, "Showing location on map...")
-		this@MapHandler.activity!!.showLocation()
+		Log.v(tag, "Setting up location service...")
+		this@MapHandler.activity!!.setupLocationService()
+	}
+
+	fun updateMarkerLocation(location: Location) {
+
+		// If the marker hasn't been added to the map create a new one.
+		if (this.locationMarker == null) {
+			this.locationMarker = this.map!!.addMarker {
+				position(LatLng(location.latitude, location.longitude))
+				title(this@MapHandler.activity!!.resources.getString(R.string.your_location))
+			}
+		} else {
+
+			// Otherwise just update the LatLng location.
+			this.locationMarker!!.position = LatLng(location.latitude, location.longitude)
+		}
+
 	}
 
 	companion object {
 
-		private fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: MapsActivity):
+		fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: FragmentActivity):
 				Iterable<KmlPlacemark> {
 			val kml = kmlLayer(map, file, activity)
 			return kml.placemarks
 		}
 
 		@AnyThread
-		private suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
+		suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: FragmentActivity,
 			@ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int? = null):
 				Array<VisibleUIMapItem> = coroutineScope {
 
@@ -339,7 +377,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			return@coroutineScope hashMap.values.toTypedArray()
 		}
 
-		private fun getARGB(activity: MapsActivity, @ColorRes color: Int): Int {
+		private fun getARGB(activity: FragmentActivity, @ColorRes color: Int): Int {
 			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 				activity.getColor(color)
 			} else {
@@ -347,7 +385,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			}
 		}
 
-		private fun getPlacemarkName(placemark: KmlPlacemark): String {
+		fun getPlacemarkName(placemark: KmlPlacemark): String {
 
 			return if (placemark.hasProperty("name")) {
 				placemark.getProperty("name")
@@ -360,8 +398,8 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 		}
 
 		@AnyThread
-		private suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: MapsActivity,
-			@ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>) = coroutineScope { // TODO Optimize this
+		suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: FragmentActivity,
+			@ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>, visible: Boolean = BuildConfig.DEBUG) = coroutineScope { // TODO Optimize this
 
 			val hashMap: HashMap<String, ArrayList<Polygon>> = HashMap()
 
@@ -375,7 +413,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 				val polygon: Polygon
 				withContext(Dispatchers.Main) {
 					polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates, 0.5F,
-						argb, argb, 8F)
+						argb, argb, 8F, visible)
 				}
 
 				val name: String = getPlacemarkName(it)
@@ -403,8 +441,8 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 		}
 
 		@MainThread
-		private suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
-			fillColor: Int, strokeColor: Int, strokeWidth: Float): Polygon = coroutineScope {
+		suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
+			fillColor: Int, strokeColor: Int, strokeWidth: Float, visible: Boolean): Polygon = coroutineScope {
 			return@coroutineScope map.addPolygon {
 				addAll(points)
 				clickable(false)
@@ -413,7 +451,7 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 				fillColor(fillColor)
 				strokeColor(strokeColor)
 				strokeWidth(strokeWidth)
-				visible(BuildConfig.DEBUG)
+				visible(visible)
 			}
 		}
 	}
