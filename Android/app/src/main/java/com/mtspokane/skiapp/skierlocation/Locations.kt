@@ -28,7 +28,13 @@ object Locations {
 		this.previousLocation = this.currentLocation
 		this.currentLocation = newLocation
 
-		this.altitudeConfidence = this.getAltitudeConfidenceValue()
+		this.altitudeConfidence = when (this.getVerticalDirection()) {
+			VerticalDirection.UP_CERTAIN -> 3u
+			VerticalDirection.UP -> 2u
+			VerticalDirection.FLAT -> 1u
+			else -> 0u
+		}
+
 		this.speedConfidence = this.getSpeedConfidenceValue()
 
 		MtSpokaneMapItems.chairlifts.forEach {
@@ -93,15 +99,6 @@ object Locations {
 		}
 
 		return null
-	}
-
-	private fun getAltitudeConfidenceValue(): UShort {
-		return when (this.getVerticalDirection()) {
-			VerticalDirection.UP_CERTAIN -> 3u
-			VerticalDirection.UP -> 2u
-			VerticalDirection.FLAT -> 1u
-			else -> 0u
-		}
 	}
 
 	private fun getSpeedConfidenceValue(): UShort {

@@ -35,12 +35,4 @@ object MtSpokaneMapItems {
 
 		this.isSetup = false
 	}
-
-	@Deprecated("This is a one liner", ReplaceWith("destroyUIItems()"))
-	fun reset() {
-
-		this.destroyUIItems()
-
-	}
-
 }

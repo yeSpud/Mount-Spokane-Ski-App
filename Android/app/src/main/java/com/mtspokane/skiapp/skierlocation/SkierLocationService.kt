@@ -28,6 +28,7 @@ import androidx.core.app.NotificationCompat
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.activitysummary.SkiingActivity
+import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapactivity.MapsActivity
 import kotlin.reflect.KClass
@@ -126,41 +127,36 @@ class SkierLocationService : Service(), LocationListener {
 
 		val chairliftTerminal = Locations.checkIfAtChairliftTerminals()
 		if (chairliftTerminal != null) {
-			val chairliftText: String = this.getString(R.string.current_chairlift, chairliftTerminal.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(chairliftText) }
-			this.updateNotification(chairliftText, chairliftTerminal.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(chairliftTerminal.name, location, chairliftTerminal.getIcon()))
+			this.updateUI(R.string.current_chairlift, chairliftTerminal, location)
 			return
 		}
 
 		if (Locations.altitudeConfidence >= 2u && Locations.speedConfidence >= 1u && Locations.mostLikelyChairlift != null) {
-			val chairliftText: String = this.getString(R.string.current_chairlift, Locations.mostLikelyChairlift!!.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(chairliftText) }
-			this.updateNotification(chairliftText, Locations.mostLikelyChairlift!!.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(Locations.mostLikelyChairlift!!.name, location, Locations.mostLikelyChairlift!!.getIcon()))
+			this.updateUI(R.string.current_chairlift, Locations.mostLikelyChairlift!!, location)
 			return
 		}
 
 		val other = Locations.checkIfOnOther()
 		if (other != null) {
-			val otherText: String = this.getString(R.string.current_other, other.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(otherText) }
-			this.updateNotification(otherText, other.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(other.name, location, other.getIcon()))
+			this.updateUI(R.string.current_other, other, location)
 			return
 		}
 
 		val run = Locations.checkIfOnRun()
 		if (run != null) {
-			val runText: String = this.getString(R.string.current_run, run.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(runText) }
-			this.updateNotification(runText, run.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(run.name, location, run.getIcon()))
+			this.updateUI(R.string.current_run, run, location)
 			return
 		}
 
 		Locations.visibleLocationUpdates.forEach { it.updateLocation(this.getString(R.string.app_name)) }
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
+	}
+
+	private fun updateUI(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
+		val text: String = this.getString(textResource, mapItem.name)
+		Locations.visibleLocationUpdates.forEach { it.updateLocation(text) }
+		this.updateNotification(text, mapItem.getIcon())
+		SkiingActivity.Activities.add(SkiingActivity(mapItem.name, location, mapItem.getIcon()))
 	}
 
 	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
