@@ -34,6 +34,10 @@ import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
 
+	private lateinit var locationManager: LocationManager
+
+	private lateinit var notificationManager: NotificationManager
+
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
@@ -55,15 +59,17 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onCreate called!")
 		super.onCreate()
 
+		this.locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		this.notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
 		SkiingActivity.populateActivitiesArray(this)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			this.createNotificationChannels()
 		}
 
-		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
+		if (this.locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
 				2F, this)
 		}
 	}
@@ -90,11 +96,8 @@ class SkierLocationService : Service(), LocationListener {
 
 		Locations.visibleLocationUpdates.clear()
 
-		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-		locationManager.removeUpdates(this)
-
-		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		notificationManager.cancel(TRACKING_SERVICE_ID)
+		this.locationManager.removeUpdates(this)
+		this.notificationManager.cancel(TRACKING_SERVICE_ID)
 
 		val file: String = SkiingActivity.writeActivitiesToFile(this)
 
@@ -105,7 +108,7 @@ class SkierLocationService : Service(), LocationListener {
 
 		val notification: Notification = builder.build()
 
-		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
+		this.notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 
 		MtSpokaneMapItems.destroyUIItems()
 	}
@@ -170,9 +173,7 @@ class SkierLocationService : Service(), LocationListener {
 		}
 
 		val notification: Notification = createPersistentNotification(title, bitmap)
-
-		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		notificationManager.notify(TRACKING_SERVICE_ID, notification)
+		this.notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")

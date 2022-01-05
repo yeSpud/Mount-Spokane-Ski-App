@@ -92,6 +92,7 @@ object Locations {
 		return null
 	}
 
+	@Deprecated("Use altitude confidence and speed confidence individually")
 	fun getChairliftConfidencePercentage(): Float {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
