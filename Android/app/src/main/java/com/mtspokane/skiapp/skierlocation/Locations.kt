@@ -13,7 +13,13 @@ object Locations {
 	var currentLocation: Location? = null
 	private set
 
-	var chairliftConfidence = 0
+	var altitudeConfidence: UShort = 0u
+	private set
+
+	var speedConfidence: UShort = 0u
+	private set
+
+	var mostLikelyChairlift: MapItem? = null
 	private set
 
 	var visibleLocationUpdates: ArrayList<VisibleLocationUpdate> = ArrayList(0)
@@ -21,7 +27,21 @@ object Locations {
 	fun updateLocations(newLocation: Location) {
 		this.previousLocation = this.currentLocation
 		this.currentLocation = newLocation
-		this.chairliftConfidence = 0
+
+		this.altitudeConfidence = when (this.getVerticalDirection()) {
+			VerticalDirection.UP_CERTAIN -> 3u
+			VerticalDirection.UP -> 2u
+			VerticalDirection.FLAT -> 1u
+			else -> 0u
+		}
+
+		this.speedConfidence = this.getSpeedConfidenceValue()
+
+		MtSpokaneMapItems.chairlifts.forEach {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				this.mostLikelyChairlift = it
+			}
+		}
 	}
 
 	fun getVerticalDirection(): VerticalDirection {
@@ -53,12 +73,12 @@ object Locations {
 
 	fun checkIfOnOther(): MapItem? {
 
-		if (this.currentLocation == null) {
+		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
 			return null
 		}
 
 		MtSpokaneMapItems.other.forEach {
-			if (it != null && it.locationInsidePoints(this.currentLocation!!)) {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return it
 			}
 		}
@@ -66,53 +86,29 @@ object Locations {
 		return null
 	}
 
-	fun checkIfOnChairlift(): MapItem? {
+	fun checkIfAtChairliftTerminals(): MapItem? {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
 			return null
 		}
 
-		val numberOfChecks = 6
-		val minimumConfidenceValue: Double = 4.0 / numberOfChecks
-
-		// Check altitude.
-		this.chairliftConfidence += getAltitudeConfidence()
-
-		// Check speed.
-		this.chairliftConfidence += getSpeedConfidence()
-
-		var potentialChairlift: MapItem? = null
-		MtSpokaneMapItems.chairlifts.forEach {
+		MtSpokaneMapItems.chairliftTerminals.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
-				this.chairliftConfidence += 1
-				potentialChairlift = it
+				return it
 			}
 		}
 
-		return if (this.chairliftConfidence / numberOfChecks >= minimumConfidenceValue) {
-			potentialChairlift
-		} else {
-			null
-		}
+		return null
 	}
 
-	private fun getAltitudeConfidence(): Int {
-		return when (this.getVerticalDirection()) {
-			VerticalDirection.UP_CERTAIN -> 3
-			VerticalDirection.UP -> 2
-			VerticalDirection.FLAT -> 1
-			else -> 0
-		}
-	}
-
-	private fun getSpeedConfidence(): Int {
+	private fun getSpeedConfidenceValue(): UShort {
 
 		if (this.currentLocation == null || this.previousLocation == null) {
-			return 0
+			return 0u
 		}
 
 		if (this.currentLocation!!.speed == 0.0F || this.previousLocation!!.speed == 0.0F) {
-			return 0
+			return 0u
 		}
 
 
@@ -125,22 +121,22 @@ object Locations {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			if (this.currentLocation!!.speedAccuracyMetersPerSecond > 0.0F && this.previousLocation!!.speedAccuracyMetersPerSecond > 0.0F) {
 				 if ((this.currentLocation!!.speed - this.currentLocation!!.speedAccuracyMetersPerSecond >= minChairliftSpeed) && (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracyMetersPerSecond <= maxChairliftSpeed)) {
-					 return 2
+					 return 2u
 				}
 			}
 		}
 
 		return if (this.currentLocation!!.speed in minChairliftSpeed..maxChairliftSpeed) {
-			1
+			1u
 		} else {
-			0
+			0u
 		}
 
 	}
 
 	fun checkIfOnRun(): MapItem? {
 
-		if (this.currentLocation == null) {
+		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
 			return null
 		}
 

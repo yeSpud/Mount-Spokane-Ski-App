@@ -2,11 +2,13 @@ package com.mtspokane.skiapp.mapItem
 
 object MtSpokaneMapItems {
 
-	var skiAreaBounds: UIMapItem? = null
-
-	val other: Array<UIMapItem?> = arrayOfNulls(9)
-
 	var isSetup = false
+
+	lateinit var skiAreaBounds: UIMapItem
+
+	lateinit var other: Array<UIMapItem> // Should be 9
+
+	lateinit var chairliftTerminals: Array<UIMapItem> // Should be size 6
 
 	lateinit var chairlifts: Array<VisibleUIMapItem> // Should be size 6
 
@@ -18,12 +20,13 @@ object MtSpokaneMapItems {
 
 	fun destroyUIItems() {
 
-		this.skiAreaBounds?.destroyUIItems()
+		this.skiAreaBounds.destroyUIItems()
 		this.other.forEach {
-			it?.destroyUIItems()
+			it.destroyUIItems()
 		}
-		val visibleArrays: Array<Array<VisibleUIMapItem>> = arrayOf(this.chairlifts, this.easyRuns,
-			this.moderateRuns, this.difficultRuns)
+		val visibleArrays: Array<Array<UIMapItem>> = arrayOf(this.chairliftTerminals,
+			this.chairlifts as Array<UIMapItem>, this.easyRuns as Array<UIMapItem>,
+			this.moderateRuns as Array<UIMapItem>, this.difficultRuns as Array<UIMapItem>)
 		visibleArrays.forEach { array ->
 			array.forEach {
 				it.destroyUIItems()
@@ -32,16 +35,4 @@ object MtSpokaneMapItems {
 
 		this.isSetup = false
 	}
-
-	fun reset() {
-
-		this.destroyUIItems()
-
-		for (i in this.other.indices) {
-			this.other[i] = null
-		}
-
-		this.skiAreaBounds = null
-	}
-
 }

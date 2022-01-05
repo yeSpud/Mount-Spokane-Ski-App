@@ -2,6 +2,7 @@ package com.mtspokane.skiapp.activitysummary
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -19,6 +20,7 @@ import androidx.core.view.isNotEmpty
 import androidx.core.view.setPadding
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
+import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -58,6 +60,10 @@ class ActivitySummary : Activity() {
 			val filename: String? = this.intent.extras!!.getString("file")
 
 			if (filename != null) {
+				val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE)
+						as NotificationManager
+				notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
+
 				val activities: Array<SkiingActivity> = SkiingActivity
 					.readSkiingActivitiesFromFile(this, filename)
 				this.loadActivities(activities)
@@ -145,7 +151,6 @@ class ActivitySummary : Activity() {
 				}
 				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}
-
 		}
 	}
 

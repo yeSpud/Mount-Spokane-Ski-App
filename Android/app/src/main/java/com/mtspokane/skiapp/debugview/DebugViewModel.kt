@@ -1,7 +1,9 @@
 package com.mtspokane.skiapp.debugview
 
-import android.graphics.Color
 import android.util.Log
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
+import androidx.annotation.RawRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -11,16 +13,14 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.Polygon
-import com.google.maps.android.data.kml.KmlPolygon
 import com.google.maps.android.ktx.awaitMap
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapactivity.MapHandler
+import java.util.Locale
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.withContext
 
 class DebugViewModel : ViewModel() {
 
@@ -30,159 +30,99 @@ class DebugViewModel : ViewModel() {
 
 	suspend fun mapCoroutine(supportFragment: SupportMapFragment, activity: DebugActivity) {
 
-		val tag = "mapCoroutine"
-
 		this.map = supportFragment.awaitMap()
 
 		// Move the camera.
 		val cameraPosition = CameraPosition.Builder()
-			.target(LatLng(47.92517834073426, -117.10480503737926))
-			.tilt(45F)
-			.bearing(317.50552F)
-			.zoom(14.414046F)
+			.target(LatLng(47.921774273268106, -117.10490226745605))
+			.tilt(47.547382F)
+			.bearing(319.2285F)
+			.zoom(14.169826F)
 			.build()
 		this.map!!.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-		this.map!!.setLatLngBoundsForCameraTarget(
-			LatLngBounds(
-				LatLng(47.912728,
-			-117.133402), LatLng(47.943674, -117.092470)
-			)
-		)
+		this.map!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728,
+			-117.133402), LatLng(47.943674, -117.092470)))
 		this.map!!.setMaxZoomPreference(20F)
 		this.map!!.setMinZoomPreference(13F)
+
+		/*
+		this.map!!.setOnCameraIdleListener {
+			val c: CameraPosition = this.map!!.cameraPosition
+
+			Log.v("OnCameraIdle", "Bearing: ${c.bearing}")
+			Log.v("OnCameraIdle", "Target: ${c.target}")
+			Log.v("OnCameraIdle", "Tilt: ${c.tilt}")
+			Log.v("OnCameraIdle", "Zoom: ${c.zoom}")
+		} */
 
 		// Set the map to use satellite view.
 		this.map!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
 		viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
+
 			// Add the chairlifts to the map.
 			// Load in the chairlift kml file, and iterate though each placemark.
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading chairlift polylines")
-				MapHandler.loadPolylines(this@DebugViewModel.map!!, R.raw.lifts, activity,
-					R.color.chairlift, 4f, R.drawable.ic_chairlift)
-				Log.v(tag, "Finished loading chairlift polylines")
-			}.start()
+			this@DebugViewModel.loadPolylinesAsync("Loading chairlift polylines",
+				R.raw.lifts, activity, R.color.chairlift,4.0F, R.drawable.ic_chairlift).start()
 
 			// Load in the easy runs kml file, and iterate though each placemark.
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading easy polylines")
-				MapHandler.loadPolylines(this@DebugViewModel.map!!, R.raw.easy, activity, R.color.easy,
-					3f, R.drawable.ic_easy)
-				Log.v(tag, "Finished loading easy run polylines")
-			}.start()
+			this@DebugViewModel.loadPolylinesAsync("Loading easy polylines", R.raw.easy,
+				activity, R.color.easy, 3.0F, R.drawable.ic_easy).start()
 
 			// Load in the moderate runs kml file, and iterate though each placemark.
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading moderate polylines")
-				MapHandler.loadPolylines(this@DebugViewModel.map!!, R.raw.moderate, activity,
-					R.color.moderate, 2f, R.drawable.ic_moderate)
-				Log.v(tag, "Finished loading moderate run polylines")
-			}.start()
+			this@DebugViewModel.loadPolylinesAsync("Loading moderate polylines",
+				R.raw.moderate, activity, R.color.moderate, 2.0F, R.drawable.ic_moderate).start()
 
 			// Load in the difficult runs kml file, and iterate though each placemark.
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading difficult polylines")
-				MapHandler.loadPolylines(this@DebugViewModel.map!!, R.raw.difficult, activity,
-					R.color.difficult, 1f, R.drawable.ic_difficult)
-				Log.v(tag, "Finished loading difficult polylines")
-			}.start()
+			this@DebugViewModel.loadPolylinesAsync("Loading difficult polylines",
+				R.raw.difficult, activity, R.color.difficult, 1.0F, R.drawable.ic_difficult).start()
 
 			// Other polygons
 			// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading other polygons")
+			this@DebugViewModel.loadPolygonsAsync("Loading other polygons", R.raw.other,
+				activity, R.color.other_polygon_fill, false).start()
 
-				var otherIndex = 0
-
-				// Load the other polygons file.
-				MapHandler.parseKmlFile(this@DebugViewModel.map!!, R.raw.other, activity).forEach {
-
-					// Get the name of the other polygon.
-					val name: String = MapHandler.getPlacemarkName(it)
-
-					// Get the polygon from the file.
-					val kmlPolygon: KmlPolygon = it.geometry as KmlPolygon
-
-					// If the polygon is the ski area bounds then add it to the map as its own object.
-					withContext(Dispatchers.Main) {
-						if (name == "Ski Area Bounds") {
-							Log.d(tag, "Adding bounds to map")
-
-							val skiAreaBoundsPolygon: Polygon = MapHandler.addPolygonToMap(this@DebugViewModel.map!!,
-								kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
-								Color.MAGENTA, 1.0F, true)
-
-							UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
-
-						} else {
-
-							// Load the other polygons as normal.
-							val polygon: Polygon = MapHandler.addPolygonToMap(this@DebugViewModel.map!!,
-								kmlPolygon.outerBoundaryCoordinates, 0.5F, R.color.other_polygon_fill,
-								Color.MAGENTA, 8F, true)
-
-							val item = UIMapItem(name, polygon)
-
-							val icon: Int? = when (name) {
-								"Lodge 1" -> R.drawable.ic_missing // TODO Lodge icon
-								"Lodge 2" -> R.drawable.ic_missing // TODO Lodge icon
-								"Yurt" -> R.drawable.ic_yurt
-								"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
-								"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
-								"Lodge 1 Parking Lot" -> R.drawable.ic_parking
-								"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-								"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
-								else -> {
-									Log.w(tag, "$name does not have an icon")
-									null
-								}
-							}
-
-							if (icon != null) {
-								item.setIcon(icon)
-							}
-							otherIndex++
-
-							Log.i(tag, "Added item: $name")
-						}
-					}
-				}
-				Log.v(tag, "Finished loading other polygons")
-			}.start()
+			// Load the chairlift terminal polygons file.
+			this@DebugViewModel.loadPolygonsAsync("Loading chairlift terminal polygons",
+				R.raw.lift_terminal_polygons, activity, R.color.chairlift_polygon, true).start()
 
 			// Load the chairlift polygons file.
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading chairlift polygons")
-				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.lift_polygons, activity,
-					R.color.chairlift_polygon, emptyArray(), true)
-				Log.v(tag, "Finished loading chairlift polygons")
-			}.start()
+			this@DebugViewModel.loadPolygonsAsync("Loading chairlift polygons",
+				R.raw.lift_polygons, activity, R.color.chairlift_polygon, true).start()
 
 			// Load the easy polygons file.
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading easy polygons")
-				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.easy_polygons, activity,
-					R.color.easy_polygon, emptyArray(), true)
-				Log.v(tag, "Finished loading easy polygons")
-			}.start()
+			this@DebugViewModel.loadPolygonsAsync("Loading easy polygons",
+				R.raw.easy_polygons, activity, R.color.easy_polygon, true).start()
 
-			// Load the  moderate polygons file.
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading moderate polygons")
-				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.moderate_polygons, activity,
-					R.color.moderate_polygon, emptyArray(), true)
-				Log.v(tag, "Finished loading moderate polygons")
-			}.start()
+			// Load the moderate polygons file.
+			this@DebugViewModel.loadPolygonsAsync("Loading moderate polygons",
+				R.raw.moderate_polygons, activity, R.color.moderate_polygon, true).start()
 
 			// Load the difficult polygons file.
-			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-				Log.v(tag, "Started loading difficult polygons")
-				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.difficult_polygons, activity,
-					R.color.difficult_polygon, emptyArray(), true)
-				Log.v(tag, "Finished loading difficult polygons")
-			}.start()
+			this@DebugViewModel.loadPolygonsAsync("Loading difficult polygons",
+				R.raw.difficult_polygons, activity, R.color.difficult_polygon, true).start()
 		}.start()
 	}
 
+	private fun loadPolylinesAsync(jobDescription: String, @RawRes polylineResource: Int, activity: DebugActivity,
+	                               @ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int): Deferred<Int> {
+		return viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
+			val tag = "loadPolylinesAsync"
+			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
+
+			MapHandler.loadPolylines(this@DebugViewModel.map!!, polylineResource, activity, color,
+				zIndex, icon)
+			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
+		}
+	}
+
+	private fun loadPolygonsAsync(jobDescription: String, @RawRes polygonResource: Int, activity: DebugActivity,
+	                              @ColorRes color: Int, visible: Boolean): Deferred<Int> {
+		return viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
+			val tag = "loadPolygonsAsync"
+			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
+			MapHandler.loadPolygons(this@DebugViewModel.map!!, polygonResource, activity, color, visible)
+			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
+		}
+	}
 }

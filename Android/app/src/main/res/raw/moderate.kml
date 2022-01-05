@@ -91,7 +91,7 @@
     <Placemark>
         <name>Short Shot</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin90</styleUrl>
+        <styleUrl>#msn_ylw-pushpin900</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -105,7 +105,7 @@
     <Placemark>
         <name>Lower Nastar</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin90</styleUrl>
+        <styleUrl>#msn_ylw-pushpin900</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -150,7 +150,7 @@
     <Placemark>
         <name>Alisons Way</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin90</styleUrl>
+        <styleUrl>#msn_ylw-pushpin900</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -166,7 +166,7 @@
     <Placemark>
         <name>Swede&apos;s Folly</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin18</styleUrl>
+        <styleUrl>#msn_ylw-pushpin180</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -186,7 +186,7 @@
     <Placemark>
         <name>Nastar</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin90</styleUrl>
+        <styleUrl>#msn_ylw-pushpin900</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -210,7 +210,7 @@
     <Placemark>
         <name>Skookum</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <styleUrl>#msn_ylw-pushpin4</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -247,7 +247,7 @@
     <Placemark>
         <name>Upper Northwest Passage</name>
         <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin2</styleUrl>
+        <styleUrl>#msn_ylw-pushpin7</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -257,7 +257,7 @@
                 -117.1114581075272,47.92551292286121,0 -117.1114093849576,47.9255245459475,0
                 -117.1113502408483,47.92553840972515,0 -117.1112637894436,47.92555611038159,0
                 -117.1111981329825,47.92557041987072,0 -117.1111535192336,47.92558287303432,0
-                -117.1108790884297,47.92565661083309,0 -117.1106494512743,47.92579321153529,0
+                -117.1108790884297,47.92565661083308,0 -117.1106494512743,47.92579321153529,0
                 -117.1103879214392,47.92602385653317,0 -117.1102973096591,47.92614007921195,0
                 -117.1101695965622,47.92628220547878,0 -117.1099305060556,47.92645497986383,0
                 -117.1095832769723,47.92674316827693,0 -117.1092568734871,47.92699297423463,0
@@ -267,7 +267,7 @@
     </Placemark>
     <Placemark>
         <name>Trail to 1</name>
-        <styleUrl>#msn_ylw-pushpin9</styleUrl>
+        <styleUrl>#msn_ylw-pushpin90</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -293,7 +293,8 @@
     </Placemark>
     <Placemark>
         <name>Trail to 1</name>
-        <styleUrl>#msn_ylw-pushpin9</styleUrl>
+        <visibility>0</visibility>
+        <styleUrl>#msn_ylw-pushpin90</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -316,7 +317,7 @@
     </Placemark>
     <Placemark>
         <name>Lamonga Pass</name>
-        <styleUrl>#msn_ylw-pushpin50</styleUrl>
+        <styleUrl>#msn_ylw-pushpin501</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -359,7 +360,7 @@
     </Placemark>
     <Placemark>
         <name>Trail to Ridge Run</name>
-        <styleUrl>#msn_ylw-pushpin1</styleUrl>
+        <styleUrl>#msn_ylw-pushpin2</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -383,7 +384,7 @@
     </Placemark>
     <Placemark>
         <name>Ridge Run</name>
-        <styleUrl>#msn_ylw-pushpin11</styleUrl>
+        <styleUrl>#msn_ylw-pushpin111</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -504,7 +505,7 @@
     </Placemark>
     <Placemark>
         <name>Gary&apos;s Glory</name>
-        <styleUrl>#msn_ylw-pushpin50</styleUrl>
+        <styleUrl>#msn_ylw-pushpin501</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -530,7 +531,7 @@
     </Placemark>
     <Placemark>
         <name>Caren&apos;s Colors</name>
-        <styleUrl>#msn_ylw-pushpin50</styleUrl>
+        <styleUrl>#msn_ylw-pushpin501</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>

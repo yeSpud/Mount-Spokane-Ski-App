@@ -28,11 +28,16 @@ import androidx.core.app.NotificationCompat
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.activitysummary.SkiingActivity
+import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapactivity.MapsActivity
 import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
+
+	private lateinit var locationManager: LocationManager
+
+	private lateinit var notificationManager: NotificationManager
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 		Log.v("SkierLocationService", "onStartCommand called!")
@@ -55,15 +60,17 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onCreate called!")
 		super.onCreate()
 
+		this.locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		this.notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
 		SkiingActivity.populateActivitiesArray(this)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			this.createNotificationChannels()
 		}
 
-		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
+		if (this.locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
 				2F, this)
 		}
 	}
@@ -90,11 +97,8 @@ class SkierLocationService : Service(), LocationListener {
 
 		Locations.visibleLocationUpdates.clear()
 
-		val locationManager: LocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-		locationManager.removeUpdates(this)
-
-		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		notificationManager.cancel(TRACKING_SERVICE_ID)
+		this.locationManager.removeUpdates(this)
+		this.notificationManager.cancel(TRACKING_SERVICE_ID)
 
 		val file: String = SkiingActivity.writeActivitiesToFile(this)
 
@@ -105,9 +109,9 @@ class SkierLocationService : Service(), LocationListener {
 
 		val notification: Notification = builder.build()
 
-		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
+		this.notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 
-		MtSpokaneMapItems.reset()
+		MtSpokaneMapItems.destroyUIItems()
 	}
 
 	override fun onLocationChanged(location: Location) {
@@ -115,43 +119,44 @@ class SkierLocationService : Service(), LocationListener {
 		Locations.updateLocations(location)
 
 		// If we are not on the mountain stop the tracking.
-		if (MtSpokaneMapItems.skiAreaBounds == null) {
+		if (MtSpokaneMapItems.skiAreaBounds.points.isEmpty()) {
 			this.stopSelf()
-		} else if (MtSpokaneMapItems.skiAreaBounds!!.points.isEmpty()) {
-			this.stopSelf()
-		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
+		} else if (!MtSpokaneMapItems.skiAreaBounds.locationInsidePoints(location)) {
 			this.stopSelf()
 		}
 
-		val chairlift = Locations.checkIfOnChairlift()
-		if (chairlift != null) {
-			val chairliftText: String = this.getString(R.string.current_chairlift, chairlift.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(chairliftText) }
-			this.updateNotification(chairliftText, chairlift.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(chairlift.name, location, chairlift.getIcon()))
+		val chairliftTerminal = Locations.checkIfAtChairliftTerminals()
+		if (chairliftTerminal != null) {
+			this.updateUI(R.string.current_chairlift, chairliftTerminal, location)
+			return
+		}
+
+		if (Locations.altitudeConfidence >= 2u && Locations.speedConfidence >= 1u && Locations.mostLikelyChairlift != null) {
+			this.updateUI(R.string.current_chairlift, Locations.mostLikelyChairlift!!, location)
 			return
 		}
 
 		val other = Locations.checkIfOnOther()
 		if (other != null) {
-			val otherText: String = this.getString(R.string.current_other, other.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(otherText) }
-			this.updateNotification(otherText, other.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(other.name, location, other.getIcon()))
+			this.updateUI(R.string.current_other, other, location)
 			return
 		}
 
 		val run = Locations.checkIfOnRun()
 		if (run != null) {
-			val runText: String = this.getString(R.string.current_run, run.name)
-			Locations.visibleLocationUpdates.forEach { it.updateLocation(runText) }
-			this.updateNotification(runText, run.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(run.name, location, run.getIcon()))
+			this.updateUI(R.string.current_run, run, location)
 			return
 		}
 
 		Locations.visibleLocationUpdates.forEach { it.updateLocation(this.getString(R.string.app_name)) }
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
+	}
+
+	private fun updateUI(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
+		val text: String = this.getString(textResource, mapItem.name)
+		Locations.visibleLocationUpdates.forEach { it.updateLocation(text) }
+		this.updateNotification(text, mapItem.getIcon())
+		SkiingActivity.Activities.add(SkiingActivity(mapItem.name, location, mapItem.getIcon()))
 	}
 
 	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
@@ -163,9 +168,7 @@ class SkierLocationService : Service(), LocationListener {
 		}
 
 		val notification: Notification = createPersistentNotification(title, bitmap)
-
-		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		notificationManager.notify(TRACKING_SERVICE_ID, notification)
+		this.notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")

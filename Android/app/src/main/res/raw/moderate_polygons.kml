@@ -339,7 +339,7 @@
     </Placemark>
     <Placemark>
         <name>Short Shot</name>
-        <styleUrl>#msn_ylw-pushpin3</styleUrl>
+        <styleUrl>#msn_ylw-pushpin30</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -401,7 +401,7 @@
     </Placemark>
     <Placemark>
         <name>Lower Nastar</name>
-        <styleUrl>#msn_ylw-pushpin19</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1900</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -577,7 +577,7 @@
     </Placemark>
     <Placemark>
         <name>New Bowl</name>
-        <styleUrl>#msn_ylw-pushpin19</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1900</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -814,7 +814,7 @@
     </Placemark>
     <Placemark>
         <name>Alisons Way</name>
-        <styleUrl>#msn_ylw-pushpin5</styleUrl>
+        <styleUrl>#msn_ylw-pushpin50</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -952,7 +952,7 @@
     </Placemark>
     <Placemark>
         <name>Swede&apos;s Folly</name>
-        <styleUrl>#msn_ylw-pushpin19</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1900</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -1315,7 +1315,7 @@
     </Placemark>
     <Placemark>
         <name>Upper Northwest Passage</name>
-        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <styleUrl>#msn_ylw-pushpin9</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -1403,7 +1403,7 @@
     </Placemark>
     <Placemark>
         <name>Trail to 1</name>
-        <styleUrl>#msn_ylw-pushpin0</styleUrl>
+        <styleUrl>#msn_ylw-pushpin17</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -1605,7 +1605,7 @@
     </Placemark>
     <Placemark>
         <name>Lamonga Pass</name>
-        <styleUrl>#msn_ylw-pushpin1</styleUrl>
+        <styleUrl>#msn_ylw-pushpin10</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2316,7 +2316,7 @@
     </Placemark>
     <Placemark>
         <name>Trail to Ridge Run</name>
-        <styleUrl>#msn_ylw-pushpin19</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1900</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2682,7 +2682,7 @@
     </Placemark>
     <Placemark>
         <name>Ridge Run</name>
-        <styleUrl>#msn_ylw-pushpin2</styleUrl>
+        <styleUrl>#msn_ylw-pushpin11</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2964,7 +2964,7 @@
                         -117.1014409656276,47.94068822667519,0
                         -117.1015577844137,47.94070442798079,0
                         -117.1015680578991,47.94073071876678,0
-                        -117.1016055877545,47.94075835453128,0
+                        -117.1016055877545,47.94075835453129,0
                         -117.1015892920751,47.94077027591818,0
                         -117.1016686432938,47.94078907507972,0 -117.101651591766,47.94075484959976,0
                         -117.1016693942979,47.94072208653733,0
@@ -3428,7 +3428,7 @@
     </Placemark>
     <Placemark>
         <name>Upper Geronimo</name>
-        <styleUrl>#msn_ylw-pushpin17</styleUrl>
+        <styleUrl>#msn_ylw-pushpin170</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -3553,7 +3553,7 @@
     </Placemark>
     <Placemark>
         <name>Upper Geronimo</name>
-        <styleUrl>#msn_ylw-pushpin17</styleUrl>
+        <styleUrl>#msn_ylw-pushpin170</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -3722,7 +3722,7 @@
     </Placemark>
     <Placemark>
         <name>Secret Squirrel</name>
-        <styleUrl>#msn_ylw-pushpin19</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1900</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -3874,7 +3874,7 @@
     </Placemark>
     <Placemark>
         <name>Secret Squirrel</name>
-        <styleUrl>#msn_ylw-pushpin19</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1900</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -4883,7 +4883,7 @@
     </Placemark>
     <Placemark>
         <name>Caren&apos;s Colors</name>
-        <styleUrl>#msn_ylw-pushpin7</styleUrl>
+        <styleUrl>#msn_ylw-pushpin70</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
