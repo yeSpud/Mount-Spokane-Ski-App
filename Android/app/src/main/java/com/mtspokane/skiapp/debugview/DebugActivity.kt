@@ -62,11 +62,10 @@ class DebugActivity : FragmentActivity() {
 		this.previousLocationName = this.binding.currentLocationName.text
 		this.binding.currentLocationName.text = locationString
 		this.binding.currentLocationAccuracy.text = this.getString(R.string.current_location_accuracy, Locations.currentLocation!!.accuracy)
-		this.binding.currentLocationAltitude.text = this.getString(R.string.current_location_altitude, Locations.currentLocation!!.altitude)
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			this.binding.currentLocationAltitudeAccuracy.text = this.getString(R.string.current_location_altitude_accuracy, Locations.currentLocation!!.verticalAccuracyMeters)
+			this.binding.currentLocationAltitude.text = this.getString(R.string.current_location_altitude, Locations.currentLocation!!.altitude, Locations.currentLocation!!.verticalAccuracyMeters)
 		} else {
-			this.binding.currentLocationAltitudeAccuracy.text = this.getString(R.string.current_location_altitude_accuracy, 0)
+			this.binding.currentLocationAltitude.text = this.getString(R.string.current_location_altitude, Locations.currentLocation!!.altitude, 0)
 		}
 
 		this.binding.currentLocationLatitude.text = this.getString(R.string.current_location_latitude, Locations.currentLocation!!.latitude)
@@ -105,11 +104,10 @@ class DebugActivity : FragmentActivity() {
 		}
 		this.binding.previousLocationName.text = this.previousLocationName
 		this.binding.previousLocationAccuracy.text = this.getString(R.string.previous_location_accuracy, Locations.previousLocation!!.accuracy)
-		this.binding.previousLocationAltitude.text = this.getString(R.string.previous_location_altitude, Locations.previousLocation!!.altitude)
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			this.binding.previousLocationAltitudeAccuracy.text = this.getString(R.string.previous_location_altitude_accuracy, Locations.previousLocation!!.verticalAccuracyMeters)
+			this.binding.previousLocationAltitude.text = this.getString(R.string.previous_location_altitude, Locations.previousLocation!!.altitude, Locations.previousLocation!!.verticalAccuracyMeters)
 		} else {
-			this.binding.previousLocationAltitudeAccuracy.text = this.getString(R.string.previous_location_altitude_accuracy, 0)
+			this.binding.previousLocationAltitude.text = this.getString(R.string.previous_location_altitude, Locations.previousLocation!!.altitude, 0)
 		}
 
 		this.binding.previousLocationLatitude.text = this.getString(R.string.previous_location_latitude, Locations.previousLocation!!.latitude)

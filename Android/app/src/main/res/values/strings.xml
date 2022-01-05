@@ -64,20 +64,18 @@
     <string name="debug_view_title">Super Secret Debug View</string>
     <string name="previous_location_name">Previous location name: %s</string>
     <string name="previous_location_accuracy">Previous location accuracy: %f meters</string>
-    <string name="previous_location_altitude">Previous location altitude: %f meters</string>
-    <string name="previous_location_altitude_accuracy">Previous location altitude accuracy: %f meters</string>
+    <string name="previous_location_altitude">Previous location altitude: %f meters\n<i>±%f meters</i></string>
     <string name="previous_location_latitude">Previous location latitude: %f</string>
     <string name="previous_location_longitude">Previous location longitude: %f</string>
     <string name="previous_location_speed">Previous location speed: %f meters/second\n<i>±%f meters/second</i></string>
     <string name="current_location_name">Current location name: %s</string>
     <string name="current_location_accuracy">Current location accuracy: %f meters</string>
-    <string name="current_location_altitude">Current location altitude: %f meters</string>
-    <string name="current_location_altitude_accuracy">Current location altitude accuracy: %f meters</string>
+    <string name="current_location_altitude">Current location altitude: %f meters\n<i>±%f meters</i></string>
     <string name="current_location_latitude">Current location latitude: %f</string>
     <string name="current_location_longitude">Current location longitude: %f</string>
     <string name="current_location_speed">Current location speed: %f meters/second\n<i>±%f meters/second</i></string>
     <string name="vertical_direction">Vertical direction: %s</string>
-    <string name="chairlift_confidence">Chairlift confidence: %d / %d</string>
+    <string name="chairlift_confidence">Chairlift confidence: %d / %f</string>
     <string name="most_likely_chairlift">Most likely chairlift: %s</string>
 
 </resources>

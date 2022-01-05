@@ -38,12 +38,6 @@
                 android:text="@string/previous_location_altitude" />
 
             <TextView
-                android:id="@+id/previous_location_altitude_accuracy"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/previous_location_altitude_accuracy" />
-
-            <TextView
                 android:id="@+id/previous_location_latitude"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -87,11 +81,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/current_location_altitude" />
 
-            <TextView
-                android:id="@+id/current_location_altitude_accuracy"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/current_location_altitude_accuracy" />
 
             <TextView
                 android:id="@+id/current_location_latitude"

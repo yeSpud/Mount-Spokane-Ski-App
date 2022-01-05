@@ -10,11 +10,8 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.Polygon
 import com.google.maps.android.ktx.awaitMap
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapactivity.MapHandler
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -34,16 +31,26 @@ class DebugViewModel : ViewModel() {
 
 		// Move the camera.
 		val cameraPosition = CameraPosition.Builder()
-			.target(LatLng(47.92517834073426, -117.10480503737926))
-			.tilt(45F)
-			.bearing(317.50552F)
-			.zoom(14.414046F)
+			.target(LatLng(47.921774273268106, -117.10490226745605))
+			.tilt(47.547382F)
+			.bearing(319.2285F)
+			.zoom(14.169826F)
 			.build()
 		this.map!!.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 		this.map!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728,
 			-117.133402), LatLng(47.943674, -117.092470)))
 		this.map!!.setMaxZoomPreference(20F)
 		this.map!!.setMinZoomPreference(13F)
+
+		/*
+		this.map!!.setOnCameraIdleListener {
+			val c: CameraPosition = this.map!!.cameraPosition
+
+			Log.v("OnCameraIdle", "Bearing: ${c.bearing}")
+			Log.v("OnCameraIdle", "Target: ${c.target}")
+			Log.v("OnCameraIdle", "Tilt: ${c.tilt}")
+			Log.v("OnCameraIdle", "Zoom: ${c.zoom}")
+		} */
 
 		// Set the map to use satellite view.
 		this.map!!.mapType = GoogleMap.MAP_TYPE_SATELLITE
@@ -86,37 +93,8 @@ class DebugViewModel : ViewModel() {
 			// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading other polygons")
-
-				val hashmap: HashMap<String, Array<Polygon>> = MapHandler.loadPolygons(this@DebugViewModel.map!!,
-					R.raw.other, activity, R.color.other_polygon_fill)
-
-				val skiAreaBoundsKeyName = "Ski Area Bounds"
-				val skiAreaBounds = hashmap[skiAreaBoundsKeyName]
-				MtSpokaneMapItems.skiAreaBounds = UIMapItem(skiAreaBoundsKeyName, skiAreaBounds?.get(0))
-				hashmap.remove(skiAreaBoundsKeyName)
-
-				val names: Array<String> = hashmap.keys.toTypedArray()
-				MtSpokaneMapItems.other = Array(9) {
-
-					val icon: Int? = when (names[it]) {
-						"Lodge 1" -> R.drawable.ic_missing // TODO Lodge icon
-						"Lodge 2" -> R.drawable.ic_missing // TODO Lodge icon
-						"Yurt" -> R.drawable.ic_yurt
-						"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
-						"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
-						"Lodge 1 Parking Lot" -> R.drawable.ic_parking
-						"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-						"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
-						"Ski School" -> R.drawable.ic_missing // TODO Ski school icon
-						else -> {
-							Log.w(tag, "${names[it]} does not have an icon")
-							null
-						}
-					}
-
-					UIMapItem(names[it], hashmap[names[it]]?.get(0), icon)
-				}
-
+				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.other, activity,
+					R.color.other_polygon_fill, false)
 				Log.v(tag, "Finished loading other polygons")
 			}.start()
 
