@@ -16,7 +16,7 @@ class DebugActivity : FragmentActivity() {
 
 	private var locationChangeCallback: Locations.VisibleLocationUpdate? = null
 
-	lateinit var viewModel: DebugViewModel
+	private lateinit var viewModel: DebugViewModel
 
 	private var previousLocationName: CharSequence = ""
 
@@ -71,11 +71,10 @@ class DebugActivity : FragmentActivity() {
 
 		this.binding.currentLocationLatitude.text = this.getString(R.string.current_location_latitude, Locations.currentLocation!!.latitude)
 		this.binding.currentLocationLongitude.text = this.getString(R.string.current_location_longitude, Locations.currentLocation!!.longitude)
-		this.binding.currentLocationSpeed.text = this.getString(R.string.current_location_speed, Locations.currentLocation!!.speed)
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			this.binding.currentLocationSpeedAccuracy.text = this.getString(R.string.current_location_speed_accuracy, Locations.currentLocation!!.speedAccuracyMetersPerSecond)
+			this.binding.currentLocationSpeed.text = this.getString(R.string.current_location_speed, Locations.currentLocation!!.speed, Locations.currentLocation!!.speedAccuracyMetersPerSecond)
 		} else {
-			this.binding.currentLocationSpeedAccuracy.text = this.getString(R.string.current_location_speed_accuracy, 0)
+			this.binding.currentLocationSpeed.text = this.getString(R.string.current_location_speed, Locations.currentLocation!!.speed, 0)
 		}
 
 		if (this.viewModel.map != null) {
@@ -115,11 +114,10 @@ class DebugActivity : FragmentActivity() {
 
 		this.binding.previousLocationLatitude.text = this.getString(R.string.previous_location_latitude, Locations.previousLocation!!.latitude)
 		this.binding.previousLocationLongitude.text = this.getString(R.string.previous_location_longitude, Locations.previousLocation!!.longitude)
-		this.binding.previousLocationSpeed.text = this.getString(R.string.previous_location_speed, Locations.previousLocation!!.speed)
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			this.binding.previousLocationSpeedAccuracy.text = this.getString(R.string.previous_location_speed_accuracy, Locations.previousLocation!!.speedAccuracyMetersPerSecond)
+			this.binding.previousLocationSpeed.text = this.getString(R.string.previous_location_speed, Locations.previousLocation!!.speed, Locations.previousLocation!!.speedAccuracyMetersPerSecond)
 		} else {
-			this.binding.previousLocationSpeedAccuracy.text = this.getString(R.string.previous_location_speed_accuracy, 0)
+			this.binding.previousLocationSpeed.text = this.getString(R.string.previous_location_speed, Locations.previousLocation!!.speed, 0)
 		}
 	}
 
