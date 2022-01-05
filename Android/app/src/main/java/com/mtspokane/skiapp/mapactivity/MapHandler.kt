@@ -3,7 +3,6 @@ package com.mtspokane.skiapp.mapactivity
 import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.util.Log
@@ -193,99 +192,124 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading other polygons")
 
-				var otherIndex = 0
+				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(this@MapHandler.map!!,
+					R.raw.other, this@MapHandler.activity!!, R.color.other_polygon_fill)
 
-				// Load the other polygons file.
-				parseKmlFile(this@MapHandler.map!!, R.raw.other, this@MapHandler.activity!!).forEach {
+				val skiAreaBoundsKeyName = "Ski Area Bounds"
+				val skiAreaBounds = hashmap[skiAreaBoundsKeyName]
+				MtSpokaneMapItems.skiAreaBounds = UIMapItem(skiAreaBoundsKeyName, skiAreaBounds?.get(0))
+				hashmap.remove(skiAreaBoundsKeyName)
 
-					// Get the name of the other polygon.
-					val name: String = getPlacemarkName(it)
+				val names: Array<String> = hashmap.keys.toTypedArray()
+				MtSpokaneMapItems.other = Array(9) {
 
-					// Get the polygon from the file.
-					val kmlPolygon: KmlPolygon = it.geometry as KmlPolygon
-
-					// If the polygon is the ski area bounds then add it to the map as its own object.
-					withContext(Dispatchers.Main) {
-						if (name == "Ski Area Bounds") {
-							Log.d(tag, "Adding bounds to map")
-
-							val skiAreaBoundsPolygon: Polygon = addPolygonToMap(this@MapHandler.map!!,
-								kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
-								Color.MAGENTA, 1.0F, BuildConfig.DEBUG)
-
-							val skiAreaBoundsMapItem = UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
-
-							MtSpokaneMapItems.skiAreaBounds = skiAreaBoundsMapItem
-
-						} else {
-
-							// Load the other polygons as normal.
-
-							val polygon: Polygon = addPolygonToMap(this@MapHandler.map!!, kmlPolygon
-								.outerBoundaryCoordinates, 0.5F, R.color.other_polygon_fill,
-								Color.MAGENTA, 8F, BuildConfig.DEBUG)
-
-							val item = UIMapItem(name, polygon)
-
-							val icon: Int? = when (name) {
-								"Lodge 1" -> R.drawable.ic_missing // TODO Lodge icon
-								"Lodge 2" -> R.drawable.ic_missing // TODO Lodge icon
-								"Yurt" -> R.drawable.ic_yurt
-								"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
-								"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
-								"Lodge 1 Parking Lot" -> R.drawable.ic_parking
-								"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-								"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
-								"Ski School" -> R.drawable.ic_missing // TODO Ski school icon
-								else -> {
-									Log.w(tag, "$name does not have an icon")
-									null
-								}
-							}
-
-							if (icon != null) {
-								item.setIcon(icon)
-							}
-
-							MtSpokaneMapItems.other[otherIndex] = item
-							otherIndex++
-
-							Log.i(tag, "Added item: $name")
+					val icon: Int? = when (names[it]) {
+						"Lodge 1" -> R.drawable.ic_missing // TODO Lodge icon
+						"Lodge 2" -> R.drawable.ic_missing // TODO Lodge icon
+						"Yurt" -> R.drawable.ic_yurt
+						"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
+						"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
+						"Lodge 1 Parking Lot" -> R.drawable.ic_parking
+						"Lodge 2 Parking Lot" -> R.drawable.ic_parking
+						"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
+						"Ski School" -> R.drawable.ic_missing // TODO Ski school icon
+						else -> {
+							Log.w(tag, "${names[it]} does not have an icon")
+							null
 						}
 					}
+
+					UIMapItem(names[it], hashmap[names[it]]?.get(0), icon)
 				}
+
 				Log.v(tag, "Finished loading other polygons")
+			},
+
+			// Load the chairlift terminals.
+			async(Dispatchers.IO) {
+				Log.v(tag, "Started loading chairlift terminal polylines")
+				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(this@MapHandler.map!!,
+					R.raw.lift_terminal_polygons, this@MapHandler.activity!!, R.color.chairlift_polygon)
+
+				val names: Array<String> = hashmap.keys.toTypedArray()
+				MtSpokaneMapItems.chairliftTerminals = Array(6) {
+
+					val polygonArray: Array<Polygon> = hashmap[names[it]]!!
+
+					val uiMapItem = UIMapItem(names[it], polygonArray[0], R.drawable.ic_chairlift)
+					uiMapItem.addAdditionalPolygon(polygonArray[1])
+					uiMapItem
+				}
+
+				Log.v(tag, "Finished loading chairlift terminal polylines")
 			},
 
 			// Load the chairlift polygons file.
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading chairlift polygons")
-				loadPolygons(this@MapHandler.map!!, R.raw.lift_polygons, this@MapHandler.activity!!,
-					R.color.chairlift_polygon, MtSpokaneMapItems.chairlifts)
+				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(this@MapHandler.map!!,
+					R.raw.lift_polygons, this@MapHandler.activity!!, R.color.chairlift_polygon)
+
+				MtSpokaneMapItems.chairlifts.forEach {  visibleMapItem: VisibleUIMapItem ->
+
+					val polygons: Array<Polygon>? = hashmap[visibleMapItem.name]
+					polygons?.forEach {
+						visibleMapItem.addAdditionalPolygon(it)
+					}
+				}
+
 				Log.v(tag, "Finished loading chairlift polygons")
 			},
 
 			// Load the easy polygons file.
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading easy polygons")
-				loadPolygons(this@MapHandler.map!!, R.raw.easy_polygons, this@MapHandler.activity!!,
-					R.color.easy_polygon, MtSpokaneMapItems.easyRuns)
+
+				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(this@MapHandler.map!!,
+					R.raw.easy_polygons, this@MapHandler.activity!!, R.color.easy_polygon)
+
+				MtSpokaneMapItems.easyRuns.forEach { visibleUIMapItem: VisibleUIMapItem ->
+
+					val polygons: Array<Polygon>? = hashmap[visibleUIMapItem.name]
+					polygons?.forEach {
+						visibleUIMapItem.addAdditionalPolygon(it)
+					}
+				}
+
 				Log.v(tag, "Finished loading easy polygons")
 			},
 
-			// Load the  moderate polygons file.
+			// Load the moderate polygons file.
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading moderate polygons")
-				loadPolygons(this@MapHandler.map!!, R.raw.moderate_polygons, this@MapHandler.activity!!,
-					R.color.moderate_polygon, MtSpokaneMapItems.moderateRuns)
+				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(this@MapHandler.map!!,
+					R.raw.moderate_polygons, this@MapHandler.activity!!, R.color.moderate_polygon)
+
+				MtSpokaneMapItems.moderateRuns.forEach { visibleUIMapItem: VisibleUIMapItem ->
+
+					val polygons: Array<Polygon>? = hashmap[visibleUIMapItem.name]
+					polygons?.forEach {
+						visibleUIMapItem.addAdditionalPolygon(it)
+					}
+				}
+
 				Log.v(tag, "Finished loading moderate polygons")
 			},
 
 			// Load the difficult polygons file.
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading difficult polygons")
-				loadPolygons(this@MapHandler.map!!, R.raw.difficult_polygons, this@MapHandler.activity!!,
-					R.color.difficult_polygon, MtSpokaneMapItems.difficultRuns)
+				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(this@MapHandler.map!!,
+					R.raw.difficult_polygons, this@MapHandler.activity!!, R.color.difficult_polygon)
+
+				MtSpokaneMapItems.difficultRuns.forEach { visibleUIMapItem: VisibleUIMapItem ->
+
+					val polygons: Array<Polygon>? = hashmap[visibleUIMapItem.name]
+					polygons?.forEach {
+						visibleUIMapItem.addAdditionalPolygon(it)
+					}
+				}
+
 				Log.v(tag, "Finished loading difficult polygons")
 			}
 		)
@@ -400,14 +424,14 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 		@AnyThread
 		suspend fun loadPolygons(map: GoogleMap, @RawRes fileRes: Int, activity: FragmentActivity,
-			@ColorRes color: Int, visibleUIMapItems: Array<VisibleUIMapItem>, visible: Boolean = BuildConfig.DEBUG) = coroutineScope { // TODO Optimize this
+			@ColorRes color: Int, visible: Boolean = BuildConfig.DEBUG): HashMap<String, Array<Polygon>> = coroutineScope {
 
-			val hashMap: HashMap<String, ArrayList<Polygon>> = HashMap()
+			val hashMap: HashMap<String, Array<Polygon>> = HashMap()
 
 			// Load the polygons file.
-			parseKmlFile(map, fileRes, activity).forEach {
+			parseKmlFile(map, fileRes, activity).forEach { placemark ->
 
-				val kmlPolygon: KmlPolygon = it.geometry as KmlPolygon
+				val kmlPolygon: KmlPolygon = placemark.geometry as KmlPolygon
 
 				val argb = getARGB(activity, color)
 
@@ -417,28 +441,27 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 						argb, argb, 8F, visible)
 				}
 
-				val name: String = getPlacemarkName(it)
+				val name: String = getPlacemarkName(placemark)
 
 				if (hashMap[name] == null) {
-					val arrayList: ArrayList<Polygon> = ArrayList(1)
-					arrayList.add(polygon)
-					hashMap[name] = arrayList
+					val array: Array<Polygon> = Array(1) { polygon }
+					hashMap[name] = array
 				} else {
-					hashMap[name]!!.add(polygon)
+					val oldArray: Array<Polygon>? = hashMap[name]
+					if (oldArray != null) {
+						val largerArray: Array<Polygon> = Array(oldArray.size + 1) {
+							if (it == oldArray.size) {
+								polygon
+							} else {
+								oldArray[it]
+							}
+						}
+						hashMap[name] = largerArray
+					}
 				}
 			}
 
-			visibleUIMapItems.forEach { visibleMapItem ->
-				if (hashMap[visibleMapItem.name] != null) {
-					withContext(Dispatchers.Main) {
-						hashMap[visibleMapItem.name]!!.forEach { polygon ->
-							visibleMapItem.addAdditionalPolygon(polygon)
-						}
-					}
-				} else {
-					Log.w("loadPolygons", "Visible map item ${visibleMapItem.name} is not in hashmap!")
-				}
-			}
+			return@coroutineScope hashMap
 		}
 
 		@MainThread

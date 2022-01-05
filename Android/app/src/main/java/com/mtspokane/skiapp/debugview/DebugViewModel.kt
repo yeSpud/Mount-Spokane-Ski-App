@@ -1,6 +1,5 @@
 package com.mtspokane.skiapp.debugview
 
-import android.graphics.Color
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,15 +11,14 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polygon
-import com.google.maps.android.data.kml.KmlPolygon
 import com.google.maps.android.ktx.awaitMap
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapactivity.MapHandler
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.withContext
 
 class DebugViewModel : ViewModel() {
 
@@ -42,12 +40,8 @@ class DebugViewModel : ViewModel() {
 			.zoom(14.414046F)
 			.build()
 		this.map!!.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-		this.map!!.setLatLngBoundsForCameraTarget(
-			LatLngBounds(
-				LatLng(47.912728,
-			-117.133402), LatLng(47.943674, -117.092470)
-			)
-		)
+		this.map!!.setLatLngBoundsForCameraTarget(LatLngBounds(LatLng(47.912728,
+			-117.133402), LatLng(47.943674, -117.092470)))
 		this.map!!.setMaxZoomPreference(20F)
 		this.map!!.setMinZoomPreference(13F)
 
@@ -93,61 +87,36 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading other polygons")
 
-				var otherIndex = 0
+				val hashmap: HashMap<String, Array<Polygon>> = MapHandler.loadPolygons(this@DebugViewModel.map!!,
+					R.raw.other, activity, R.color.other_polygon_fill)
 
-				// Load the other polygons file.
-				MapHandler.parseKmlFile(this@DebugViewModel.map!!, R.raw.other, activity).forEach {
+				val skiAreaBoundsKeyName = "Ski Area Bounds"
+				val skiAreaBounds = hashmap[skiAreaBoundsKeyName]
+				MtSpokaneMapItems.skiAreaBounds = UIMapItem(skiAreaBoundsKeyName, skiAreaBounds?.get(0))
+				hashmap.remove(skiAreaBoundsKeyName)
 
-					// Get the name of the other polygon.
-					val name: String = MapHandler.getPlacemarkName(it)
+				val names: Array<String> = hashmap.keys.toTypedArray()
+				MtSpokaneMapItems.other = Array(9) {
 
-					// Get the polygon from the file.
-					val kmlPolygon: KmlPolygon = it.geometry as KmlPolygon
-
-					// If the polygon is the ski area bounds then add it to the map as its own object.
-					withContext(Dispatchers.Main) {
-						if (name == "Ski Area Bounds") {
-							Log.d(tag, "Adding bounds to map")
-
-							val skiAreaBoundsPolygon: Polygon = MapHandler.addPolygonToMap(this@DebugViewModel.map!!,
-								kmlPolygon.outerBoundaryCoordinates, 0.0F, Color.TRANSPARENT,
-								Color.MAGENTA, 1.0F, true)
-
-							UIMapItem("Ski Area Bounds", skiAreaBoundsPolygon)
-
-						} else {
-
-							// Load the other polygons as normal.
-							val polygon: Polygon = MapHandler.addPolygonToMap(this@DebugViewModel.map!!,
-								kmlPolygon.outerBoundaryCoordinates, 0.5F, R.color.other_polygon_fill,
-								Color.MAGENTA, 8F, true)
-
-							val item = UIMapItem(name, polygon)
-
-							val icon: Int? = when (name) {
-								"Lodge 1" -> R.drawable.ic_missing // TODO Lodge icon
-								"Lodge 2" -> R.drawable.ic_missing // TODO Lodge icon
-								"Yurt" -> R.drawable.ic_yurt
-								"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
-								"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
-								"Lodge 1 Parking Lot" -> R.drawable.ic_parking
-								"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-								"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
-								else -> {
-									Log.w(tag, "$name does not have an icon")
-									null
-								}
-							}
-
-							if (icon != null) {
-								item.setIcon(icon)
-							}
-							otherIndex++
-
-							Log.i(tag, "Added item: $name")
+					val icon: Int? = when (names[it]) {
+						"Lodge 1" -> R.drawable.ic_missing // TODO Lodge icon
+						"Lodge 2" -> R.drawable.ic_missing // TODO Lodge icon
+						"Yurt" -> R.drawable.ic_yurt
+						"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
+						"Ski Patrol" -> R.drawable.ic_ski_patrol_icon
+						"Lodge 1 Parking Lot" -> R.drawable.ic_parking
+						"Lodge 2 Parking Lot" -> R.drawable.ic_parking
+						"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
+						"Ski School" -> R.drawable.ic_missing // TODO Ski school icon
+						else -> {
+							Log.w(tag, "${names[it]} does not have an icon")
+							null
 						}
 					}
+
+					UIMapItem(names[it], hashmap[names[it]]?.get(0), icon)
 				}
+
 				Log.v(tag, "Finished loading other polygons")
 			}.start()
 
@@ -155,7 +124,7 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading chairlift polygons")
 				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.lift_polygons, activity,
-					R.color.chairlift_polygon, emptyArray(), true)
+					R.color.chairlift_polygon, true)
 				Log.v(tag, "Finished loading chairlift polygons")
 			}.start()
 
@@ -163,7 +132,7 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading easy polygons")
 				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.easy_polygons, activity,
-					R.color.easy_polygon, emptyArray(), true)
+					R.color.easy_polygon, true)
 				Log.v(tag, "Finished loading easy polygons")
 			}.start()
 
@@ -171,7 +140,7 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading moderate polygons")
 				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.moderate_polygons, activity,
-					R.color.moderate_polygon, emptyArray(), true)
+					R.color.moderate_polygon, true)
 				Log.v(tag, "Finished loading moderate polygons")
 			}.start()
 
@@ -179,10 +148,9 @@ class DebugViewModel : ViewModel() {
 			viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 				Log.v(tag, "Started loading difficult polygons")
 				MapHandler.loadPolygons(this@DebugViewModel.map!!, R.raw.difficult_polygons, activity,
-					R.color.difficult_polygon, emptyArray(), true)
+					R.color.difficult_polygon, true)
 				Log.v(tag, "Finished loading difficult polygons")
 			}.start()
 		}.start()
 	}
-
 }
