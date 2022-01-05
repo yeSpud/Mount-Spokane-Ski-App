@@ -139,6 +139,12 @@
         android:layout_height="wrap_content"
         android:text="@string/chairlift_confidence" />
 
+    <TextView
+        android:id="@+id/chairlift"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/most_likely_chairlift" />
+
     <fragment
         android:id="@+id/debug_map"
         android:layout_weight="18"

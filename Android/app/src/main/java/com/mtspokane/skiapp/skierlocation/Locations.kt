@@ -16,12 +16,23 @@ object Locations {
 	var chairliftConfidence = 0
 	private set
 
+	const val numberOfChairliftChecks = 5.0F
+
+	var mostLikelyChairlift: MapItem? = null
+	private set
+
 	var visibleLocationUpdates: ArrayList<VisibleLocationUpdate> = ArrayList(0)
 
 	fun updateLocations(newLocation: Location) {
 		this.previousLocation = this.currentLocation
 		this.currentLocation = newLocation
 		this.chairliftConfidence = 0
+
+		MtSpokaneMapItems.chairlifts.forEach {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				this.mostLikelyChairlift = it
+			}
+		}
 	}
 
 	fun getVerticalDirection(): VerticalDirection {
@@ -53,12 +64,12 @@ object Locations {
 
 	fun checkIfOnOther(): MapItem? {
 
-		if (this.currentLocation == null) {
+		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
 			return null
 		}
 
 		MtSpokaneMapItems.other.forEach {
-			if (it != null && it.locationInsidePoints(this.currentLocation!!)) {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return it
 			}
 		}
@@ -66,14 +77,26 @@ object Locations {
 		return null
 	}
 
-	fun checkIfOnChairlift(): MapItem? {
+	fun checkIfAtChairliftTerminals(): MapItem? {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
 			return null
 		}
 
-		val numberOfChecks = 6
-		val minimumConfidenceValue: Double = 4.0 / numberOfChecks
+		MtSpokaneMapItems.chairliftTerminals.forEach {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				return it
+			}
+		}
+
+		return null
+	}
+
+	fun getChairliftConfidencePercentage(): Float {
+
+		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
+			return 0.0F
+		}
 
 		// Check altitude.
 		this.chairliftConfidence += getAltitudeConfidence()
@@ -81,19 +104,7 @@ object Locations {
 		// Check speed.
 		this.chairliftConfidence += getSpeedConfidence()
 
-		var potentialChairlift: MapItem? = null
-		MtSpokaneMapItems.chairlifts.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				this.chairliftConfidence += 1
-				potentialChairlift = it
-			}
-		}
-
-		return if (this.chairliftConfidence / numberOfChecks >= minimumConfidenceValue) {
-			potentialChairlift
-		} else {
-			null
-		}
+		return (this.chairliftConfidence / this.numberOfChairliftChecks)
 	}
 
 	private fun getAltitudeConfidence(): Int {
@@ -140,7 +151,7 @@ object Locations {
 
 	fun checkIfOnRun(): MapItem? {
 
-		if (this.currentLocation == null) {
+		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
 			return null
 		}
 

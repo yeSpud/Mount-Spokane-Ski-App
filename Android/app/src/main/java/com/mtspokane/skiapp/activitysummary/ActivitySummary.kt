@@ -145,7 +145,6 @@ class ActivitySummary : Activity() {
 				}
 				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}
-
 		}
 	}
 

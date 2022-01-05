@@ -107,7 +107,7 @@ class SkierLocationService : Service(), LocationListener {
 
 		notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 
-		MtSpokaneMapItems.reset()
+		MtSpokaneMapItems.destroyUIItems()
 	}
 
 	override fun onLocationChanged(location: Location) {
@@ -115,20 +115,27 @@ class SkierLocationService : Service(), LocationListener {
 		Locations.updateLocations(location)
 
 		// If we are not on the mountain stop the tracking.
-		if (MtSpokaneMapItems.skiAreaBounds == null) {
+		if (MtSpokaneMapItems.skiAreaBounds.points.isEmpty()) {
 			this.stopSelf()
-		} else if (MtSpokaneMapItems.skiAreaBounds!!.points.isEmpty()) {
-			this.stopSelf()
-		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
+		} else if (!MtSpokaneMapItems.skiAreaBounds.locationInsidePoints(location)) {
 			this.stopSelf()
 		}
 
-		val chairlift = Locations.checkIfOnChairlift()
-		if (chairlift != null) {
-			val chairliftText: String = this.getString(R.string.current_chairlift, chairlift.name)
+		val chairliftTerminal = Locations.checkIfAtChairliftTerminals()
+		if (chairliftTerminal != null) {
+			val chairliftText: String = this.getString(R.string.current_chairlift, chairliftTerminal.name)
 			Locations.visibleLocationUpdates.forEach { it.updateLocation(chairliftText) }
-			this.updateNotification(chairliftText, chairlift.getIcon())
-			SkiingActivity.Activities.add(SkiingActivity(chairlift.name, location, chairlift.getIcon()))
+			this.updateNotification(chairliftText, chairliftTerminal.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(chairliftTerminal.name, location, chairliftTerminal.getIcon()))
+			return
+		}
+
+		val chairliftConfidencePercentage = Locations.getChairliftConfidencePercentage()
+		if (chairliftConfidencePercentage >= 0.5F && Locations.mostLikelyChairlift != null) {
+			val chairliftText: String = this.getString(R.string.current_chairlift, Locations.mostLikelyChairlift!!.name)
+			Locations.visibleLocationUpdates.forEach { it.updateLocation(chairliftText) }
+			this.updateNotification(chairliftText, Locations.mostLikelyChairlift!!.getIcon())
+			SkiingActivity.Activities.add(SkiingActivity(Locations.mostLikelyChairlift!!.name, location, Locations.mostLikelyChairlift!!.getIcon()))
 			return
 		}
 

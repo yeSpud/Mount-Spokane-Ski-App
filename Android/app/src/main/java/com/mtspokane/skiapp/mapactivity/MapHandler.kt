@@ -338,15 +338,35 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 	companion object {
 
-		fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: FragmentActivity):
+		private fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: FragmentActivity):
 				Iterable<KmlPlacemark> {
 			val kml = kmlLayer(map, file, activity)
 			return kml.placemarks
 		}
 
+		private fun getARGB(activity: FragmentActivity, @ColorRes color: Int): Int {
+			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				activity.getColor(color)
+			} else {
+				ResourcesCompat.getColor(activity.resources, color, null)
+			}
+		}
+
+		private fun getPlacemarkName(placemark: KmlPlacemark): String {
+
+			return if (placemark.hasProperty("name")) {
+				placemark.getProperty("name")
+			} else {
+
+				// If the name wasn't found in the properties return an empty string.
+				Log.w("getPlacemarkName", "Placemark is missing name!")
+				""
+			}
+		}
+
 		@AnyThread
 		suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: FragmentActivity,
-			@ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int? = null):
+		                          @ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int? = null):
 				Array<VisibleUIMapItem> = coroutineScope {
 
 			val hashMap: HashMap<String, VisibleUIMapItem> = HashMap()
@@ -400,26 +420,6 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			}
 
 			return@coroutineScope hashMap.values.toTypedArray()
-		}
-
-		private fun getARGB(activity: FragmentActivity, @ColorRes color: Int): Int {
-			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				activity.getColor(color)
-			} else {
-				ResourcesCompat.getColor(activity.resources, color, null)
-			}
-		}
-
-		fun getPlacemarkName(placemark: KmlPlacemark): String {
-
-			return if (placemark.hasProperty("name")) {
-				placemark.getProperty("name")
-			} else {
-
-				// If the name wasn't found in the properties return an empty string.
-				Log.w("getPlacemarkName", "Placemark is missing name!")
-				""
-			}
 		}
 
 		@AnyThread
