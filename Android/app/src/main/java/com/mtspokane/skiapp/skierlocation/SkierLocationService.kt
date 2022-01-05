@@ -133,8 +133,7 @@ class SkierLocationService : Service(), LocationListener {
 			return
 		}
 
-		val chairliftConfidencePercentage = Locations.getChairliftConfidencePercentage()
-		if (chairliftConfidencePercentage >= 0.5F && Locations.mostLikelyChairlift != null) {
+		if (Locations.altitudeConfidence >= 2u && Locations.speedConfidence >= 1u && Locations.mostLikelyChairlift != null) {
 			val chairliftText: String = this.getString(R.string.current_chairlift, Locations.mostLikelyChairlift!!.name)
 			Locations.visibleLocationUpdates.forEach { it.updateLocation(chairliftText) }
 			this.updateNotification(chairliftText, Locations.mostLikelyChairlift!!.getIcon())

@@ -13,10 +13,11 @@ object Locations {
 	var currentLocation: Location? = null
 	private set
 
-	var chairliftConfidence = 0
+	var altitudeConfidence: UShort = 0u
 	private set
 
-	const val numberOfChairliftChecks = 5.0F
+	var speedConfidence: UShort = 0u
+	private set
 
 	var mostLikelyChairlift: MapItem? = null
 	private set
@@ -26,7 +27,9 @@ object Locations {
 	fun updateLocations(newLocation: Location) {
 		this.previousLocation = this.currentLocation
 		this.currentLocation = newLocation
-		this.chairliftConfidence = 0
+
+		this.altitudeConfidence = this.getAltitudeConfidenceValue()
+		this.speedConfidence = this.getSpeedConfidenceValue()
 
 		MtSpokaneMapItems.chairlifts.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
@@ -92,39 +95,23 @@ object Locations {
 		return null
 	}
 
-	@Deprecated("Use altitude confidence and speed confidence individually")
-	fun getChairliftConfidencePercentage(): Float {
-
-		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
-			return 0.0F
-		}
-
-		// Check altitude.
-		this.chairliftConfidence += getAltitudeConfidence()
-
-		// Check speed.
-		this.chairliftConfidence += getSpeedConfidence()
-
-		return (this.chairliftConfidence / this.numberOfChairliftChecks)
-	}
-
-	private fun getAltitudeConfidence(): Int {
+	private fun getAltitudeConfidenceValue(): UShort {
 		return when (this.getVerticalDirection()) {
-			VerticalDirection.UP_CERTAIN -> 3
-			VerticalDirection.UP -> 2
-			VerticalDirection.FLAT -> 1
-			else -> 0
+			VerticalDirection.UP_CERTAIN -> 3u
+			VerticalDirection.UP -> 2u
+			VerticalDirection.FLAT -> 1u
+			else -> 0u
 		}
 	}
 
-	private fun getSpeedConfidence(): Int {
+	private fun getSpeedConfidenceValue(): UShort {
 
 		if (this.currentLocation == null || this.previousLocation == null) {
-			return 0
+			return 0u
 		}
 
 		if (this.currentLocation!!.speed == 0.0F || this.previousLocation!!.speed == 0.0F) {
-			return 0
+			return 0u
 		}
 
 
@@ -137,15 +124,15 @@ object Locations {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			if (this.currentLocation!!.speedAccuracyMetersPerSecond > 0.0F && this.previousLocation!!.speedAccuracyMetersPerSecond > 0.0F) {
 				 if ((this.currentLocation!!.speed - this.currentLocation!!.speedAccuracyMetersPerSecond >= minChairliftSpeed) && (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracyMetersPerSecond <= maxChairliftSpeed)) {
-					 return 2
+					 return 2u
 				}
 			}
 		}
 
 		return if (this.currentLocation!!.speed in minChairliftSpeed..maxChairliftSpeed) {
-			1
+			1u
 		} else {
-			0
+			0u
 		}
 
 	}

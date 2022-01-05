@@ -75,7 +75,8 @@
     <string name="current_location_longitude">Current location longitude: %f</string>
     <string name="current_location_speed">Current location speed: %f meters/second\n<i>±%f meters/second</i></string>
     <string name="vertical_direction">Vertical direction: %s</string>
-    <string name="chairlift_confidence">Chairlift confidence: %d / %f</string>
     <string name="most_likely_chairlift">Most likely chairlift: %s</string>
+    <string name="altitude_confidence">Altitude confidence: %s</string>
+    <string name="speed_confidence">Speed confidence: %s</string>
 
 </resources>

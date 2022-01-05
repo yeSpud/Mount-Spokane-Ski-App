@@ -91,8 +91,9 @@ class DebugActivity : FragmentActivity() {
 			}
 		}
 
+		this.binding.altitudeConfidence.text = this.getString(R.string.altitude_confidence, Locations.altitudeConfidence.toString())
+		this.binding.speedConfidence.text = this.getString(R.string.altitude_confidence, Locations.speedConfidence.toString())
 		this.binding.verticalDirection.text = this.getString(R.string.vertical_direction, Locations.getVerticalDirection().name)
-		this.binding.chairliftConfidence.text = this.getString(R.string.chairlift_confidence, Locations.chairliftConfidence, Locations.numberOfChairliftChecks)
 		if (Locations.mostLikelyChairlift != null) {
 			this.binding.chairlift.text = this.getString(R.string.most_likely_chairlift, Locations.mostLikelyChairlift!!.name)
 		} else {
