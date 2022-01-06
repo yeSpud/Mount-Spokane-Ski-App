@@ -183,6 +183,16 @@ class ActivitySummary : Activity() {
 				}
 			}
 		}
+
+		if (startingActivity != null) {
+			if (endingActivity != null) {
+				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
+					startingActivity!!.time, endingActivity!!.time))
+			} else {
+				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
+					startingActivity!!.time, null))
+			}
+		}
 	}
 
 	private fun createLayoutParameters(width: Int, height: Int, marginLeft: Int = 0, marginTop: Int = 0,
