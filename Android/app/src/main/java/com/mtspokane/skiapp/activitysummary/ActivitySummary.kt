@@ -155,17 +155,32 @@ class ActivitySummary : Activity() {
 	}
 
 	fun loadActivities(activities: Array<SkiingActivity>) {
+
 		this.container.removeAllViews()
-		var previousActivity: SkiingActivity? = null
-		activities.forEach { skiingActivity ->
 
-			if (previousActivity == null || previousActivity!!.name != skiingActivity.name) {
+		var startingActivity: SkiingActivity? = null
+		var endingActivity: SkiingActivity? = null
 
+		activities.forEach { skiingActivity: SkiingActivity ->
 
-				val view: LinearLayout = this.createActivityView(skiingActivity.icon, skiingActivity.name,
-					skiingActivity.time, null) // TODO Configure end time
-				this.container.addView(view)
-				previousActivity = skiingActivity
+			if (startingActivity == null) {
+				startingActivity = skiingActivity
+			} else {
+
+				if (skiingActivity.name == startingActivity!!.name) {
+					endingActivity = skiingActivity
+				} else {
+					if (endingActivity != null) {
+						this.container.addView(this.createActivityView(startingActivity!!.icon,
+								startingActivity!!.name, startingActivity!!.time, endingActivity!!.time))
+						endingActivity = null
+					} else {
+						this.container.addView(this.createActivityView(startingActivity!!.icon,
+							startingActivity!!.name, startingActivity!!.time, startingActivity!!.time))
+					}
+
+					startingActivity = skiingActivity
+				}
 			}
 		}
 	}
