@@ -100,16 +100,19 @@ class SkierLocationService : Service(), LocationListener {
 		this.locationManager.removeUpdates(this)
 		this.notificationManager.cancel(TRACKING_SERVICE_ID)
 
-		val file: String = SkiingActivity.writeActivitiesToFile(this)
+		if (SkiingActivity.Activities.isNotEmpty()) {
 
-		val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, file)
+			val file: String = SkiingActivity.writeActivitiesToFile(this)
 
-		val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
-			true, R.string.activity_notification_text, pendingIntent)
+			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, file)
 
-		val notification: Notification = builder.build()
+			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
+				true, R.string.activity_notification_text, pendingIntent)
 
-		this.notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
+			val notification: Notification = builder.build()
+
+			this.notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
+		}
 
 		MtSpokaneMapItems.destroyUIItems()
 	}

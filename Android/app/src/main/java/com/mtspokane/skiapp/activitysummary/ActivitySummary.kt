@@ -8,16 +8,19 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
+import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TableRow
 import android.widget.TextView
+import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isNotEmpty
-import androidx.core.view.setPadding
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
@@ -140,14 +143,11 @@ class ActivitySummary : Activity() {
 			val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
 
 			when (requestCode) {
-				WRITE_JSON_CODE -> SkiingActivity.writeToExportFile(
-					this.contentResolver, fileUri,
-					json.toString(4)
-				)
+				WRITE_JSON_CODE -> SkiingActivity.writeToExportFile(this.contentResolver, fileUri,
+					json.toString(4))
 				WRITE_GEOJSON_CODE -> {
 					val geoJson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
-					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, geoJson
-						.toString(4))
+					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, geoJson.toString(4))
 				}
 				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}
@@ -155,70 +155,124 @@ class ActivitySummary : Activity() {
 	}
 
 	fun loadActivities(activities: Array<SkiingActivity>) {
+
 		this.container.removeAllViews()
-		var previousActivity: SkiingActivity? = null
-		activities.forEach {
 
-			if (previousActivity == null || previousActivity!!.name != it.name) {
+		var startingActivity: SkiingActivity? = null
+		var endingActivity: SkiingActivity? = null
 
-				val view: LinearLayout = createActivityView(it)
-				this.container.addView(view)
-				previousActivity = it
+		activities.forEach { skiingActivity: SkiingActivity ->
+
+			if (startingActivity == null) {
+				startingActivity = skiingActivity
+			} else {
+
+				if (skiingActivity.name == startingActivity!!.name) {
+					endingActivity = skiingActivity
+				} else {
+					if (endingActivity != null) {
+						this.container.addView(this.createActivityView(startingActivity!!.icon,
+								startingActivity!!.name, startingActivity!!.time, endingActivity!!.time))
+						endingActivity = null
+					} else {
+						this.container.addView(this.createActivityView(startingActivity!!.icon,
+							startingActivity!!.name, startingActivity!!.time, startingActivity!!.time))
+					}
+
+					startingActivity = skiingActivity
+				}
+			}
+		}
+
+		if (startingActivity != null) {
+			if (endingActivity != null) {
+				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
+					startingActivity!!.time, endingActivity!!.time))
+			} else {
+				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
+					startingActivity!!.time, null))
 			}
 		}
 	}
 
-	private fun createActivityView(activity: SkiingActivity): LinearLayout {
-
-		val linearLayout = LinearLayout(this)
-		linearLayout.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-			LinearLayout.LayoutParams.WRAP_CONTENT)
-		linearLayout.orientation = LinearLayout.HORIZONTAL
-		linearLayout.setPadding(10)
-
-
-		val imageView = ImageView(this)
-		val imageLayoutParams = this.createLayoutParameters(45, 45)
-		imageView.layoutParams = imageLayoutParams
-		imageView.contentDescription = this.getText(R.string.icon_description)
-		if (activity.icon != null) {
-			imageView.setImageDrawable(AppCompatResources.getDrawable(this, activity.icon))
-		}
-		linearLayout.addView(imageView)
-
-
-		val nameLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
-			ViewGroup.MarginLayoutParams.WRAP_CONTENT)
-		val nameView = this.createTextView(nameLayoutParams, 20F, activity.name)
-		linearLayout.addView(nameView)
-
-
-		val timeLayoutParams = this.createLayoutParameters(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
-			ViewGroup.MarginLayoutParams.WRAP_CONTENT)
-		val weightLayoutParams = TableRow.LayoutParams(timeLayoutParams)
-		weightLayoutParams.weight = 10F
-		val timeFormatter = SimpleDateFormat("hh:mm:ss", Locale.US)
-		val date = Date(activity.time)
-		val time: String = timeFormatter.format(date)
-		val timeView = this.createTextView(weightLayoutParams, 12F, time)
-		linearLayout.addView(timeView)
-
-		return linearLayout
-	}
-
-	private fun createLayoutParameters(width: Int, height: Int): ViewGroup.MarginLayoutParams {
-		val layoutParameter: ViewGroup.MarginLayoutParams = ViewGroup.MarginLayoutParams(width, height)
-		layoutParameter.marginEnd = 5
+	private fun createLayoutParameters(width: Int, height: Int, marginLeft: Int = 0, marginTop: Int = 0,
+	                                   marginRight: Int = 0, marginBottom: Int = 0): TableRow.LayoutParams {
+		val layoutParameter: TableRow.LayoutParams = TableRow.LayoutParams(width, height)
+		layoutParameter.setMargins(marginLeft, marginTop, marginRight, marginBottom)
 		return layoutParameter
 	}
 
-	private fun createTextView(layoutParams: ViewGroup.LayoutParams, textSize: Float,
-	                           text: CharSequence): TextView {
-		val textView = TextView(this)
-		textView.layoutParams = layoutParams
-		textView.textSize = textSize
-		textView.text = text
-		return textView
+	private fun getTimeFromLong(time: Long): String {
+		val timeFormatter = SimpleDateFormat("h:mm:ss", Locale.US)
+		val date = Date(time)
+		return timeFormatter.format(date)
+	}
+
+	private fun createActivityView(@DrawableRes icon: Int?, titleText: String,
+	                               startTime: Long, endTime: Long?): LinearLayout {
+
+		val activityContainer = LinearLayout(this)
+		activityContainer.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.MATCH_PARENT,
+			50, marginTop = 5, marginBottom = 5)
+		activityContainer.orientation = LinearLayout.HORIZONTAL
+
+		val imageContainer = ImageView(this)
+		val imageLayoutParameters = this.createLayoutParameters(50, 50, marginRight = 10,
+			marginLeft = 10)
+		imageLayoutParameters.weight = 0.0F
+		imageContainer.layoutParams = imageLayoutParameters
+		imageContainer.contentDescription = this.getString(R.string.icon_description)
+		if (icon != null) {
+			imageContainer.setImageDrawable(AppCompatResources.getDrawable(this, icon))
+		} else {
+			imageContainer.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_missing))
+		}
+		activityContainer.addView(imageContainer)
+
+		val titleContainer = HorizontalScrollView(this)
+		val titleContainerLayoutParameters = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
+			50)
+		titleContainerLayoutParameters.weight = 1.0F
+		titleContainer.layoutParams = titleContainerLayoutParameters
+
+		val title = TextView(this)
+		title.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
+			50)
+		title.textSize = 27.0F
+		title.textAlignment = View.TEXT_ALIGNMENT_CENTER
+		title.gravity = Gravity.TOP
+		title.text = titleText
+		titleContainer.addView(title)
+		activityContainer.addView(titleContainer)
+
+		// Time container
+		val timeContainer = LinearLayout(this)
+		val timeContainerLayoutParameters = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
+			50, marginLeft = 10, marginRight = 10)
+		timeContainerLayoutParameters.weight = 0.0F
+		timeContainer.layoutParams = timeContainerLayoutParameters
+		timeContainer.orientation = LinearLayout.VERTICAL
+
+		// Start time
+		val startTimeTextView = TextView(this)
+		startTimeTextView.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
+			22, marginBottom = 6)
+		startTimeTextView.textSize = 11.0F
+		startTimeTextView.text = this.getTimeFromLong(startTime)
+		timeContainer.addView(startTimeTextView)
+
+		// End time
+		if (endTime != null) {
+			val endTimeTextView = TextView(this)
+			endTimeTextView.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
+				22)
+			endTimeTextView.textSize = 11.0F
+			endTimeTextView.text = this.getTimeFromLong(endTime)
+			timeContainer.addView(endTimeTextView)
+		}
+		activityContainer.addView(timeContainer)
+
+		return activityContainer
 	}
 
 	companion object {
