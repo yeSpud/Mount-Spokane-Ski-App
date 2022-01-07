@@ -209,8 +209,10 @@
     </Placemark>
     <Placemark>
         <name>Skookum</name>
-        <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin4</styleUrl>
+        <description>night run
+            easiest way down
+        </description>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -246,8 +248,10 @@
     </Placemark>
     <Placemark>
         <name>Upper Northwest Passage</name>
-        <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin7</styleUrl>
+        <description>night run
+            easiest way down
+        </description>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -266,8 +270,8 @@
         </LineString>
     </Placemark>
     <Placemark>
-        <name>Trail to 1</name>
-        <styleUrl>#msn_ylw-pushpin90</styleUrl>
+        <name>To Vista Cruiser</name>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -292,9 +296,8 @@
         </LineString>
     </Placemark>
     <Placemark>
-        <name>Trail to 1</name>
-        <visibility>0</visibility>
-        <styleUrl>#msn_ylw-pushpin90</styleUrl>
+        <name>To Vista Cruiser</name>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -359,32 +362,8 @@
         </LineString>
     </Placemark>
     <Placemark>
-        <name>Trail to Ridge Run</name>
-        <styleUrl>#msn_ylw-pushpin2</styleUrl>
-        <LineString>
-            <tessellate>1</tessellate>
-            <coordinates>
-                -117.1074731012313,47.92925916765627,0 -117.1075632132573,47.92944898640419,0
-                -117.1075934778091,47.92956538001712,0 -117.1076970235906,47.92975127881708,0
-                -117.1077627058266,47.92986562226525,0 -117.1077763571952,47.93009330395095,0
-                -117.1078676227643,47.93025205777917,0 -117.1079365976787,47.93043762147448,0
-                -117.1079649725784,47.93077932907917,0 -117.1079921113713,47.93092593646473,0
-                -117.1081136041767,47.93104587606083,0 -117.108178083845,47.9312374032661,0
-                -117.1082718882618,47.93144901708716,0 -117.1083566146341,47.93159737229907,0
-                -117.1083800803219,47.93180412754451,0 -117.1083891271496,47.93199317356667,0
-                -117.1083771006658,47.93208145574816,0 -117.108384115091,47.9322059283294,0
-                -117.1083926736667,47.93235330124606,0 -117.1083812807118,47.93245010751788,0
-                -117.1083292801087,47.93272865536701,0 -117.1082600125262,47.93294740760603,0
-                -117.1082049598059,47.93310442571003,0 -117.1081421914128,47.93321378431899,0
-                -117.1080508651912,47.93335317541319,0 -117.1078545850204,47.93356809196918,0
-                -117.1077705595857,47.93366459845974,0 -117.1076892716308,47.93380499720433,0
-                -117.1075796717399,47.93395100299278,0 -117.1074997908761,47.9340648486079,0
-            </coordinates>
-        </LineString>
-    </Placemark>
-    <Placemark>
         <name>Ridge Run</name>
-        <styleUrl>#msn_ylw-pushpin111</styleUrl>
+        <styleUrl>#msn_ylw-pushpin1110</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -466,7 +445,7 @@
     </Placemark>
     <Placemark>
         <name>Secret Squirrel</name>
-        <styleUrl>#msn_ylw-pushpin0</styleUrl>
+        <styleUrl>#msn_ylw-pushpin00</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>
@@ -491,7 +470,7 @@
     </Placemark>
     <Placemark>
         <name>Secret Squirrel</name>
-        <styleUrl>#msn_ylw-pushpin0</styleUrl>
+        <styleUrl>#msn_ylw-pushpin00</styleUrl>
         <LineString>
             <tessellate>1</tessellate>
             <coordinates>

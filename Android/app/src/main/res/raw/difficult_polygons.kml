@@ -1462,7 +1462,7 @@
     </Placemark>
     <Placemark>
         <name>No Alibi</name>
-        <styleUrl>#msn_ylw-pushpin130</styleUrl>
+        <styleUrl>#msn_ylw-pushpin13</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -1826,7 +1826,7 @@
     </Placemark>
     <Placemark>
         <name>Al&apos;s Alley</name>
-        <styleUrl>#msn_ylw-pushpin13</styleUrl>
+        <styleUrl>#msn_ylw-pushpin130</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2034,7 +2034,7 @@
     </Placemark>
     <Placemark>
         <name>Upper Siesta</name>
-        <styleUrl>#msn_ylw-pushpin130</styleUrl>
+        <styleUrl>#msn_ylw-pushpin13</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2207,7 +2207,7 @@
     </Placemark>
     <Placemark>
         <name>Meadows</name>
-        <styleUrl>#msn_ylw-pushpin130</styleUrl>
+        <styleUrl>#msn_ylw-pushpin13</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2249,7 +2249,7 @@
     </Placemark>
     <Placemark>
         <name>Meadows</name>
-        <styleUrl>#msn_ylw-pushpin130</styleUrl>
+        <styleUrl>#msn_ylw-pushpin13</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2487,7 +2487,7 @@
     </Placemark>
     <Placemark>
         <name>Roller Coaster</name>
-        <styleUrl>#msn_ylw-pushpin130</styleUrl>
+        <styleUrl>#msn_ylw-pushpin13</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2625,7 +2625,7 @@
     </Placemark>
     <Placemark>
         <name>Roller Coaster</name>
-        <styleUrl>#msn_ylw-pushpin130</styleUrl>
+        <styleUrl>#msn_ylw-pushpin13</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2684,7 +2684,7 @@
     </Placemark>
     <Placemark>
         <name>Jump Hill</name>
-        <styleUrl>#msn_ylw-pushpin130</styleUrl>
+        <styleUrl>#msn_ylw-pushpin13</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -2748,7 +2748,7 @@
     </Placemark>
     <Placemark>
         <name>Smuggler&apos;s Notch</name>
-        <styleUrl>#msn_ylw-pushpin130</styleUrl>
+        <styleUrl>#msn_ylw-pushpin13</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -4433,7 +4433,7 @@
     </Placemark>
     <Placemark>
         <name>Lower Geronimo</name>
-        <styleUrl>#msn_ylw-pushpin1</styleUrl>
+        <styleUrl>#msn_ylw-pushpin111</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
@@ -4723,7 +4723,7 @@
     </Placemark>
     <Placemark>
         <name>Skid Road</name>
-        <styleUrl>#msn_ylw-pushpin1</styleUrl>
+        <styleUrl>#msn_ylw-pushpin111</styleUrl>
         <Polygon>
             <tessellate>1</tessellate>
             <outerBoundaryIs>
