@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.annotation.AnyThread
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
-import androidx.annotation.MainThread
 import androidx.annotation.RawRes
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
@@ -19,6 +18,8 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
@@ -361,6 +362,8 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 	companion object {
 
+		private const val PROPERTY_KEY = "description"
+
 		private fun parseKmlFile(map: GoogleMap, @RawRes file: Int, activity: FragmentActivity):
 				Iterable<KmlPlacemark> {
 			val kml = kmlLayer(map, file, activity)
@@ -387,6 +390,22 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			}
 		}
 
+		private fun polylineHasProperty(polylineProperties: List<String>?, propertyKey: String): Boolean {
+
+			if (polylineProperties == null) {
+				return false
+			}
+
+			for (property in polylineProperties) {
+				Log.v("polylineHasProperty", "Checking if property \"$property\" matches property key \"$propertyKey\"")
+				if (property.contains(propertyKey)) {
+					return true
+				}
+			}
+
+			return false
+		}
+
 		@AnyThread
 		suspend fun loadPolylines(map: GoogleMap, @RawRes fileRes: Int, activity: FragmentActivity,
 		                          @ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int? = null):
@@ -407,12 +426,25 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 				// Get the color of the polyline.
 				val argb = getARGB(activity, color)
 
+				// Get the properties of the polyline.
+				val polylineProperties: List<String>? = if (it.hasProperty(PROPERTY_KEY)) {
+					it.getProperty(PROPERTY_KEY).split('\n')
+				} else {
+					null
+				}
+
+				// Check if the polyline is an easy way down polyline.
+				val easiestWayDown = polylineHasProperty(polylineProperties, "easiest way down")
+
 				// Create the polyline using the coordinates and other options.
 				var polyline: Polyline
 				withContext(Dispatchers.Main) {
 					polyline = map.addPolyline {
 						addAll(coordinates)
 						color(argb)
+						if (easiestWayDown) {
+							pattern(listOf(Gap(2.0F), Dash(8.0F)))
+						}
 						geodesic(true)
 						startCap(RoundCap())
 						endCap(RoundCap())
@@ -426,8 +458,8 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 				// Check if the map item is already in the hashmap.
 				if (hashMap[name] == null) {
 
-					// Check if this is a night item. Its a night item if the property contains a description.
-					val night = it.hasProperty("description")
+					// Check if this is a night item.
+					val night = polylineHasProperty(polylineProperties, "night run")
 
 					// Create a new map item for the polyline (since its not in the hashmap).
 					val mapItem = VisibleUIMapItem(name, arrayOf(polyline), isNightRun = night, icon = icon)
@@ -460,8 +492,16 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 
 				val polygon: Polygon
 				withContext(Dispatchers.Main) {
-					polygon = addPolygonToMap(map, kmlPolygon.outerBoundaryCoordinates, 0.5F,
-						argb, argb, 8F, visible)
+					polygon = map.addPolygon {
+						addAll(kmlPolygon.outerBoundaryCoordinates)
+						clickable(false)
+						geodesic(true)
+						zIndex(0.5F)
+						fillColor(argb)
+						strokeColor(argb)
+						strokeWidth(8.0F)
+						visible(visible)
+					}
 				}
 
 				val name: String = getPlacemarkName(placemark)
@@ -486,21 +526,6 @@ class MapHandler(private var activity: MapsActivity?) : OnMapReadyCallback {
 			}
 
 			return@coroutineScope hashMap
-		}
-
-		@MainThread
-		suspend fun addPolygonToMap(map: GoogleMap, points: Iterable<LatLng>, zIndex: Float,
-			fillColor: Int, strokeColor: Int, strokeWidth: Float, visible: Boolean): Polygon = coroutineScope {
-			return@coroutineScope map.addPolygon {
-				addAll(points)
-				clickable(false)
-				geodesic(true)
-				zIndex(zIndex)
-				fillColor(fillColor)
-				strokeColor(strokeColor)
-				strokeWidth(strokeWidth)
-				visible(visible)
-			}
 		}
 	}
 }
