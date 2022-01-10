@@ -76,7 +76,7 @@ class ActivitySummary : Activity() {
 		}
 
 		// If all else fails just load from the current activities array.
-		this.loadActivities(SkiingActivity.Activities.toTypedArray())
+		this.loadActivities(SkiingActivity.Activities)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {

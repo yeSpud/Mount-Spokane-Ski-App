@@ -1,16 +1,15 @@
 package com.mtspokane.skiapp.skierlocation
 
-import android.location.Location
-import android.os.Build
+import com.mtspokane.skiapp.activitysummary.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 
 object Locations {
 
-	var previousLocation: Location? = null
+	var previousLocation: SkiingActivity? = null
 	private set
 
-	var currentLocation: Location? = null
+	var currentLocation: SkiingActivity? = null
 	private set
 
 	var altitudeConfidence: UShort = 0u
@@ -24,9 +23,9 @@ object Locations {
 
 	var visibleLocationUpdates: ArrayList<VisibleLocationUpdate> = ArrayList(0)
 
-	fun updateLocations(newLocation: Location) {
+	fun updateLocations(skiingActivity: SkiingActivity) {
 		this.previousLocation = this.currentLocation
-		this.currentLocation = newLocation
+		this.currentLocation = skiingActivity
 
 		this.altitudeConfidence = when (this.getVerticalDirection()) {
 			VerticalDirection.UP_CERTAIN -> 3u
@@ -54,12 +53,12 @@ object Locations {
 			return VerticalDirection.UNKNOWN
 		}
 
-
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-			if ((this.currentLocation!!.altitude - this.currentLocation!!.verticalAccuracyMeters) > (this.previousLocation!!.altitude + this.previousLocation!!.verticalAccuracyMeters)) {
+		if (this.currentLocation!!.altitudeAccuracy != null && this.previousLocation!!.altitudeAccuracy != null) {
+			if ((this.currentLocation!!.altitude - this.currentLocation!!.altitudeAccuracy!!) >
+				(this.previousLocation!!.altitude + this.previousLocation!!.altitudeAccuracy!!)) {
 				return VerticalDirection.UP_CERTAIN
-			} else if ((this.currentLocation!!.altitude + this.currentLocation!!.verticalAccuracyMeters) < (this.previousLocation!!.altitude - this.previousLocation!!.verticalAccuracyMeters)) {
+			} else if ((this.currentLocation!!.altitude + this.currentLocation!!.altitudeAccuracy!!) <
+				(this.previousLocation!!.altitude - this.previousLocation!!.altitudeAccuracy!!)) {
 				return VerticalDirection.DOWN_CERTAIN
 			}
 		}
@@ -118,9 +117,10 @@ object Locations {
 		// 150 feet per minute to meters per second.
 		val minChairliftSpeed = 150.0F * 0.00508F
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			if (this.currentLocation!!.speedAccuracyMetersPerSecond > 0.0F && this.previousLocation!!.speedAccuracyMetersPerSecond > 0.0F) {
-				 if ((this.currentLocation!!.speed - this.currentLocation!!.speedAccuracyMetersPerSecond >= minChairliftSpeed) && (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracyMetersPerSecond <= maxChairliftSpeed)) {
+		if (this.currentLocation!!.speedAccuracy != null && this.previousLocation!!.speedAccuracy != null) {
+			if (this.currentLocation!!.speedAccuracy!! > 0.0F && this.previousLocation!!.speedAccuracy!! > 0.0F) {
+				 if ((this.currentLocation!!.speed - this.currentLocation!!.speedAccuracy!! >= minChairliftSpeed)
+					 && (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracy!! <= maxChairliftSpeed)) {
 					 return 2u
 				}
 			}

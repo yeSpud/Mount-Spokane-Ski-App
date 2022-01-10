@@ -77,10 +77,8 @@ class SkiingActivity {
 
 	companion object {
 
-		val Activities: ArrayList<SkiingActivity> = ArrayList(0)
+		var Activities: Array<SkiingActivity> = emptyArray()
 
-		private const val NAME = "name"
-		private const val ICON = "icon"
 		private const val ACCURACY = "acc"
 		private const val ALTITUDE = "alt"
 		private const val ALTITUDE_ACCURACY = "altacc"
@@ -190,9 +188,7 @@ class SkiingActivity {
 			val date: String = getDate()
 			val filename = "$date.json"
 
-			val array: Array<SkiingActivity> = readSkiingActivitiesFromFile(context, filename)
-
-			Activities.addAll(array)
+			this.Activities = readSkiingActivitiesFromFile(context, filename)
 		}
 
 		fun getDate(): String {
@@ -239,8 +235,6 @@ class SkiingActivity {
 				featureEntry.put("geometry", geometryJson)
 
 				val propertiesJson = JSONObject()
-				propertiesJson.put(NAME, jsonEntry.getString(NAME))
-				propertiesJson.put(ICON, jsonEntry.opt(ICON))
 				propertiesJson.put(ACCURACY, jsonEntry.opt(ACCURACY))
 				propertiesJson.put(ALTITUDE_ACCURACY, jsonEntry.opt(ALTITUDE_ACCURACY))
 				propertiesJson.put(SPEED, jsonEntry.opt(SPEED))

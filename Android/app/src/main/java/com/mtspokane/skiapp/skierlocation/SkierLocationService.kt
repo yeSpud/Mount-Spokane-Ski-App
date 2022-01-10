@@ -119,35 +119,37 @@ class SkierLocationService : Service(), LocationListener {
 
 	override fun onLocationChanged(location: Location) {
 
-		Locations.updateLocations(location)
+		val skiingActivity = SkiingActivity(location)
+
+		Locations.updateLocations(skiingActivity)
 
 		// If we are not on the mountain stop the tracking.
 		if (MtSpokaneMapItems.skiAreaBounds.points.isEmpty()) {
 			this.stopSelf()
-		} else if (!MtSpokaneMapItems.skiAreaBounds.locationInsidePoints(location)) {
+		} else if (!MtSpokaneMapItems.skiAreaBounds.locationInsidePoints(skiingActivity)) {
 			this.stopSelf()
 		}
 
-		val chairliftTerminal = Locations.checkIfAtChairliftTerminals()
+		val chairliftTerminal: MapItem? = Locations.checkIfAtChairliftTerminals()
 		if (chairliftTerminal != null) {
-			this.updateUI(R.string.current_chairlift, chairliftTerminal, location)
+			this.updateUI(R.string.current_chairlift, chairliftTerminal, skiingActivity)
 			return
 		}
 
 		if (Locations.altitudeConfidence >= 2u && Locations.speedConfidence >= 1u && Locations.mostLikelyChairlift != null) {
-			this.updateUI(R.string.current_chairlift, Locations.mostLikelyChairlift!!, location)
+			this.updateUI(R.string.current_chairlift, Locations.mostLikelyChairlift!!, skiingActivity)
 			return
 		}
 
-		val other = Locations.checkIfOnOther()
+		val other: MapItem? = Locations.checkIfOnOther()
 		if (other != null) {
-			this.updateUI(R.string.current_other, other, location)
+			this.updateUI(R.string.current_other, other, skiingActivity)
 			return
 		}
 
-		val run = Locations.checkIfOnRun()
+		val run: MapItem? = Locations.checkIfOnRun()
 		if (run != null) {
-			this.updateUI(R.string.current_run, run, location)
+			this.updateUI(R.string.current_run, run, skiingActivity)
 			return
 		}
 
@@ -155,11 +157,19 @@ class SkierLocationService : Service(), LocationListener {
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
 	}
 
-	private fun updateUI(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
+	private fun updateUI(@StringRes textResource: Int, mapItem: MapItem, skiingActivity: SkiingActivity) {
 		val text: String = this.getString(textResource, mapItem.name)
 		Locations.visibleLocationUpdates.forEach { it.updateLocation(text) }
 		this.updateNotification(text, mapItem.getIcon())
-		SkiingActivity.Activities.add(SkiingActivity(location))
+
+		SkiingActivity.Activities = Array(SkiingActivity.Activities.size + 1) {
+
+			if (it == SkiingActivity.Activities.size) {
+				skiingActivity
+			} else {
+				SkiingActivity.Activities[it]
+			}
+		}
 	}
 
 	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
