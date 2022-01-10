@@ -1,7 +1,7 @@
 package com.mtspokane.skiapp.mapItem
 
+import android.location.Location
 import androidx.annotation.DrawableRes
-import com.mtspokane.skiapp.activitysummary.SkiingActivity
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.tan
@@ -33,7 +33,7 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 	 * See the License for the specific language governing permissions and
 	 * limitations under the License.
 	 */
-	fun locationInsidePoints(point: SkiingActivity): Boolean {
+	fun locationInsidePoints(point: Location): Boolean {
 
 		this.points.forEach {
 
