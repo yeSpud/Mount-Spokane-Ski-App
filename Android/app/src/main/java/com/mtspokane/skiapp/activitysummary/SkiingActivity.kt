@@ -8,6 +8,7 @@ import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.core.content.FileProvider
 import com.mtspokane.skiapp.R
 import org.json.JSONArray
@@ -21,6 +22,13 @@ import java.util.Locale
 import kotlin.collections.ArrayList
 
 class SkiingActivity {
+
+	@Deprecated("Don't store and read the name - use the location to determine the name")
+	val name: String
+
+	@Deprecated("Don't store and read the icon - use the location to determine the icon")
+	@DrawableRes
+	val icon: Int?
 
 	val accuracy: Float
 
@@ -38,7 +46,9 @@ class SkiingActivity {
 
 	val time: Long
 
-	constructor(location: Location) {
+	constructor(name: String, location: Location, @DrawableRes icon: Int?) {
+		this.name = name
+		this.icon = icon
 
 		this.accuracy = location.accuracy
 		this.altitude = location.altitude
@@ -62,9 +72,12 @@ class SkiingActivity {
 		this.time = location.time
 	}
 
-	constructor(accuracy: Float, altitude: Double, altitudeAccuracy: Float?, latitude: Double,
-	            longitude: Double, speed: Float, speedAccuracy: Float?, time: Long) {
+	constructor(name: String, @DrawableRes icon: Int?, accuracy: Float, altitude: Double,
+		altitudeAccuracy: Float?, latitude: Double, longitude: Double, speed: Float,
+		        speedAccuracy: Float?, time: Long) {
 
+		this.name = name
+		this.icon = icon
 		this.accuracy = accuracy
 		this.altitude = altitude
 		this.altitudeAccuracy = altitudeAccuracy
@@ -95,7 +108,12 @@ class SkiingActivity {
 			val jsonArray = JSONArray()
 			Activities.forEach {
 				val jsonEntry = JSONObject()
-
+				jsonEntry.put(NAME, it.name)
+				if (it.icon != null) {
+					jsonEntry.put(ICON, context.resources.getResourceName(it.icon))
+				} else {
+					jsonEntry.put(ICON, null)
+				}
 				jsonEntry.put(ACCURACY, it.accuracy)
 				jsonEntry.put(ALTITUDE, it.altitude)
 				jsonEntry.put(ALTITUDE_ACCURACY, it.altitudeAccuracy)
@@ -156,6 +174,15 @@ class SkiingActivity {
 			for (i in 0 until count) {
 				val jsonObject: JSONObject = jsonArray.getJSONObject(i)
 
+				val name: String = jsonObject.getString(NAME)
+
+				val iconLocation: String? = jsonObject.opt(ICON) as String?
+				val icon: Int? = if (iconLocation != null) {
+					context.resources.getIdentifier(iconLocation, "drawable", context.packageName)
+				} else {
+					null
+				}
+
 				val accuracy: Float = parseFloat(jsonObject, ACCURACY)!!
 				val altitude: Double = jsonObject.optDouble(ALTITUDE)
 				val altitudeAccuracy: Float? = parseFloat(jsonObject, ALTITUDE_ACCURACY)
@@ -165,8 +192,8 @@ class SkiingActivity {
 				val speedAccuracy: Float? = parseFloat(jsonObject, SPEED_ACCURACY)
 				val time: Long = jsonObject.optLong(TIME)
 
-				val activity = SkiingActivity(accuracy, altitude, altitudeAccuracy, latitude,
-					longitude, speed, speedAccuracy, time)
+				val activity = SkiingActivity(name, icon, accuracy, altitude, altitudeAccuracy,
+					latitude, longitude, speed, speedAccuracy, time)
 				arrayList.add(activity)
 			}
 

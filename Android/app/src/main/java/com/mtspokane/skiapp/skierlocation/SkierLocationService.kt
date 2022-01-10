@@ -159,7 +159,7 @@ class SkierLocationService : Service(), LocationListener {
 		val text: String = this.getString(textResource, mapItem.name)
 		Locations.visibleLocationUpdates.forEach { it.updateLocation(text) }
 		this.updateNotification(text, mapItem.getIcon())
-		SkiingActivity.Activities.add(SkiingActivity(location))
+		SkiingActivity.Activities.add(SkiingActivity(mapItem.name, location, mapItem.getIcon()))
 	}
 
 	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
