@@ -101,9 +101,8 @@ class ActivitySummary : Activity() {
 			R.id.open -> this.fileSelectionDialog.showDialog()
 			R.id.export_json -> SkiingActivity.createNewFileSAF(this, this.loadedFile,
 				JSON_MIME_TYPE, WRITE_JSON_CODE)
-			R.id.export_geojson -> SkiingActivity.createNewFileSAF(
-				this, this.loadedFile.replace("json", "geojson"),
-				GEOJSON_MIME_TYPE, WRITE_GEOJSON_CODE)
+			R.id.export_geojson -> SkiingActivity.createNewFileSAF(this, this.loadedFile
+				.replace("json", "geojson"), GEOJSON_MIME_TYPE, WRITE_GEOJSON_CODE)
 			R.id.share_json -> {
 				val file = File(this.filesDir, this.loadedFile)
 				SkiingActivity.shareFile(this, file, JSON_MIME_TYPE)
@@ -167,30 +166,22 @@ class ActivitySummary : Activity() {
 				startingActivity = skiingActivity
 			} else {
 
-				if (skiingActivity.name == startingActivity!!.name) {
-					endingActivity = skiingActivity
+				if (endingActivity != null) {
+					this.container.addView(this.createActivityView(startingActivity!!.time, endingActivity!!.time))
+					endingActivity = null
 				} else {
-					if (endingActivity != null) {
-						this.container.addView(this.createActivityView(startingActivity!!.icon,
-								startingActivity!!.name, startingActivity!!.time, endingActivity!!.time))
-						endingActivity = null
-					} else {
-						this.container.addView(this.createActivityView(startingActivity!!.icon,
-							startingActivity!!.name, startingActivity!!.time, startingActivity!!.time))
-					}
-
-					startingActivity = skiingActivity
+					this.container.addView(this.createActivityView(startingActivity!!.time, startingActivity!!.time))
 				}
+
+				startingActivity = skiingActivity
 			}
 		}
 
 		if (startingActivity != null) {
 			if (endingActivity != null) {
-				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
-					startingActivity!!.time, endingActivity!!.time))
+				this.container.addView(this.createActivityView(startingActivity!!.time, endingActivity!!.time))
 			} else {
-				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
-					startingActivity!!.time, null))
+				this.container.addView(this.createActivityView(startingActivity!!.time, null))
 			}
 		}
 	}
