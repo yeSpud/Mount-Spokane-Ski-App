@@ -23,8 +23,10 @@ import kotlin.collections.ArrayList
 
 class SkiingActivity {
 
+	@Deprecated("Don't store and read the name - use the location to determine the name")
 	val name: String
 
+	@Deprecated("Don't store and read the icon - use the location to determine the icon")
 	@DrawableRes
 	val icon: Int?
 
