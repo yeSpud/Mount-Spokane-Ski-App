@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.debugview
+package com.mtspokane.skiapp.activities
 
 import android.os.Build
 import android.os.Bundle

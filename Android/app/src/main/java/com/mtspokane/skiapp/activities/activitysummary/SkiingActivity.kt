@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.activitysummary
+package com.mtspokane.skiapp.activities.activitysummary
 
 import android.app.Activity
 import android.content.ContentResolver

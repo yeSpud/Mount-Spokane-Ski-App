@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.mapactivity
+package com.mtspokane.skiapp.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -16,7 +16,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.MainMap

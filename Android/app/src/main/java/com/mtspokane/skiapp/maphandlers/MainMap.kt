@@ -13,11 +13,11 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polygon
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.debugview.DebugActivity
+import com.mtspokane.skiapp.activities.DebugActivity
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.UIMapItem
 import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
-import com.mtspokane.skiapp.mapactivity.MapsActivity
+import com.mtspokane.skiapp.activities.MapsActivity
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

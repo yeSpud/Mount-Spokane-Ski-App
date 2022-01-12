@@ -9,7 +9,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.debugview.DebugActivity
+import com.mtspokane.skiapp.activities.DebugActivity
 import java.util.Locale
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
