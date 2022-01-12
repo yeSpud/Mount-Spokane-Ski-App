@@ -22,6 +22,8 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
@@ -34,7 +36,7 @@ import org.json.JSONObject
 
 class ActivitySummary : FragmentActivity() {
 
-	private var map: ActivitySummaryMap? = null
+	private var mapHandler: ActivitySummaryMap? = null
 
 	private lateinit var container: LinearLayout
 
@@ -63,11 +65,11 @@ class ActivitySummary : FragmentActivity() {
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
 		// Setup the map handler.
-		this.map = ActivitySummaryMap(this)
+		this.mapHandler = ActivitySummaryMap(this)
 
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
-		mapFragment.getMapAsync(this.map!!)
+		mapFragment.getMapAsync(this.mapHandler!!)
 
 		if (this.intent.extras != null) {
 
@@ -169,10 +171,20 @@ class ActivitySummary : FragmentActivity() {
 
 		this.container.removeAllViews()
 
+		if (this.mapHandler != null) {
+			this.mapHandler!!.locationMarkers.forEach {
+				it.remove()
+			}
+		}
+
 		var startingActivity: SkiingActivity? = null
 		var endingActivity: SkiingActivity? = null
 
 		activities.forEach { skiingActivity: SkiingActivity ->
+
+			if (this.mapHandler != null) {
+				this.mapHandler!!.addMarker(skiingActivity.latitude, skiingActivity.longitude)
+			}
 
 			if (startingActivity == null) {
 				startingActivity = skiingActivity
