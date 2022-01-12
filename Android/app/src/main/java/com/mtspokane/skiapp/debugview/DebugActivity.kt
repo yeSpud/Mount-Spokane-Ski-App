@@ -3,20 +3,19 @@ package com.mtspokane.skiapp.debugview
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivityDebugBinding
+import com.mtspokane.skiapp.maphandlers.DebugMap
 import com.mtspokane.skiapp.skierlocation.Locations
 
 class DebugActivity : FragmentActivity() {
 
-	private var locationChangeCallback: Locations.VisibleLocationUpdate? = null
+	private var mapHandler: DebugMap? = null
 
-	private lateinit var viewModel: DebugViewModel
+	private var locationChangeCallback: Locations.VisibleLocationUpdate? = null
 
 	private var previousLocationName: CharSequence = ""
 
@@ -25,8 +24,6 @@ class DebugActivity : FragmentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		this.viewModel = ViewModelProvider(this).get(DebugViewModel::class.java)
-
 		this.binding = ActivityDebugBinding.inflate(this.layoutInflater)
 		this.setContentView(this.binding.root)
 
@@ -34,16 +31,15 @@ class DebugActivity : FragmentActivity() {
 
 		this.locationChangeCallback = object : Locations.VisibleLocationUpdate {
 			override fun updateLocation(locationString: String) {
-
 				this@DebugActivity.updateText(locationString)
 			}
 		}
 
+		this.mapHandler = DebugMap(this)
+
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.debug_map) as SupportMapFragment
-		this.lifecycleScope.launchWhenCreated {
-			this@DebugActivity.viewModel.mapCoroutine(mapFragment, this@DebugActivity)
-		}
+		mapFragment.getMapAsync(this.mapHandler!!)
 
 		// Add listener for map for a location change.
 		if (this.locationChangeCallback != null) {
@@ -60,7 +56,7 @@ class DebugActivity : FragmentActivity() {
 		}
 
 		this.previousLocationName = this.binding.currentLocationName.text
-		this.binding.currentLocationName.text = locationString
+		this.binding.currentLocationName.text = this.getString(R.string.current_location_name, locationString)
 		this.binding.currentLocationAccuracy.text = this.getString(R.string.current_location_accuracy, Locations.currentLocation!!.accuracy)
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			this.binding.currentLocationAltitude.text = this.getString(R.string.current_location_altitude, Locations.currentLocation!!.altitude, Locations.currentLocation!!.verticalAccuracyMeters)
@@ -76,18 +72,19 @@ class DebugActivity : FragmentActivity() {
 			this.binding.currentLocationSpeed.text = this.getString(R.string.current_location_speed, Locations.currentLocation!!.speed, 0)
 		}
 
-		if (this.viewModel.map != null) {
+		if (this.mapHandler != null && this.mapHandler!!.map != null) {
 
 			// If the marker hasn't been added to the map create a new one.
-			if (this.viewModel.locationMarker == null) {
-				this.viewModel.locationMarker = this.viewModel.map!!.addMarker {
+			if (this.mapHandler!!.locationMarker == null) {
+				this.mapHandler!!.locationMarker = this.mapHandler!!.map!!.addMarker {
 					position(LatLng(Locations.currentLocation!!.latitude, Locations.currentLocation!!.longitude))
 					title(this@DebugActivity.getString(R.string.your_location))
 				}
 			} else {
 
 				// Otherwise just update the LatLng location.
-				this.viewModel.locationMarker!!.position = LatLng(Locations.currentLocation!!.latitude, Locations.currentLocation!!.longitude)
+				this.mapHandler!!.locationMarker!!.position = LatLng(Locations.currentLocation!!.latitude,
+					Locations.currentLocation!!.longitude)
 			}
 		}
 
@@ -133,11 +130,10 @@ class DebugActivity : FragmentActivity() {
 		Locations.visibleLocationUpdates.remove(this.locationChangeCallback)
 		this.locationChangeCallback = null
 
-		if (this.viewModel.locationMarker != null) {
-			this.viewModel.locationMarker!!.remove()
-			this.viewModel.locationMarker = null
+		if (this.mapHandler != null) {
+			this.mapHandler!!.destroy()
+			this.mapHandler = null
 		}
-		this.viewModel.map = null
 	}
 
 }

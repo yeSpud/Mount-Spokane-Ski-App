@@ -19,6 +19,7 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.maphandlers.MainMap
 import com.mtspokane.skiapp.skierlocation.Locations
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import kotlinx.coroutines.CoroutineStart
@@ -27,8 +28,7 @@ import kotlinx.coroutines.async
 
 class MapsActivity : FragmentActivity() {
 
-	// Handler for managing the map object.
-	private var mapHandler: MapHandler? = null
+	private var map: MainMap? = null
 
 	private var locationChangeCallback: Locations.VisibleLocationUpdate? = null
 
@@ -54,11 +54,11 @@ class MapsActivity : FragmentActivity() {
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
 		// Setup the map handler.
-		this.mapHandler = MapHandler(this)
+		this.map = MainMap(this)
 
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
-		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-		mapFragment!!.getMapAsync(this.mapHandler!!)
+		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+		mapFragment.getMapAsync(this.map!!)
 
 		this.locationChangeCallback = object : Locations.VisibleLocationUpdate {
 			override fun updateLocation(locationString: String) {
@@ -67,8 +67,8 @@ class MapsActivity : FragmentActivity() {
 					return
 				}
 
-				if (this@MapsActivity.mapHandler != null) {
-					this@MapsActivity.mapHandler!!.updateMarkerLocation(Locations.currentLocation!!)
+				if (this@MapsActivity.map != null) {
+					this@MapsActivity.map!!.updateMarkerLocation(Locations.currentLocation!!)
 				}
 
 				this@MapsActivity.actionBar!!.title = locationString
@@ -85,8 +85,10 @@ class MapsActivity : FragmentActivity() {
 		this.locationChangeCallback = null
 
 		// Reset the map handler.
-		this.mapHandler!!.destroy()
-		this.mapHandler = null
+		if (this.map != null) {
+			this.map!!.destroy()
+			this.map = null
+		}
 		
 		// Remove UI items from MtSpokaneMapItems.
 		MtSpokaneMapItems.destroyUIItems()
@@ -100,7 +102,7 @@ class MapsActivity : FragmentActivity() {
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
 		// Only execute the following checks if the map handler is not null.
-		if (this.mapHandler != null) {
+		if (this.map != null) {
 
 			val checked = !item.isChecked
 			item.isChecked = checked
@@ -154,7 +156,7 @@ class MapsActivity : FragmentActivity() {
 			permissionValue -> {
 				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					this.lifecycleScope.async(Dispatchers.Main, CoroutineStart.LAZY) {
-						this@MapsActivity.mapHandler!!.setupLocation()
+						this@MapsActivity.map!!.setupLocation()
 					}.start()
 				}
 			}
