@@ -1,24 +1,19 @@
 package com.mtspokane.skiapp.maphandlers
 
 import android.util.Log
-import androidx.annotation.ColorRes
-import androidx.annotation.DrawableRes
-import androidx.annotation.RawRes
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.DebugActivity
-import java.util.Locale
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 
-class DebugMap(private val activity: DebugActivity) : MapHandler(CameraPosition.Builder().target(LatLng(47.921774273268106,
-	-117.10490226745605)).tilt(47.547382F).bearing(319.2285F).zoom(14.169826F)
-	.build()) {
+class DebugMap(activity: DebugActivity) : MapHandler(activity, CameraPosition.Builder()
+	.target(LatLng(47.921774273268106, -117.10490226745605)).tilt(47.547382F)
+	.bearing(319.2285F).zoom(14.169826F).build()) {
 
 	var locationMarker: Marker? = null
 
@@ -31,27 +26,6 @@ class DebugMap(private val activity: DebugActivity) : MapHandler(CameraPosition.
 		}
 
 		super.destroy()
-	}
-
-
-	private fun loadPolylinesAsync(jobDescription: String, @RawRes polylineResource: Int,
-	                               @ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int): Deferred<Int> {
-		return this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-			val tag = "loadPolylinesAsync"
-			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
-			this@DebugMap.loadPolylines(polylineResource, this@DebugMap.activity, color, zIndex, icon)
-			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
-		}
-	}
-
-	private fun loadPolygonsAsync(jobDescription: String, @RawRes polygonResource: Int,
-	                              @ColorRes color: Int, visible: Boolean): Deferred<Int> {
-		return this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-			val tag = "loadPolygonsAsync"
-			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
-			this@DebugMap.loadPolygons(polygonResource, this@DebugMap.activity, color, visible)
-			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
-		}
 	}
 
 	init {

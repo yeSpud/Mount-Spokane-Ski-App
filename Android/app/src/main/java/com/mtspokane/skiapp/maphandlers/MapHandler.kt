@@ -1,6 +1,5 @@
 package com.mtspokane.skiapp.maphandlers
 
-import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.AnyThread
@@ -9,6 +8,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RawRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -28,12 +28,16 @@ import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
+import java.util.Locale
 import kotlin.Throws
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
-open class MapHandler(private val initialCameraPosition: CameraPosition) : OnMapReadyCallback {
+open class MapHandler(internal val activity: FragmentActivity, private val initialCameraPosition: CameraPosition) : OnMapReadyCallback {
 
 	internal var map: GoogleMap? = null
 
@@ -104,20 +108,20 @@ open class MapHandler(private val initialCameraPosition: CameraPosition) : OnMap
 	}
 
 	@Throws(NullPointerException::class)
-	private fun parseKmlFile(@RawRes file: Int, context: Context): Iterable<KmlPlacemark> {
+	private fun parseKmlFile(@RawRes file: Int): Iterable<KmlPlacemark> {
 
 		if (this.map == null) {
 			throw NullPointerException("Map has not been setup yet!")
 		}
 
-		val kml = kmlLayer(this.map!!, file, context)
+		val kml = kmlLayer(this.map!!, file, this.activity)
 		return kml.placemarks
 	}
 
 	@AnyThread
 	@Throws(NullPointerException::class)
-	suspend fun loadPolylines(@RawRes fileRes: Int, activity: FragmentActivity,
-	                          @ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int? = null):
+	suspend fun loadPolylines(@RawRes fileRes: Int, @ColorRes color: Int, zIndex: Float,
+	                          @DrawableRes icon: Int? = null):
 			Array<VisibleUIMapItem> = coroutineScope {
 
 		if (this@MapHandler.map == null) {
@@ -127,7 +131,7 @@ open class MapHandler(private val initialCameraPosition: CameraPosition) : OnMap
 		val hashMap: HashMap<String, VisibleUIMapItem> = HashMap()
 
 		// Load the polyline from the file, and iterate though each placemark.
-		this@MapHandler.parseKmlFile(fileRes, activity).forEach {
+		this@MapHandler.parseKmlFile(fileRes).forEach {
 
 			// Get the name of the polyline.
 			val name: String = getPlacemarkName(it)
@@ -137,7 +141,7 @@ open class MapHandler(private val initialCameraPosition: CameraPosition) : OnMap
 			val coordinates: ArrayList<LatLng> = lineString.geometryObject
 
 			// Get the color of the polyline.
-			val argb = getARGB(activity, color)
+			val argb = this@MapHandler.getARGB(color)
 
 			// Get the properties of the polyline.
 			val polylineProperties: List<String>? = if (it.hasProperty(PROPERTY_KEY)) {
@@ -192,8 +196,8 @@ open class MapHandler(private val initialCameraPosition: CameraPosition) : OnMap
 
 	@AnyThread
 	@Throws(NullPointerException::class)
-	suspend fun loadPolygons(@RawRes fileRes: Int, context: Context, @ColorRes color: Int,
-	                         visible: Boolean = BuildConfig.DEBUG): HashMap<String, Array<Polygon>> = coroutineScope {
+	suspend fun loadPolygons(@RawRes fileRes: Int, @ColorRes color: Int, visible: Boolean = BuildConfig.DEBUG):
+			HashMap<String, Array<Polygon>> = coroutineScope {
 
 		if (this@MapHandler.map == null) {
 			throw NullPointerException("Map has not been setup yet!")
@@ -202,11 +206,11 @@ open class MapHandler(private val initialCameraPosition: CameraPosition) : OnMap
 		val hashMap: HashMap<String, Array<Polygon>> = HashMap()
 
 		// Load the polygons file.
-		this@MapHandler.parseKmlFile(fileRes, context).forEach { placemark ->
+		this@MapHandler.parseKmlFile(fileRes).forEach { placemark ->
 
 			val kmlPolygon: KmlPolygon = placemark.geometry as KmlPolygon
 
-			val argb = getARGB(context, color)
+			val argb = this@MapHandler.getARGB(color)
 
 			val polygon: Polygon
 			withContext(Dispatchers.Main) {
@@ -246,6 +250,34 @@ open class MapHandler(private val initialCameraPosition: CameraPosition) : OnMap
 		return@coroutineScope hashMap
 	}
 
+	fun loadPolylinesAsync(jobDescription: String, @RawRes polylineResource: Int,
+	                               @ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int): Deferred<Int> {
+		return this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
+			val tag = "loadPolylinesAsync"
+			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
+			this@MapHandler.loadPolylines(polylineResource, color, zIndex, icon)
+			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
+		}
+	}
+
+	fun loadPolygonsAsync(jobDescription: String, @RawRes polygonResource: Int,
+	                              @ColorRes color: Int, visible: Boolean = BuildConfig.DEBUG): Deferred<Int> {
+		return this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
+			val tag = "loadPolygonsAsync"
+			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
+			this@MapHandler.loadPolygons(polygonResource, color, visible)
+			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
+		}
+	}
+
+	private fun getARGB(@ColorRes color: Int): Int {
+		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			this.activity.getColor(color)
+		} else {
+			ResourcesCompat.getColor(this.activity.resources, color, null)
+		}
+	}
+
 	companion object {
 
 		private val CAMERA_BOUNDS = LatLngBounds(LatLng(47.912728, -117.133402),
@@ -266,14 +298,6 @@ open class MapHandler(private val initialCameraPosition: CameraPosition) : OnMap
 				// If the name wasn't found in the properties return an empty string.
 				Log.w("getPlacemarkName", "Placemark is missing name!")
 				""
-			}
-		}
-
-		private fun getARGB(context: Context, @ColorRes color: Int): Int {
-			return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				context.getColor(color)
-			} else {
-				ResourcesCompat.getColor(context.resources, color, null)
 			}
 		}
 

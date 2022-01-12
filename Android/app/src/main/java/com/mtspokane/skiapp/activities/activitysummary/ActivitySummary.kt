@@ -1,6 +1,5 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
@@ -21,8 +20,11 @@ import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isNotEmpty
+import androidx.fragment.app.FragmentActivity
+import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
+import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import java.io.File
 import java.text.SimpleDateFormat
@@ -30,7 +32,9 @@ import java.util.Date
 import java.util.Locale
 import org.json.JSONObject
 
-class ActivitySummary : Activity() {
+class ActivitySummary : FragmentActivity() {
+
+	private var map: ActivitySummaryMap? = null
 
 	private lateinit var container: LinearLayout
 
@@ -57,6 +61,13 @@ class ActivitySummary : Activity() {
 
 		// Be sure to show the action bar.
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
+
+		// Setup the map handler.
+		this.map = ActivitySummaryMap(this)
+
+		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
+		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
+		mapFragment.getMapAsync(this.map!!)
 
 		if (this.intent.extras != null) {
 

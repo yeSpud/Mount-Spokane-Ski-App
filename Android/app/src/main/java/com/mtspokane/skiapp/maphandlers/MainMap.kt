@@ -25,9 +25,9 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
-class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Builder().target(LatLng(47.92517834073426,
-	-117.10480503737926)).tilt(45F).bearing(317.50552F).zoom(14.414046F)
-	.build()) {
+class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Builder()
+	.target(LatLng(47.92517834073426, -117.10480503737926)).tilt(45F)
+	.bearing(317.50552F).zoom(14.414046F).build()) {
 
 	private var locationMarker: Marker? = null
 
@@ -72,7 +72,7 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 				Log.v(tag, "Started loading other polygons")
 
 				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(R.raw.other,
-					this@MainMap.activity, R.color.other_polygon_fill, false)
+					R.color.other_polygon_fill, false)
 
 				val skiAreaBoundsKeyName = "Ski Area Bounds"
 				val skiAreaBounds = hashmap[skiAreaBoundsKeyName]
@@ -121,7 +121,7 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading chairlift terminal polylines")
 				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(R.raw.lift_terminal_polygons,
-					this@MainMap.activity, R.color.chairlift_polygon)
+					R.color.chairlift_polygon)
 
 				val names: Array<String> = hashmap.keys.toTypedArray()
 				withContext(Dispatchers.Main) {
@@ -142,7 +142,7 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading chairlift polygons")
 				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(R.raw.lift_polygons,
-					this@MainMap.activity, R.color.chairlift_polygon)
+					R.color.chairlift_polygon)
 
 				withContext(Dispatchers.Main) {
 					MtSpokaneMapItems.chairlifts.forEach { visibleMapItem: VisibleUIMapItem ->
@@ -162,7 +162,7 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 				Log.v(tag, "Started loading easy polygons")
 
 				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(R.raw.easy_polygons,
-					this@MainMap.activity, R.color.easy_polygon)
+					R.color.easy_polygon)
 
 				withContext(Dispatchers.Main) {
 					MtSpokaneMapItems.easyRuns.forEach { visibleUIMapItem: VisibleUIMapItem ->
@@ -181,7 +181,7 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading moderate polygons")
 				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(R.raw.moderate_polygons,
-					this@MainMap.activity, R.color.moderate_polygon)
+					R.color.moderate_polygon)
 
 				withContext(Dispatchers.Main) {
 					MtSpokaneMapItems.moderateRuns.forEach { visibleUIMapItem: VisibleUIMapItem ->
@@ -200,7 +200,7 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 			async(Dispatchers.IO) {
 				Log.v(tag, "Started loading difficult polygons")
 				val hashmap: HashMap<String, Array<Polygon>> = loadPolygons(R.raw.difficult_polygons,
-					this@MainMap.activity, R.color.difficult_polygon)
+					R.color.difficult_polygon)
 
 				withContext(Dispatchers.Main) {
 					MtSpokaneMapItems.difficultRuns.forEach { visibleUIMapItem: VisibleUIMapItem ->
@@ -219,7 +219,7 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 		polygonLoads.awaitAll() // Wait for all loads to have finished...
 
 		Log.v(tag, "Setting up location service...")
-		this@MainMap.activity.setupLocationService()
+		(this@MainMap.activity as MapsActivity).setupLocationService()
 	}
 
 	init {
@@ -228,7 +228,7 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 
 			val tag = "MainMap"
 
-			if (this.activity.locationEnabled) {
+			if ((this@MainMap.activity as MapsActivity).locationEnabled) {
 				it.setOnMapLongClickListener {
 					Log.d(tag, "Launching debug view")
 					val intent = Intent(this.activity, DebugActivity::class.java)
@@ -244,32 +244,32 @@ class MainMap(private val activity: MapsActivity) : MapHandler(CameraPosition.Bu
 					// Load in the chairlift kml file, and iterate though each placemark.
 					async(Dispatchers.IO) {
 						Log.v(tag, "Started loading chairlift polylines")
-						MtSpokaneMapItems.chairlifts = loadPolylines(R.raw.lifts, this@MainMap.activity,
-							R.color.chairlift, 4f, R.drawable.ic_chairlift)
+						MtSpokaneMapItems.chairlifts = loadPolylines(R.raw.lifts, R.color.chairlift,
+							4f, R.drawable.ic_chairlift)
 						Log.v(tag, "Finished loading chairlift polylines")
 					},
 
 					// Load in the easy runs kml file, and iterate though each placemark.
 					async(Dispatchers.IO) {
 						Log.v(tag, "Started loading easy polylines")
-						MtSpokaneMapItems.easyRuns = loadPolylines(R.raw.easy, this@MainMap.activity,
-							R.color.easy, 3f, R.drawable.ic_easy)
+						MtSpokaneMapItems.easyRuns = loadPolylines(R.raw.easy, R.color.easy,
+							3f, R.drawable.ic_easy)
 						Log.v(tag, "Finished loading easy run polylines")
 					},
 
 					// Load in the moderate runs kml file, and iterate though each placemark.
 					async(Dispatchers.IO) {
 						Log.v(tag, "Started loading moderate polylines")
-						MtSpokaneMapItems.moderateRuns = loadPolylines(R.raw.moderate, this@MainMap.activity,
-							R.color.moderate, 2f, R.drawable.ic_moderate)
+						MtSpokaneMapItems.moderateRuns = loadPolylines(R.raw.moderate, R.color.moderate,
+							2f, R.drawable.ic_moderate)
 						Log.v(tag, "Finished loading moderate run polylines")
 					},
 
 					// Load in the difficult runs kml file, and iterate though each placemark.
 					async(Dispatchers.IO) {
 						Log.v(tag, "Started loading difficult polylines")
-						MtSpokaneMapItems.difficultRuns = loadPolylines(R.raw.difficult, this@MainMap.activity,
-							R.color.difficult, 1f, R.drawable.ic_difficult)
+						MtSpokaneMapItems.difficultRuns = loadPolylines(R.raw.difficult, R.color.difficult,
+							1f, R.drawable.ic_difficult)
 						Log.v(tag, "Finished loading difficult polylines")
 					}
 				)
