@@ -6,7 +6,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.ktx.addMarker
+import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.activities.activitysummary.SkiingActivity
@@ -14,12 +17,15 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.withContext
 
 class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, CameraPosition.Builder()
 	.target(LatLng(47.923275586525094, -117.10265189409256)).tilt(45.0F)
 	.bearing(317.50552F).zoom(14.279241F).build()) {
 
 	var locationMarkers: Array<Marker> = emptyArray()
+
+	var polyline: Polyline? = null
 
 	override fun destroy() {
 
@@ -29,6 +35,10 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 				it.remove()
 			}
 			this.locationMarkers = emptyArray()
+		}
+
+		if (this.polyline != null) {
+			this.polyline = null
 		}
 
 		super.destroy()
@@ -49,6 +59,29 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 					this.locationMarkers[it]
 				}
 			}
+		}
+	}
+
+	fun addPolylineFromMarker() {
+
+		if (this.map == null) {
+			return
+		}
+
+		this.polyline = this.map!!.addPolyline {
+
+			this@ActivitySummaryMap.locationMarkers.forEach {
+				add(it.position)
+			}
+
+			color(this@ActivitySummaryMap.getARGB(R.color.yellow))
+			zIndex(10.0F)
+			geodesic(true)
+			startCap(RoundCap())
+			endCap(RoundCap())
+			clickable(false)
+			width(8.0F)
+			visible(true)
 		}
 	}
 
@@ -103,20 +136,24 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 				)
 
 				loads.awaitAll()
-				if (this@ActivitySummaryMap.activity.intent.extras != null) {
+				withContext(Dispatchers.Main) {
+					if (this@ActivitySummaryMap.activity.intent.extras != null) {
 
-					val filename: String? = this@ActivitySummaryMap.activity.intent.extras!!.getString("file")
-					if (filename != null) {
-						val activities: Array<SkiingActivity> = SkiingActivity
-							.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity, filename)
-						(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(activities)
+						val filename: String? =
+							this@ActivitySummaryMap.activity.intent.extras!!.getString("file")
+						if (filename != null) {
+							val activities: Array<SkiingActivity> = SkiingActivity
+								.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity,
+									filename)
+							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(activities)
+						} else {
+							(this@ActivitySummaryMap.activity as ActivitySummary)
+								.loadActivities(SkiingActivity.Activities.toTypedArray())
+						}
 					} else {
 						(this@ActivitySummaryMap.activity as ActivitySummary)
 							.loadActivities(SkiingActivity.Activities.toTypedArray())
 					}
-				} else {
-					(this@ActivitySummaryMap.activity as ActivitySummary)
-						.loadActivities(SkiingActivity.Activities.toTypedArray())
 				}
 
 			}.start()

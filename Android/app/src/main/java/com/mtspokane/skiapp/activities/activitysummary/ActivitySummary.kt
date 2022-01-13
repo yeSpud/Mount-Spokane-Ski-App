@@ -167,9 +167,16 @@ class ActivitySummary : FragmentActivity() {
 		this.container.removeAllViews()
 
 		if (this.mapHandler != null) {
+
+			if (this.mapHandler!!.polyline != null) {
+				this.mapHandler!!.polyline!!.remove()
+				this.mapHandler!!.polyline = null
+			}
+
 			this.mapHandler!!.locationMarkers.forEach {
 				it.remove()
 			}
+			this.mapHandler!!.locationMarkers = emptyArray()
 		}
 
 		var startingActivity: SkiingActivity? = null
@@ -220,6 +227,10 @@ class ActivitySummary : FragmentActivity() {
 				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
 					startingActivity!!.time, null))
 			}
+		}
+
+		if (this.mapHandler != null) {
+			this.mapHandler!!.addPolylineFromMarker()
 		}
 	}
 

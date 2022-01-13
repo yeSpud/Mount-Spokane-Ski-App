@@ -270,7 +270,7 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 		}
 	}
 
-	private fun getARGB(@ColorRes color: Int): Int {
+	fun getARGB(@ColorRes color: Int): Int {
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			this.activity.getColor(color)
 		} else {
