@@ -42,7 +42,7 @@
             android:value="${GOOGLE_MAPS_API_KEY}" />
 
         <activity
-            android:name=".mapactivity.MapsActivity"
+            android:name=".activities.MapsActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:launchMode="singleInstance">
@@ -53,14 +53,14 @@
         </activity>
 
         <activity
-            android:name=".activitysummary.ActivitySummary"
+            android:name="com.mtspokane.skiapp.activities.activitysummary.ActivitySummary"
             android:exported="true"
             android:label="@string/activity_summary_title"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
 
         <activity
-            android:name=".debugview.DebugActivity"
+            android:name=".activities.DebugActivity"
             android:exported="true"
             android:label="@string/debug_view_title"
             android:launchMode="singleInstance"

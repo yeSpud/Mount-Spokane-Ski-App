@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".activitysummary.FileSelectionDialog">
+    tools:context=".activities.activitysummary.FileSelectionDialog">
 
     <TextView
         android:layout_width="match_parent"

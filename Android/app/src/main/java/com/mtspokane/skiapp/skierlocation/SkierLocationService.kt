@@ -26,11 +26,11 @@ import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.activitysummary.SkiingActivity
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.activities.activitysummary.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.mapactivity.MapsActivity
+import com.mtspokane.skiapp.activities.MapsActivity
 import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
