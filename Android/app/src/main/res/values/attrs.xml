@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ActivityView">
+        <attr name="icon" format="reference" />
+        <attr name="title" format="string" />
+        <attr name="start_time" format="string" />
+        <attr name="end_time" format="string" />
+    </declare-styleable>
+</resources>

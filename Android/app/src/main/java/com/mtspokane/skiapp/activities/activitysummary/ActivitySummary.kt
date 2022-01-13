@@ -19,6 +19,8 @@ import android.widget.TableRow
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.SupportMapFragment
@@ -216,12 +218,13 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
+	/*
 	private fun createLayoutParameters(width: Int, height: Int, marginLeft: Int = 0, marginTop: Int = 0,
 	                                   marginRight: Int = 0, marginBottom: Int = 0): TableRow.LayoutParams {
 		val layoutParameter: TableRow.LayoutParams = TableRow.LayoutParams(width, height)
 		layoutParameter.setMargins(marginLeft, marginTop, marginRight, marginBottom)
 		return layoutParameter
-	}
+	}*/
 
 	private fun getTimeFromLong(time: Long): String {
 		val timeFormatter = SimpleDateFormat("h:mm:ss", Locale.US)
@@ -230,17 +233,38 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	private fun createActivityView(@DrawableRes icon: Int?, titleText: String,
-	                               startTime: Long, endTime: Long?): LinearLayout {
+	                               startTime: Long, endTime: Long?): ActivityView {
 
-		val activityContainer = LinearLayout(this)
+		val activityView = ActivityView(this)
+
+		if (icon != null) {
+			activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, icon))
+		} else {
+			activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_missing))
+		}
+
+		activityView.title.text = titleText
+		activityView.startTime.text = this.getTimeFromLong(startTime)
+
+		if (endTime != null) {
+			activityView.endTime.text = this.getTimeFromLong(endTime)
+		}
+
+		return activityView
+		/*
+		val activityContainer = ConstraintLayout(this)
 		activityContainer.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.WRAP_CONTENT, marginTop = 10, marginBottom = 10)
+		activityContainer.id = activityContainer.hashCode()
+
+		/*
+		val oldActivityContainer = LinearLayout(this)
+		oldActivityContainer.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.MATCH_PARENT,
 			50, marginTop = 5, marginBottom = 5)
-		activityContainer.orientation = LinearLayout.HORIZONTAL
+		oldActivityContainer.orientation = LinearLayout.HORIZONTAL*/
 
 		val imageContainer = ImageView(this)
-		val imageLayoutParameters = this.createLayoutParameters(50, 50, marginRight = 10,
-			marginLeft = 10)
-		imageLayoutParameters.weight = 0.0F
+		val imageLayoutParameters = this.createLayoutParameters(50, 50, marginLeft = 10)
 		imageContainer.layoutParams = imageLayoutParameters
 		imageContainer.contentDescription = this.getString(R.string.icon_description)
 		if (icon != null) {
@@ -248,31 +272,29 @@ class ActivitySummary : FragmentActivity() {
 		} else {
 			imageContainer.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_missing))
 		}
-		activityContainer.addView(imageContainer)
+		imageContainer.id = imageContainer.hashCode()
 
-		val titleContainer = HorizontalScrollView(this)
-		val titleContainerLayoutParameters = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
-			50)
-		titleContainerLayoutParameters.weight = 1.0F
-		titleContainer.layoutParams = titleContainerLayoutParameters
+		val imageConstraintSet = ConstraintSet()
+		imageConstraintSet.clone(activityContainer)
+		imageConstraintSet.connect(activityContainer.id, ConstraintSet.START, imageContainer.id, ConstraintSet.START)
+		imageConstraintSet.connect(activityContainer.id, ConstraintSet.TOP, imageContainer.id, ConstraintSet.TOP)
+		imageConstraintSet.applyTo(activityContainer)
 
-		val title = TextView(this)
-		title.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
-			50)
-		title.textSize = 27.0F
-		title.textAlignment = View.TEXT_ALIGNMENT_CENTER
-		title.gravity = Gravity.TOP
-		title.text = titleText
-		titleContainer.addView(title)
-		activityContainer.addView(titleContainer)
+		//oldActivityContainer.addView(imageContainer)
 
 		// Time container
 		val timeContainer = LinearLayout(this)
 		val timeContainerLayoutParameters = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
-			50, marginLeft = 10, marginRight = 10)
-		timeContainerLayoutParameters.weight = 0.0F
+			ViewGroup.LayoutParams.WRAP_CONTENT, marginRight = 10)
 		timeContainer.layoutParams = timeContainerLayoutParameters
 		timeContainer.orientation = LinearLayout.VERTICAL
+		timeContainer.id = timeContainer.hashCode()
+
+		val timeContainerConstraintSet = ConstraintSet()
+		timeContainerConstraintSet.clone(activityContainer)
+		timeContainerConstraintSet.connect(activityContainer.id, ConstraintSet.END, timeContainer.id, ConstraintSet.END)
+		timeContainerConstraintSet.connect(activityContainer.id, ConstraintSet.TOP, timeContainer.id, ConstraintSet.TOP)
+		timeContainerConstraintSet.applyTo(activityContainer)
 
 		// Start time
 		val startTimeTextView = TextView(this)
@@ -291,9 +313,35 @@ class ActivitySummary : FragmentActivity() {
 			endTimeTextView.text = this.getTimeFromLong(endTime)
 			timeContainer.addView(endTimeTextView)
 		}
-		activityContainer.addView(timeContainer)
 
-		return activityContainer
+		val titleContainer = HorizontalScrollView(this)
+		val titleContainerLayoutParameters = this.createLayoutParameters(0, 50,
+			marginLeft = 10, marginRight = 10)
+		titleContainer.layoutParams = titleContainerLayoutParameters
+		titleContainer.id = titleContainer.hashCode()
+
+		val title = TextView(this)
+		title.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT, 50)
+		title.textSize = 30.0F
+		title.textAlignment = View.TEXT_ALIGNMENT_CENTER
+		title.gravity = Gravity.CENTER_VERTICAL
+		title.text = titleText
+		titleContainer.addView(title)
+		//oldActivityContainer.addView(titleContainer)
+
+		val horizontalContainerSet = ConstraintSet()
+		horizontalContainerSet.clone(activityContainer)
+		horizontalContainerSet.connect(activityContainer.id, ConstraintSet.LEFT, titleContainer.id,
+			ConstraintSet.RIGHT)
+		horizontalContainerSet.connect(activityContainer.id, ConstraintSet.RIGHT, titleContainer.id,
+			ConstraintSet.LEFT)
+		horizontalContainerSet.connect(activityContainer.id, ConstraintSet.TOP, titleContainer.id,
+			ConstraintSet.TOP)
+		horizontalContainerSet.applyTo(activityContainer)
+
+		// oldActivityContainer.addView(timeContainer)
+
+		return activityContainer */
 	}
 
 	companion object {
