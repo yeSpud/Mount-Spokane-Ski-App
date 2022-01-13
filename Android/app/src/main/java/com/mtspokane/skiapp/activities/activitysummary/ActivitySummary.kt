@@ -1,6 +1,5 @@
-package com.mtspokane.skiapp.activitysummary
+package com.mtspokane.skiapp.activities.activitysummary
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
@@ -8,21 +7,18 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import android.widget.HorizontalScrollView
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TableRow
-import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isNotEmpty
+import androidx.fragment.app.FragmentActivity
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
+import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import java.io.File
 import java.text.SimpleDateFormat
@@ -30,7 +26,9 @@ import java.util.Date
 import java.util.Locale
 import org.json.JSONObject
 
-class ActivitySummary : Activity() {
+class ActivitySummary : FragmentActivity() {
+
+	private var mapHandler: ActivitySummaryMap? = null
 
 	private lateinit var container: LinearLayout
 
@@ -58,6 +56,13 @@ class ActivitySummary : Activity() {
 		// Be sure to show the action bar.
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
 
+		// Setup the map handler.
+		this.mapHandler = ActivitySummaryMap(this)
+
+		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
+		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
+		mapFragment.getMapAsync(this.mapHandler!!)
+
 		if (this.intent.extras != null) {
 
 			val filename: String? = this.intent.extras!!.getString("file")
@@ -72,11 +77,14 @@ class ActivitySummary : Activity() {
 				this.loadActivities(activities)
 				this.loadedFile = filename
 				return
+			} else {
+				this.loadActivities(SkiingActivity.Activities.toTypedArray())
 			}
-		}
+		} else {
 
-		// If all else fails just load from the current activities array.
-		this.loadActivities(SkiingActivity.Activities.toTypedArray())
+			// If all else fails just load from the current activities array.
+			this.loadActivities(SkiingActivity.Activities.toTypedArray())
+		}
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -158,10 +166,37 @@ class ActivitySummary : Activity() {
 
 		this.container.removeAllViews()
 
+		if (this.mapHandler != null) {
+
+			if (this.mapHandler!!.polyline != null) {
+				this.mapHandler!!.polyline!!.remove()
+				this.mapHandler!!.polyline = null
+			}
+
+			this.mapHandler!!.locationMarkers.forEach {
+				it.remove()
+			}
+			this.mapHandler!!.locationMarkers = emptyArray()
+		}
+
 		var startingActivity: SkiingActivity? = null
 		var endingActivity: SkiingActivity? = null
 
 		activities.forEach { skiingActivity: SkiingActivity ->
+
+			if (this.mapHandler != null) {
+
+				val markerIconColor = when (skiingActivity.icon) {
+					R.drawable.ic_easy -> BitmapDescriptorFactory.HUE_GREEN
+					R.drawable.ic_moderate -> BitmapDescriptorFactory.HUE_BLUE
+					R.drawable.ic_difficult -> BitmapDescriptorFactory.HUE_AZURE
+					R.drawable.ic_chairlift -> BitmapDescriptorFactory.HUE_RED
+					else -> BitmapDescriptorFactory.HUE_MAGENTA
+				}
+
+				this.mapHandler!!.addMarker(skiingActivity.latitude, skiingActivity.longitude,
+					markerIconColor)
+			}
 
 			if (startingActivity == null) {
 				startingActivity = skiingActivity
@@ -193,13 +228,10 @@ class ActivitySummary : Activity() {
 					startingActivity!!.time, null))
 			}
 		}
-	}
 
-	private fun createLayoutParameters(width: Int, height: Int, marginLeft: Int = 0, marginTop: Int = 0,
-	                                   marginRight: Int = 0, marginBottom: Int = 0): TableRow.LayoutParams {
-		val layoutParameter: TableRow.LayoutParams = TableRow.LayoutParams(width, height)
-		layoutParameter.setMargins(marginLeft, marginTop, marginRight, marginBottom)
-		return layoutParameter
+		if (this.mapHandler != null) {
+			this.mapHandler!!.addPolylineFromMarker()
+		}
 	}
 
 	private fun getTimeFromLong(time: Long): String {
@@ -209,70 +241,24 @@ class ActivitySummary : Activity() {
 	}
 
 	private fun createActivityView(@DrawableRes icon: Int?, titleText: String,
-	                               startTime: Long, endTime: Long?): LinearLayout {
+	                               startTime: Long, endTime: Long?): ActivityView {
 
-		val activityContainer = LinearLayout(this)
-		activityContainer.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.MATCH_PARENT,
-			50, marginTop = 5, marginBottom = 5)
-		activityContainer.orientation = LinearLayout.HORIZONTAL
+		val activityView = ActivityView(this)
 
-		val imageContainer = ImageView(this)
-		val imageLayoutParameters = this.createLayoutParameters(50, 50, marginRight = 10,
-			marginLeft = 10)
-		imageLayoutParameters.weight = 0.0F
-		imageContainer.layoutParams = imageLayoutParameters
-		imageContainer.contentDescription = this.getString(R.string.icon_description)
 		if (icon != null) {
-			imageContainer.setImageDrawable(AppCompatResources.getDrawable(this, icon))
+			activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, icon))
 		} else {
-			imageContainer.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_missing))
+			activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_missing))
 		}
-		activityContainer.addView(imageContainer)
 
-		val titleContainer = HorizontalScrollView(this)
-		val titleContainerLayoutParameters = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
-			50)
-		titleContainerLayoutParameters.weight = 1.0F
-		titleContainer.layoutParams = titleContainerLayoutParameters
+		activityView.title.text = titleText
+		activityView.startTime.text = this.getTimeFromLong(startTime)
 
-		val title = TextView(this)
-		title.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
-			50)
-		title.textSize = 27.0F
-		title.textAlignment = View.TEXT_ALIGNMENT_CENTER
-		title.gravity = Gravity.TOP
-		title.text = titleText
-		titleContainer.addView(title)
-		activityContainer.addView(titleContainer)
-
-		// Time container
-		val timeContainer = LinearLayout(this)
-		val timeContainerLayoutParameters = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
-			50, marginLeft = 10, marginRight = 10)
-		timeContainerLayoutParameters.weight = 0.0F
-		timeContainer.layoutParams = timeContainerLayoutParameters
-		timeContainer.orientation = LinearLayout.VERTICAL
-
-		// Start time
-		val startTimeTextView = TextView(this)
-		startTimeTextView.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
-			22, marginBottom = 6)
-		startTimeTextView.textSize = 11.0F
-		startTimeTextView.text = this.getTimeFromLong(startTime)
-		timeContainer.addView(startTimeTextView)
-
-		// End time
 		if (endTime != null) {
-			val endTimeTextView = TextView(this)
-			endTimeTextView.layoutParams = this.createLayoutParameters(ViewGroup.LayoutParams.WRAP_CONTENT,
-				22)
-			endTimeTextView.textSize = 11.0F
-			endTimeTextView.text = this.getTimeFromLong(endTime)
-			timeContainer.addView(endTimeTextView)
+			activityView.endTime.text = this.getTimeFromLong(endTime)
 		}
-		activityContainer.addView(timeContainer)
 
-		return activityContainer
+		return activityView
 	}
 
 	companion object {
