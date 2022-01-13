@@ -18,6 +18,10 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 		return this.icon
 	}
 
+	fun locationInsidePoints(point: Location): Boolean {
+		return this.locationInsidePoints(point.latitude, point.longitude)
+	}
+
 	/**
 	 * Copyright 2008, 2013 Google Inc.
 	 *
@@ -33,38 +37,38 @@ open class MapItem(val name: String, @DrawableRes private var icon: Int? = null)
 	 * See the License for the specific language governing permissions and
 	 * limitations under the License.
 	 */
-	fun locationInsidePoints(point: Location): Boolean {
+	fun locationInsidePoints(latitude: Double, longitude: Double): Boolean {
 
 		this.points.forEach {
 
 			// Only continue if the array of points isn't empty...
 			if (it.isNotEmpty()) {
 
-				// Get the latitude and longitude of the location point.
-				val locationLatitude: Double = Math.toRadians(point.latitude)
-				val locationLongitude: Double = Math.toRadians(point.longitude)
+				// Get the latitude and longitude as a radian.
+				val locationLatitudeRadian: Double = Math.toRadians(latitude)
+				val locationLongitudeRadian: Double = Math.toRadians(longitude)
 
 				val prevLocation: Pair<Double, Double> = it[it.size - 1]
-				var previousLatitude = Math.toRadians(prevLocation.first)
-				var previousLongitude = Math.toRadians(prevLocation.second)
+				var previousLatitudeRadian = Math.toRadians(prevLocation.first)
+				var previousLongitudeRadian = Math.toRadians(prevLocation.second)
 				var nIntersect = 0
 				it.forEach { latLng ->
-					val dLng3 = wrap(locationLongitude - previousLongitude)
+					val dLng3 = wrap(locationLongitudeRadian - previousLongitudeRadian)
 
 					// Special case: point equal to vertex is inside.
-					if (locationLatitude == previousLatitude && dLng3 == 0.0) {
+					if (locationLatitudeRadian == previousLatitudeRadian && dLng3 == 0.0) {
 						return true
 					}
 					val lat2 = Math.toRadians(latLng.first)
 					val lng2 = Math.toRadians(latLng.second)
 
 					// Offset longitudes by -lng1.
-					val wrappedValue: Double = wrap(lng2 - previousLongitude)
-					if (intersects(previousLatitude, lat2, wrappedValue, locationLatitude, dLng3)) {
+					val wrappedValue: Double = wrap(lng2 - previousLongitudeRadian)
+					if (intersects(previousLatitudeRadian, lat2, wrappedValue, locationLatitudeRadian, dLng3)) {
 						++nIntersect
 					}
-					previousLatitude = lat2
-					previousLongitude = lng2
+					previousLatitudeRadian = lat2
+					previousLongitudeRadian = lng2
 				}
 
 				if ((nIntersect and 1) != 0) {
