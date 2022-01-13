@@ -44,6 +44,6 @@ object MtSpokaneMapItems {
 		}
 		
 		this.isSetup = false
-		Log.i("destroyUIItems", "Finished clearing UI Items")
+		Log.d("destroyUIItems", "Finished clearing UI Items")
 	}
 }

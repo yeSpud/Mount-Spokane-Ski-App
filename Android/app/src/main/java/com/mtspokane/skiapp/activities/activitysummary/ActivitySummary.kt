@@ -4,6 +4,8 @@ import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -12,9 +14,11 @@ import android.view.MenuItem
 import android.widget.LinearLayout
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
@@ -186,7 +190,7 @@ class ActivitySummary : FragmentActivity() {
 
 			ActivitySummaryLocations.updateLocations(skiingActivity)
 
-			val titleIconColor: Pair<String, Pair<Int, Float>> = this.setIconNameAndColor()
+			val titleIconColor: Pair<String, Pair<Int, BitmapDescriptor>> = this.setIconNameAndColor()
 
 			if (this.mapHandler != null) {
 
@@ -214,19 +218,19 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private fun setIconNameAndColor(): Pair<String, Pair<Int, Float>> {
+	private fun setIconNameAndColor(): Pair<String, Pair<Int, BitmapDescriptor>> {
 
-		val returnPair: Pair<String, Pair<Int, Float>> = if (ActivitySummaryLocations.altitudeConfidence >= 2u &&
+		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (ActivitySummaryLocations.altitudeConfidence >= 2u &&
 			ActivitySummaryLocations.speedConfidence >= 1u &&
 			ActivitySummaryLocations.mostLikelyChairlift != null) {
 
 			Pair(ActivitySummaryLocations.mostLikelyChairlift!!.name, Pair(R.drawable.ic_chairlift,
-				BitmapDescriptorFactory.HUE_RED))
+				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
 		} else {
 
 			val chairliftTerminal: MapItem? = ActivitySummaryLocations.checkIfAtChairliftTerminals()
 			if (chairliftTerminal != null) {
-				Pair(chairliftTerminal.name, Pair(R.drawable.ic_chairlift, BitmapDescriptorFactory.HUE_RED))
+				Pair(chairliftTerminal.name, Pair(R.drawable.ic_chairlift, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
 			} else {
 
 				val other: MapItem? = ActivitySummaryLocations.checkIfOnOther()
@@ -236,7 +240,7 @@ class ActivitySummary : FragmentActivity() {
 					} else {
 						R.drawable.ic_missing
 					}
-					Pair(other.name, Pair(icon, BitmapDescriptorFactory.HUE_MAGENTA))
+					Pair(other.name, Pair(icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
 				} else {
 
 					val run: MapItem? = ActivitySummaryLocations.checkIfOnRun()
@@ -247,14 +251,14 @@ class ActivitySummary : FragmentActivity() {
 							R.drawable.ic_missing
 						}
 						val markerIconColor = when (icon) {
-							R.drawable.ic_easy -> BitmapDescriptorFactory.HUE_GREEN
-							R.drawable.ic_moderate -> BitmapDescriptorFactory.HUE_BLUE
-							R.drawable.ic_difficult -> BitmapDescriptorFactory.HUE_AZURE
-							else -> BitmapDescriptorFactory.HUE_MAGENTA
+							R.drawable.ic_easy -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+							R.drawable.ic_moderate -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+							R.drawable.ic_difficult -> bitmapDescriptorFromVector(this, R.drawable.ic_black_marker)
+							else -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)
 						}
 						Pair(run.name, Pair(icon, markerIconColor))
 					} else {
-						Pair("Unknown Location", Pair(R.drawable.ic_missing, BitmapDescriptorFactory.HUE_MAGENTA))
+						Pair("Unknown Location", Pair(R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
 					}
 				}
 			}
@@ -299,5 +303,18 @@ class ActivitySummary : FragmentActivity() {
 		private const val WRITE_JSON_CODE = 509
 
 		private const val WRITE_GEOJSON_CODE = 666
+
+		/**
+		 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994
+		 */
+		private fun bitmapDescriptorFromVector(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
+			val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)
+			vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
+			val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight,
+				Bitmap.Config.ARGB_8888)
+			val canvas = Canvas(bitmap)
+			vectorDrawable.draw(canvas)
+			return BitmapDescriptorFactory.fromBitmap(bitmap)
+		}
 	}
 }

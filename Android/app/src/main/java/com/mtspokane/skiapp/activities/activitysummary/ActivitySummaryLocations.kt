@@ -148,8 +148,7 @@ object ActivitySummaryLocations {
 			return null
 		}
 
-		arrayOf(
-			MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
+		arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
 			MtSpokaneMapItems.difficultRuns).forEach { runDifficulty ->
 			runDifficulty.forEach {
 				if (it.locationInsidePoints(this.currentSkiingActivity!!.latitude,
