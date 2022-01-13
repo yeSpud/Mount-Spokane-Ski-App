@@ -1,5 +1,6 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
+import android.util.Log
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 
@@ -41,7 +42,7 @@ object ActivitySummaryLocations {
 		this.currentSkiingActivity = newSkiingActivity
 	}
 
-	fun getVerticalDirection(): VerticalDirection {
+	private fun getVerticalDirection(): VerticalDirection {
 
 		if (this.previousSkiingActivity == null || this.currentSkiingActivity == null) {
 			return VerticalDirection.UNKNOWN
@@ -74,6 +75,7 @@ object ActivitySummaryLocations {
 	fun checkIfOnOther(): MapItem? {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentSkiingActivity == null) {
+			Log.w("checkIfOnOther", "Map items are not set up")
 			return null
 		}
 
@@ -90,6 +92,7 @@ object ActivitySummaryLocations {
 	fun checkIfAtChairliftTerminals(): MapItem? {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentSkiingActivity == null) {
+			Log.w("checkChairliftTerminals", "Map items are not set up")
 			return null
 		}
 
@@ -141,6 +144,7 @@ object ActivitySummaryLocations {
 	fun checkIfOnRun(): MapItem? {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentSkiingActivity == null) {
+			Log.w("checkIfOnRun", "Map items are not set up")
 			return null
 		}
 

@@ -56,6 +56,8 @@ class MapsActivity : FragmentActivity() {
 		// Setup the map handler.
 		this.map = MainMap(this)
 
+		MtSpokaneMapItems.classesUsingObject.add(this::class)
+
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
 		mapFragment.getMapAsync(this.map!!)
@@ -91,7 +93,7 @@ class MapsActivity : FragmentActivity() {
 		}
 		
 		// Remove UI items from MtSpokaneMapItems.
-		MtSpokaneMapItems.destroyUIItems()
+		MtSpokaneMapItems.destroyUIItems(this::class)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {

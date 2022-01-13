@@ -63,6 +63,8 @@ class SkierLocationService : Service(), LocationListener {
 		this.locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		this.notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+		MtSpokaneMapItems.classesUsingObject.add(this::class)
+
 		SkiingActivity.populateActivitiesArray(this)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -114,7 +116,7 @@ class SkierLocationService : Service(), LocationListener {
 			this.notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 		}
 
-		MtSpokaneMapItems.destroyUIItems()
+		MtSpokaneMapItems.destroyUIItems(this::class)
 	}
 
 	override fun onLocationChanged(location: Location) {
@@ -159,7 +161,7 @@ class SkierLocationService : Service(), LocationListener {
 		val text: String = this.getString(textResource, mapItem.name)
 		Locations.visibleLocationUpdates.forEach { it.updateLocation(text) }
 		this.updateNotification(text, mapItem.getIcon())
-		SkiingActivity.Activities.add(SkiingActivity(mapItem.name, location, mapItem.getIcon()))
+		SkiingActivity.Activities.add(SkiingActivity(mapItem.name, location))
 	}
 
 	private fun updateNotification(title: String, @DrawableRes icon: Int?) {

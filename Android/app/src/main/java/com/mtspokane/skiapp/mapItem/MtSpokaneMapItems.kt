@@ -1,8 +1,13 @@
 package com.mtspokane.skiapp.mapItem
 
+import android.util.Log
+import kotlin.reflect.KClass
+
 object MtSpokaneMapItems {
 
 	var isSetup = false
+
+	val classesUsingObject: ArrayList<KClass<*>> = ArrayList(0)
 
 	lateinit var skiAreaBounds: UIMapItem
 
@@ -18,7 +23,12 @@ object MtSpokaneMapItems {
 
 	lateinit var difficultRuns: Array<VisibleUIMapItem> // Should be size 25
 
-	fun destroyUIItems() {
+	fun destroyUIItems(`class`: KClass<*>) {
+
+		this.classesUsingObject.remove(`class`)
+		if (this.classesUsingObject.isNotEmpty()) {
+			return
+		}
 
 		this.skiAreaBounds.destroyUIItems()
 		this.other.forEach {
@@ -32,7 +42,8 @@ object MtSpokaneMapItems {
 				it.destroyUIItems()
 			}
 		}
-
+		
 		this.isSetup = false
+		Log.i("destroyUIItems", "Finished clearing UI Items")
 	}
 }
