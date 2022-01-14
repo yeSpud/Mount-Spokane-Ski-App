@@ -22,9 +22,6 @@ import kotlin.collections.ArrayList
 
 class SkiingActivity {
 
-	@Deprecated("Don't store and read the name - use the location to determine the name")
-	val name: String
-
 	val accuracy: Float
 
 	val altitude: Double
@@ -41,8 +38,7 @@ class SkiingActivity {
 
 	val time: Long
 
-	constructor(name: String, location: Location) {
-		this.name = name
+	constructor(location: Location) {
 
 		this.accuracy = location.accuracy
 		this.altitude = location.altitude
@@ -66,10 +62,9 @@ class SkiingActivity {
 		this.time = location.time
 	}
 
-	constructor(name: String, accuracy: Float, altitude: Double, altitudeAccuracy: Float?,
-	            latitude: Double, longitude: Double, speed: Float, speedAccuracy: Float?, time: Long) {
+	constructor(accuracy: Float, altitude: Double, altitudeAccuracy: Float?, latitude: Double,
+	            longitude: Double, speed: Float, speedAccuracy: Float?, time: Long) {
 
-		this.name = name
 		this.accuracy = accuracy
 		this.altitude = altitude
 		this.altitudeAccuracy = altitudeAccuracy
@@ -84,7 +79,6 @@ class SkiingActivity {
 
 		val Activities: ArrayList<SkiingActivity> = ArrayList(0)
 
-		private const val NAME = "name"
 		private const val ACCURACY = "acc"
 		private const val ALTITUDE = "alt"
 		private const val ALTITUDE_ACCURACY = "altacc"
@@ -99,7 +93,6 @@ class SkiingActivity {
 			val jsonArray = JSONArray()
 			Activities.forEach {
 				val jsonEntry = JSONObject()
-				jsonEntry.put(NAME, it.name)
 				jsonEntry.put(ACCURACY, it.accuracy)
 				jsonEntry.put(ALTITUDE, it.altitude)
 				jsonEntry.put(ALTITUDE_ACCURACY, it.altitudeAccuracy)
@@ -160,8 +153,6 @@ class SkiingActivity {
 			for (i in 0 until count) {
 				val jsonObject: JSONObject = jsonArray.getJSONObject(i)
 
-				val name: String = jsonObject.getString(NAME)
-
 				val accuracy: Float = parseFloat(jsonObject, ACCURACY)!!
 				val altitude: Double = jsonObject.optDouble(ALTITUDE)
 				val altitudeAccuracy: Float? = parseFloat(jsonObject, ALTITUDE_ACCURACY)
@@ -171,7 +162,7 @@ class SkiingActivity {
 				val speedAccuracy: Float? = parseFloat(jsonObject, SPEED_ACCURACY)
 				val time: Long = jsonObject.optLong(TIME)
 
-				val activity = SkiingActivity(name, accuracy, altitude, altitudeAccuracy, latitude,
+				val activity = SkiingActivity(accuracy, altitude, altitudeAccuracy, latitude,
 					longitude, speed, speedAccuracy, time)
 				arrayList.add(activity)
 			}
@@ -245,7 +236,6 @@ class SkiingActivity {
 				featureEntry.put("geometry", geometryJson)
 
 				val propertiesJson = JSONObject()
-				propertiesJson.put(NAME, jsonEntry.getString(NAME))
 				propertiesJson.put(ACCURACY, jsonEntry.opt(ACCURACY))
 				propertiesJson.put(ALTITUDE_ACCURACY, jsonEntry.opt(ALTITUDE_ACCURACY))
 				propertiesJson.put(SPEED, jsonEntry.opt(SPEED))

@@ -184,31 +184,52 @@ class ActivitySummary : FragmentActivity() {
 			this.mapHandler!!.locationMarkers = emptyArray()
 		}
 
+		if (activities.isEmpty()) {
+			return
+		}
+
 		var endingActivity: SkiingActivity? = null
 
-		activities.forEachIndexed { index: Int, skiingActivity: SkiingActivity ->
+		lateinit var endingTitleIconColor: Pair<String, Pair<Int, BitmapDescriptor>>
 
-			ActivitySummaryLocations.updateLocations(skiingActivity)
+		lateinit var currentTitleIconColor: Pair<String, Pair<Int, BitmapDescriptor>>
 
-			val titleIconColor: Pair<String, Pair<Int, BitmapDescriptor>> = this.setIconNameAndColor()
+		for (index in 0 until (activities.size + 1)) {
+
+			if (index == activities.size) {
+				val finalActivityView = if (endingActivity != null) {
+					this.createActivityView(currentTitleIconColor.second.first, currentTitleIconColor.first,
+						endingActivity.time, activities[activities.size - 1].time)
+				} else {
+					this.createActivityView(currentTitleIconColor.second.first, currentTitleIconColor.first,
+							activities[activities.size - 1].time, null)
+				}
+				this.container.addView(finalActivityView)
+				break
+			}
+
+			ActivitySummaryLocations.updateLocations(activities[index])
+
+			if (index > 0) {
+				endingTitleIconColor = currentTitleIconColor
+			}
+
+			currentTitleIconColor = this.getTitleIconAndColor()
 
 			if (this.mapHandler != null) {
 
-				this.mapHandler!!.addMarker(skiingActivity.latitude, skiingActivity.longitude,
-					titleIconColor.second.second)
+				this.mapHandler!!.addMarker(activities[index].latitude, activities[index].longitude,
+					currentTitleIconColor.second.second)
 			}
 
 			if (endingActivity == null) {
-				endingActivity = skiingActivity
+				endingActivity = activities[index]
 			} else {
 
-				if (endingActivity!!.name != skiingActivity.name) {
-					this.container.addView(this.createActivityView(titleIconColor.second.first,
-						titleIconColor.first, skiingActivity.time, endingActivity!!.time))
-					endingActivity = null
-				} else if (index == activities.size - 1) {
-					this.container.addView(this.createActivityView(titleIconColor.second.first,
-						titleIconColor.first, skiingActivity.time, endingActivity!!.time))
+				if (endingTitleIconColor.first != currentTitleIconColor.first) {
+					this.container.addView(this.createActivityView(endingTitleIconColor.second.first,
+						endingTitleIconColor.first, endingActivity.time, activities[index].time))
+					endingActivity = activities[index]
 				}
 			}
 		}
@@ -218,7 +239,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private fun setIconNameAndColor(): Pair<String, Pair<Int, BitmapDescriptor>> {
+	private fun getTitleIconAndColor(): Pair<String, Pair<Int, BitmapDescriptor>> {
 
 		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (ActivitySummaryLocations.altitudeConfidence >= 2u &&
 			ActivitySummaryLocations.speedConfidence >= 1u &&
