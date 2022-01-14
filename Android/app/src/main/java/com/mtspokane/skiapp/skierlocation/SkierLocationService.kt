@@ -104,9 +104,9 @@ class SkierLocationService : Service(), LocationListener {
 
 		if (SkiingActivity.Activities.isNotEmpty()) {
 
-			val file: String = SkiingActivity.writeActivitiesToFile(this)
+			SkiingActivity.writeActivitiesToFile(this)
 
-			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, file)
+			val pendingIntent: PendingIntent = this.createPendingIntent()
 
 			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
 				true, R.string.activity_notification_text, pendingIntent)
@@ -177,12 +177,9 @@ class SkierLocationService : Service(), LocationListener {
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")
-	private fun createPendingIntent(`class`: KClass<*>, filename: String? = null): PendingIntent {
-		val notificationIntent = Intent(this, `class`.java)
+	private fun createPendingIntent(): PendingIntent {
 
-		if (filename != null) {
-			notificationIntent.putExtra("file", filename)
-		}
+		val notificationIntent = Intent(this, MapsActivity::class.java)
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
@@ -193,7 +190,7 @@ class SkierLocationService : Service(), LocationListener {
 
 	private fun createPersistentNotification(title: String, iconBitmap: Bitmap?): Notification {
 
-		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class)
+		val pendingIntent: PendingIntent = this.createPendingIntent()
 
 		val builder: NotificationCompat.Builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
 			false, R.string.tracking_notice, pendingIntent)

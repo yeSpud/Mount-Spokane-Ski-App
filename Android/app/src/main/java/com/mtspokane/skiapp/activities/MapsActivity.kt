@@ -2,6 +2,7 @@ package com.mtspokane.skiapp.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -45,6 +46,10 @@ class MapsActivity : FragmentActivity() {
 		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(this.layoutInflater)
 		this.setContentView(binding.root)
+
+		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE)
+				as NotificationManager
+		notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
 
 		// Determine if the user has enabled location permissions.
 		this.locationEnabled = this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),

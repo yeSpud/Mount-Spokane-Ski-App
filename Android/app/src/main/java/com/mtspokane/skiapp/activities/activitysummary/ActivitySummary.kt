@@ -68,28 +68,8 @@ class ActivitySummary : FragmentActivity() {
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
 		mapFragment.getMapAsync(this.mapHandler!!)
 
-		if (this.intent.extras != null) {
-
-			val filename: String? = this.intent.extras!!.getString("file")
-
-			if (filename != null) {
-				val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE)
-						as NotificationManager
-				notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
-
-				val activities: Array<SkiingActivity> = SkiingActivity
-					.readSkiingActivitiesFromFile(this, filename)
-				this.loadActivities(activities)
-				this.loadedFile = filename
-				return
-			} else {
-				this.loadActivities(SkiingActivity.Activities.toTypedArray())
-			}
-		} else {
-
-			// If all else fails just load from the current activities array.
-			this.loadActivities(SkiingActivity.Activities.toTypedArray())
-		}
+		// If all else fails just load from the current activities array.
+		this.loadActivities(SkiingActivity.Activities.toTypedArray())
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
