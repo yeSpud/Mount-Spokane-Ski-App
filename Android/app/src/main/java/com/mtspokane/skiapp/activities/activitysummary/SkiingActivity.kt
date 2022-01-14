@@ -18,7 +18,6 @@ import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.collections.ArrayList
 
 class SkiingActivity {
 
@@ -77,7 +76,7 @@ class SkiingActivity {
 
 	companion object {
 
-		val Activities: ArrayList<SkiingActivity> = ArrayList(0)
+		var Activities: Array<SkiingActivity> = emptyArray()
 
 		private const val ACCURACY = "acc"
 		private const val ALTITUDE = "alt"
@@ -91,7 +90,7 @@ class SkiingActivity {
 		fun writeActivitiesToFile(context: Context): String {
 
 			val jsonArray = JSONArray()
-			Activities.forEach {
+			this.Activities.forEach {
 				val jsonEntry = JSONObject()
 				jsonEntry.put(ACCURACY, it.accuracy)
 				jsonEntry.put(ALTITUDE, it.altitude)
@@ -139,10 +138,8 @@ class SkiingActivity {
 
 		fun readSkiingActivitiesFromFile(context: Context, filename: String): Array<SkiingActivity> {
 
-			val arrayList = ArrayList<SkiingActivity>(0)
-
 			if (!context.fileList().contains(filename)) {
-				return arrayList.toTypedArray()
+				return emptyArray()
 			}
 
 			val json = readJsonFromFile(context, filename)
@@ -150,8 +147,10 @@ class SkiingActivity {
 			val jsonArray: JSONArray = json.getJSONArray(json.keys().next())
 
 			val count = jsonArray.length()
-			for (i in 0 until count) {
-				val jsonObject: JSONObject = jsonArray.getJSONObject(i)
+
+			val array = Array(count) {
+
+				val jsonObject: JSONObject = jsonArray.getJSONObject(it)
 
 				val accuracy: Float = parseFloat(jsonObject, ACCURACY)!!
 				val altitude: Double = jsonObject.optDouble(ALTITUDE)
@@ -162,12 +161,11 @@ class SkiingActivity {
 				val speedAccuracy: Float? = parseFloat(jsonObject, SPEED_ACCURACY)
 				val time: Long = jsonObject.optLong(TIME)
 
-				val activity = SkiingActivity(accuracy, altitude, altitudeAccuracy, latitude,
-					longitude, speed, speedAccuracy, time)
-				arrayList.add(activity)
+				SkiingActivity(accuracy, altitude, altitudeAccuracy, latitude, longitude, speed,
+					speedAccuracy, time)
 			}
 
-			return arrayList.toTypedArray()
+			return array
 		}
 
 		private fun parseFloat(jsonObject: JSONObject, key: String): Float? {
@@ -187,9 +185,7 @@ class SkiingActivity {
 			val date: String = getDate()
 			val filename = "$date.json"
 
-			val array: Array<SkiingActivity> = readSkiingActivitiesFromFile(context, filename)
-
-			Activities.addAll(array)
+			this.Activities = readSkiingActivitiesFromFile(context, filename)
 		}
 
 		fun getDate(): String {

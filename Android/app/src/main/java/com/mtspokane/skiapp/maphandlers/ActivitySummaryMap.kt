@@ -144,16 +144,13 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 							this@ActivitySummaryMap.activity.intent.extras!!.getString("file")
 						if (filename != null) {
 							val activities: Array<SkiingActivity> = SkiingActivity
-								.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity,
-									filename)
+								.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity, filename)
 							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(activities)
 						} else {
-							(this@ActivitySummaryMap.activity as ActivitySummary)
-								.loadActivities(SkiingActivity.Activities.toTypedArray())
+							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivity.Activities)
 						}
 					} else {
-						(this@ActivitySummaryMap.activity as ActivitySummary)
-							.loadActivities(SkiingActivity.Activities.toTypedArray())
+						(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivity.Activities)
 					}
 				}
 
