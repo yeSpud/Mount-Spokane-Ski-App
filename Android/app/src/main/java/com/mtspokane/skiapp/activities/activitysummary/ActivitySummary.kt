@@ -67,9 +67,6 @@ class ActivitySummary : FragmentActivity() {
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
 		mapFragment.getMapAsync(this.mapHandler!!)
-
-		// If all else fails just load from the current activities array.
-		this.loadActivities(SkiingActivityManager.Activities)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -146,6 +143,17 @@ class ActivitySummary : FragmentActivity() {
 				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}
 		}
+	}
+
+	override fun onDestroy() {
+		super.onDestroy()
+
+		if (this.mapHandler != null) {
+			this.mapHandler!!.destroy()
+			this.mapHandler = null
+		}
+
+		SkiingActivityManager.FinishedAndLoadedActivities = null
 	}
 
 	fun loadActivities(activities: Array<SkiingActivity>) {

@@ -12,7 +12,6 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.skiingactivity.SkiingActivity
 import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -88,68 +87,63 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 
 	init {
 
-		this.setAdditionalCallback{
+		this.setAdditionalCallback {
 			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
 				val loads = listOf(
 
-				// Add the chairlifts to the map.
-				// Load in the chairlift kml file, and iterate though each placemark.
-				this@ActivitySummaryMap.loadPolylinesAsync("Loading chairlift polylines",
-					R.raw.lifts, R.color.chairlift,4.0F, R.drawable.ic_chairlift),
+					// Add the chairlifts to the map.
+					// Load in the chairlift kml file, and iterate though each placemark.
+					this@ActivitySummaryMap.loadPolylinesAsync("Loading chairlift polylines",
+						R.raw.lifts, R.color.chairlift, 4.0F, R.drawable.ic_chairlift),
 
-				// Load in the easy runs kml file, and iterate though each placemark.
-				this@ActivitySummaryMap.loadPolylinesAsync("Loading easy polylines", R.raw.easy,
-					R.color.easy, 3.0F, R.drawable.ic_easy),
+					// Load in the easy runs kml file, and iterate though each placemark.
+					this@ActivitySummaryMap.loadPolylinesAsync("Loading easy polylines",
+						R.raw.easy, R.color.easy, 3.0F, R.drawable.ic_easy),
 
-				// Load in the moderate runs kml file, and iterate though each placemark.
-				this@ActivitySummaryMap.loadPolylinesAsync("Loading moderate polylines",
-					R.raw.moderate, R.color.moderate, 2.0F, R.drawable.ic_moderate),
+					// Load in the moderate runs kml file, and iterate though each placemark.
+					this@ActivitySummaryMap.loadPolylinesAsync("Loading moderate polylines",
+						R.raw.moderate, R.color.moderate, 2.0F, R.drawable.ic_moderate),
 
-				// Load in the difficult runs kml file, and iterate though each placemark.
-				this@ActivitySummaryMap.loadPolylinesAsync("Loading difficult polylines",
-					R.raw.difficult, R.color.difficult, 1.0F, R.drawable.ic_difficult),
+					// Load in the difficult runs kml file, and iterate though each placemark.
+					this@ActivitySummaryMap.loadPolylinesAsync("Loading difficult polylines",
+						R.raw.difficult, R.color.difficult, 1.0F, R.drawable.ic_difficult),
 
-				// Other polygons
-				// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
-				this@ActivitySummaryMap.loadPolygonsAsync("Loading other polygons", R.raw.other,
-					R.color.other_polygon_fill, false),
+					// Other polygons
+					// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
+					this@ActivitySummaryMap.loadPolygonsAsync("Loading other polygons",
+						R.raw.other, R.color.other_polygon_fill, false),
 
-				// Load the chairlift terminal polygons file.
-				this@ActivitySummaryMap.loadPolygonsAsync("Loading chairlift terminal polygons",
-					R.raw.lift_terminal_polygons, R.color.chairlift_polygon),
+					// Load the chairlift terminal polygons file.
+					this@ActivitySummaryMap.loadPolygonsAsync("Loading chairlift terminal polygons",
+						R.raw.lift_terminal_polygons, R.color.chairlift_polygon),
 
-				// Load the chairlift polygons file.
-				this@ActivitySummaryMap.loadPolygonsAsync("Loading chairlift polygons",
-					R.raw.lift_polygons, R.color.chairlift_polygon),
+					// Load the chairlift polygons file.
+					this@ActivitySummaryMap.loadPolygonsAsync("Loading chairlift polygons",
+						R.raw.lift_polygons, R.color.chairlift_polygon),
 
-				// Load the easy polygons file.
-				this@ActivitySummaryMap.loadPolygonsAsync("Loading easy polygons",
-					R.raw.easy_polygons, R.color.easy_polygon),
+					// Load the easy polygons file.
+					this@ActivitySummaryMap.loadPolygonsAsync("Loading easy polygons",
+						R.raw.easy_polygons, R.color.easy_polygon),
 
-				// Load the moderate polygons file.
-				this@ActivitySummaryMap.loadPolygonsAsync("Loading moderate polygons",
-					R.raw.moderate_polygons, R.color.moderate_polygon),
+					// Load the moderate polygons file.
+					this@ActivitySummaryMap.loadPolygonsAsync("Loading moderate polygons",
+						R.raw.moderate_polygons, R.color.moderate_polygon),
 
-				// Load the difficult polygons file.
-				this@ActivitySummaryMap.loadPolygonsAsync("Loading difficult polygons",
-					R.raw.difficult_polygons, R.color.difficult_polygon)
+					// Load the difficult polygons file.
+					this@ActivitySummaryMap.loadPolygonsAsync("Loading difficult polygons",
+						R.raw.difficult_polygons, R.color.difficult_polygon)
 				)
 
 				loads.awaitAll()
 				withContext(Dispatchers.Main) {
-					if (this@ActivitySummaryMap.activity.intent.extras != null) {
 
-						val filename: String? =
-							this@ActivitySummaryMap.activity.intent.extras!!.getString("file")
-						if (filename != null) {
-							val activities: Array<SkiingActivity> = SkiingActivityManager.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity, filename)
-							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(activities)
-						} else {
-							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivityManager.Activities)
-						}
+					if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
+						(this@ActivitySummaryMap.activity as ActivitySummary)
+							.loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
 					} else {
-						(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivityManager.Activities)
+						(this@ActivitySummaryMap.activity as ActivitySummary)
+							.loadActivities(SkiingActivityManager.InProgressActivities)
 					}
 				}
 

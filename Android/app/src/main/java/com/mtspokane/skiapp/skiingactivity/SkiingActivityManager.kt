@@ -19,7 +19,9 @@ import org.json.JSONObject
 
 object SkiingActivityManager {
 
-	var Activities: Array<SkiingActivity> = emptyArray()
+	var InProgressActivities: Array<SkiingActivity> = emptyArray()
+
+	var FinishedAndLoadedActivities: Array<SkiingActivity>? = null
 
 	private const val ACCURACY = "acc"
 	private const val ALTITUDE = "alt"
@@ -33,7 +35,7 @@ object SkiingActivityManager {
 	fun writeActivitiesToFile(context: Context): String {
 
 		val jsonArray = JSONArray()
-		this.Activities.forEach {
+		this.InProgressActivities.forEach {
 			val jsonEntry = JSONObject()
 			jsonEntry.put(ACCURACY, it.accuracy)
 			jsonEntry.put(ALTITUDE, it.altitude)
@@ -123,12 +125,12 @@ object SkiingActivityManager {
 		}
 	}
 
-	fun populateActivitiesArray(context: Context) {
+	fun resumeActivityTracking(context: Context) {
 
 		val date: String = getDate()
 		val filename = "$date.json"
 
-		this.Activities = readSkiingActivitiesFromFile(context, filename)
+		this.InProgressActivities = readSkiingActivitiesFromFile(context, filename)
 	}
 
 	fun getDate(): String {

@@ -65,7 +65,7 @@ class SkierLocationService : Service(), LocationListener {
 
 		MtSpokaneMapItems.classesUsingObject.add(this::class)
 
-		SkiingActivityManager.populateActivitiesArray(this)
+		SkiingActivityManager.resumeActivityTracking(this)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			this.createNotificationChannels()
@@ -102,7 +102,7 @@ class SkierLocationService : Service(), LocationListener {
 		this.locationManager.removeUpdates(this)
 		this.notificationManager.cancel(TRACKING_SERVICE_ID)
 
-		if (SkiingActivityManager.Activities.isNotEmpty()) {
+		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
 			SkiingActivityManager.writeActivitiesToFile(this)
 
@@ -132,24 +132,24 @@ class SkierLocationService : Service(), LocationListener {
 
 		val chairliftTerminal = InAppLocations.checkIfAtChairliftTerminals()
 		if (chairliftTerminal != null) {
-			this.updateUI(R.string.current_chairlift, chairliftTerminal, location)
+			this.appendSkiingActivity(R.string.current_chairlift, chairliftTerminal, location)
 			return
 		}
 
 		if (InAppLocations.altitudeConfidence >= 2u && InAppLocations.speedConfidence >= 1u && InAppLocations.mostLikelyChairlift != null) {
-			this.updateUI(R.string.current_chairlift, InAppLocations.mostLikelyChairlift!!, location)
+			this.appendSkiingActivity(R.string.current_chairlift, InAppLocations.mostLikelyChairlift!!, location)
 			return
 		}
 
 		val other = InAppLocations.checkIfOnOther()
 		if (other != null) {
-			this.updateUI(R.string.current_other, other, location)
+			this.appendSkiingActivity(R.string.current_other, other, location)
 			return
 		}
 
 		val run = InAppLocations.checkIfOnRun()
 		if (run != null) {
-			this.updateUI(R.string.current_run, run, location)
+			this.appendSkiingActivity(R.string.current_run, run, location)
 			return
 		}
 
@@ -157,15 +157,16 @@ class SkierLocationService : Service(), LocationListener {
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
 	}
 
-	private fun updateUI(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
+	private fun appendSkiingActivity(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
 		val text: String = this.getString(textResource, mapItem.name)
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
 		this.updateNotification(text, mapItem.getIcon())
-		SkiingActivityManager.Activities = Array(SkiingActivityManager.Activities.size + 1) {
-			if (SkiingActivityManager.Activities.size == it) {
+
+		SkiingActivityManager.InProgressActivities = Array(SkiingActivityManager.InProgressActivities.size + 1) {
+			if (SkiingActivityManager.InProgressActivities.size == it) {
 				SkiingActivity(location)
 			} else {
-				SkiingActivityManager.Activities[it]
+				SkiingActivityManager.InProgressActivities[it]
 			}
 		}
 	}
