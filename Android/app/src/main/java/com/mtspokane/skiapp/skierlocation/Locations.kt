@@ -2,6 +2,7 @@ package com.mtspokane.skiapp.skierlocation
 
 import android.location.Location
 import android.os.Build
+import android.util.Log
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 
@@ -74,6 +75,7 @@ object Locations {
 	fun checkIfOnOther(): MapItem? {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
+			Log.w("checkIfOnOther", "Map items are not set up")
 			return null
 		}
 
@@ -89,6 +91,7 @@ object Locations {
 	fun checkIfAtChairliftTerminals(): MapItem? {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
+			Log.w("checkChairliftTerminals", "Map items are not set up")
 			return null
 		}
 
@@ -137,6 +140,7 @@ object Locations {
 	fun checkIfOnRun(): MapItem? {
 
 		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
+			Log.w("checkIfOnRun", "Map items are not set up")
 			return null
 		}
 

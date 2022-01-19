@@ -2,6 +2,7 @@ package com.mtspokane.skiapp.maphandlers
 
 import android.util.Log
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -44,7 +45,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		super.destroy()
 	}
 
-	fun addMarker(latitude: Double, longitude: Double, color: Float) {
+	fun addMarker(latitude: Double, longitude: Double, color: BitmapDescriptor) {
 
 		if (this.map != null) {
 
@@ -53,7 +54,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 				if (it == this.locationMarkers.size) {
 					this.map!!.addMarker {
 						position(LatLng(latitude, longitude))
-						icon(BitmapDescriptorFactory.defaultMarker(color))
+						icon(color)
 					}!!
 				} else {
 					this.locationMarkers[it]
@@ -143,16 +144,13 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 							this@ActivitySummaryMap.activity.intent.extras!!.getString("file")
 						if (filename != null) {
 							val activities: Array<SkiingActivity> = SkiingActivity
-								.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity,
-									filename)
+								.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity, filename)
 							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(activities)
 						} else {
-							(this@ActivitySummaryMap.activity as ActivitySummary)
-								.loadActivities(SkiingActivity.Activities.toTypedArray())
+							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivity.Activities)
 						}
 					} else {
-						(this@ActivitySummaryMap.activity as ActivitySummary)
-							.loadActivities(SkiingActivity.Activities.toTypedArray())
+						(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivity.Activities)
 					}
 				}
 
