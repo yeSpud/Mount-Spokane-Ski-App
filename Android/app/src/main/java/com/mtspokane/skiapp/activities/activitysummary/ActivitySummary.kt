@@ -202,7 +202,7 @@ class ActivitySummary : FragmentActivity() {
 			}
 
 			this.mapHandler!!.locationMarkers.forEach {
-				it.remove()
+				it.destroy()
 			}
 			this.mapHandler!!.locationMarkers = emptyArray()
 		}
@@ -213,46 +213,54 @@ class ActivitySummary : FragmentActivity() {
 
 		var endingActivity: SkiingActivity? = null
 
-		lateinit var endingTitleIconColor: Pair<String, Pair<Int, BitmapDescriptor>>
+		lateinit var endingTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>>
 
-		lateinit var currentTitleIconColor: Pair<String, Pair<Int, BitmapDescriptor>>
+		lateinit var currentTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>>
 
 		for (index in 0 until (activities.size + 1)) {
 
 			if (index == activities.size) {
-				val finalActivityView = if (endingActivity != null) {
-					this.createActivityView(currentTitleIconColor.second.first, currentTitleIconColor.first,
-						endingActivity.time, activities[activities.size - 1].time)
-				} else {
-					this.createActivityView(currentTitleIconColor.second.first, currentTitleIconColor.first,
+				if (currentTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION) {
+					val finalActivityView = if (endingActivity != null) {
+						this.createActivityView(currentTitleDrawableResourceMarkerIcon.second.first,
+							currentTitleDrawableResourceMarkerIcon.first, endingActivity.time,
+							activities[activities.size - 1].time)
+					} else {
+						this.createActivityView(currentTitleDrawableResourceMarkerIcon.second.first,
+							currentTitleDrawableResourceMarkerIcon.first,
 							activities[activities.size - 1].time, null)
+					}
+					this.container.addView(finalActivityView)
+					break
 				}
-				this.container.addView(finalActivityView)
-				break
 			}
 
 			ActivitySummaryLocations.updateLocations(activities[index])
 
 			if (index > 0) {
-				endingTitleIconColor = currentTitleIconColor
+				endingTitleDrawableResourceMarkerIcon = currentTitleDrawableResourceMarkerIcon
 			}
 
-			currentTitleIconColor = this.getTitleIconAndColor()
+			currentTitleDrawableResourceMarkerIcon = this.getTitleDrawableResourceMarkerIcon()
 
 			if (this.mapHandler != null) {
 
-				this.mapHandler!!.addMarker(activities[index].latitude, activities[index].longitude,
-					currentTitleIconColor.second.second)
+				this.mapHandler!!.addActivitySummaryLocationMarker(currentTitleDrawableResourceMarkerIcon.first,
+					activities[index].latitude, activities[index].longitude, currentTitleDrawableResourceMarkerIcon.second.first,
+					currentTitleDrawableResourceMarkerIcon.second.second)
 			}
 
 			if (endingActivity == null) {
 				endingActivity = activities[index]
 			} else {
 
-				if (endingTitleIconColor.first != currentTitleIconColor.first) {
-					this.container.addView(this.createActivityView(endingTitleIconColor.second.first,
-						endingTitleIconColor.first, endingActivity.time, activities[index].time))
-					endingActivity = activities[index]
+				if (endingTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION &&
+					currentTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION) {
+					if (endingTitleDrawableResourceMarkerIcon.first != currentTitleDrawableResourceMarkerIcon.first) {
+						this.container.addView(this.createActivityView(endingTitleDrawableResourceMarkerIcon.second.first,
+							endingTitleDrawableResourceMarkerIcon.first, endingActivity.time, activities[index].time))
+						endingActivity = activities[index]
+					}
 				}
 			}
 		}
@@ -262,7 +270,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private fun getTitleIconAndColor(): Pair<String, Pair<Int, BitmapDescriptor>> {
+	private fun getTitleDrawableResourceMarkerIcon(): Pair<String, Pair<Int, BitmapDescriptor>> {
 
 		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (ActivitySummaryLocations.altitudeConfidence >= 2u &&
 			ActivitySummaryLocations.speedConfidence >= 1u &&
@@ -274,7 +282,8 @@ class ActivitySummary : FragmentActivity() {
 
 			val chairliftTerminal: MapItem? = ActivitySummaryLocations.checkIfAtChairliftTerminals()
 			if (chairliftTerminal != null) {
-				Pair(chairliftTerminal.name, Pair(R.drawable.ic_chairlift, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
+				Pair(chairliftTerminal.name, Pair(R.drawable.ic_chairlift,
+					BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
 			} else {
 
 				val other: MapItem? = ActivitySummaryLocations.checkIfOnOther()
@@ -302,7 +311,7 @@ class ActivitySummary : FragmentActivity() {
 						}
 						Pair(run.name, Pair(icon, markerIconColor))
 					} else {
-						Pair("Unknown Location", Pair(R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
+						Pair(UNKNOWN_LOCATION, Pair(R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
 					}
 				}
 			}
@@ -343,6 +352,8 @@ class ActivitySummary : FragmentActivity() {
 		const val JSON_MIME_TYPE = "application/json"
 
 		const val GEOJSON_MIME_TYPE = "application/geojson"
+
+		private const val UNKNOWN_LOCATION = "Unknown Location"
 
 		/**
 		 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994
