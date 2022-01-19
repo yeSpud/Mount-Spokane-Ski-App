@@ -4,6 +4,8 @@ import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -12,12 +14,15 @@ import android.view.MenuItem
 import android.widget.LinearLayout
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
+import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import java.io.File
@@ -63,28 +68,8 @@ class ActivitySummary : FragmentActivity() {
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
 		mapFragment.getMapAsync(this.mapHandler!!)
 
-		if (this.intent.extras != null) {
-
-			val filename: String? = this.intent.extras!!.getString("file")
-
-			if (filename != null) {
-				val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE)
-						as NotificationManager
-				notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
-
-				val activities: Array<SkiingActivity> = SkiingActivity
-					.readSkiingActivitiesFromFile(this, filename)
-				this.loadActivities(activities)
-				this.loadedFile = filename
-				return
-			} else {
-				this.loadActivities(SkiingActivity.Activities.toTypedArray())
-			}
-		} else {
-
-			// If all else fails just load from the current activities array.
-			this.loadActivities(SkiingActivity.Activities.toTypedArray())
-		}
+		// If all else fails just load from the current activities array.
+		this.loadActivities(SkiingActivity.Activities)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -179,59 +164,108 @@ class ActivitySummary : FragmentActivity() {
 			this.mapHandler!!.locationMarkers = emptyArray()
 		}
 
-		var startingActivity: SkiingActivity? = null
+		if (activities.isEmpty()) {
+			return
+		}
+
 		var endingActivity: SkiingActivity? = null
 
-		activities.forEach { skiingActivity: SkiingActivity ->
+		lateinit var endingTitleIconColor: Pair<String, Pair<Int, BitmapDescriptor>>
+
+		lateinit var currentTitleIconColor: Pair<String, Pair<Int, BitmapDescriptor>>
+
+		for (index in 0 until (activities.size + 1)) {
+
+			if (index == activities.size) {
+				val finalActivityView = if (endingActivity != null) {
+					this.createActivityView(currentTitleIconColor.second.first, currentTitleIconColor.first,
+						endingActivity.time, activities[activities.size - 1].time)
+				} else {
+					this.createActivityView(currentTitleIconColor.second.first, currentTitleIconColor.first,
+							activities[activities.size - 1].time, null)
+				}
+				this.container.addView(finalActivityView)
+				break
+			}
+
+			ActivitySummaryLocations.updateLocations(activities[index])
+
+			if (index > 0) {
+				endingTitleIconColor = currentTitleIconColor
+			}
+
+			currentTitleIconColor = this.getTitleIconAndColor()
 
 			if (this.mapHandler != null) {
 
-				val markerIconColor = when (skiingActivity.icon) {
-					R.drawable.ic_easy -> BitmapDescriptorFactory.HUE_GREEN
-					R.drawable.ic_moderate -> BitmapDescriptorFactory.HUE_BLUE
-					R.drawable.ic_difficult -> BitmapDescriptorFactory.HUE_AZURE
-					R.drawable.ic_chairlift -> BitmapDescriptorFactory.HUE_RED
-					else -> BitmapDescriptorFactory.HUE_MAGENTA
-				}
-
-				this.mapHandler!!.addMarker(skiingActivity.latitude, skiingActivity.longitude,
-					markerIconColor)
+				this.mapHandler!!.addMarker(activities[index].latitude, activities[index].longitude,
+					currentTitleIconColor.second.second)
 			}
 
-			if (startingActivity == null) {
-				startingActivity = skiingActivity
+			if (endingActivity == null) {
+				endingActivity = activities[index]
 			} else {
 
-				if (skiingActivity.name == startingActivity!!.name) {
-					endingActivity = skiingActivity
-				} else {
-					if (endingActivity != null) {
-						this.container.addView(this.createActivityView(startingActivity!!.icon,
-								startingActivity!!.name, startingActivity!!.time, endingActivity!!.time))
-						endingActivity = null
-					} else {
-						this.container.addView(this.createActivityView(startingActivity!!.icon,
-							startingActivity!!.name, startingActivity!!.time, startingActivity!!.time))
-					}
-
-					startingActivity = skiingActivity
+				if (endingTitleIconColor.first != currentTitleIconColor.first) {
+					this.container.addView(this.createActivityView(endingTitleIconColor.second.first,
+						endingTitleIconColor.first, endingActivity.time, activities[index].time))
+					endingActivity = activities[index]
 				}
-			}
-		}
-
-		if (startingActivity != null) {
-			if (endingActivity != null) {
-				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
-					startingActivity!!.time, endingActivity!!.time))
-			} else {
-				this.container.addView(this.createActivityView(startingActivity!!.icon, startingActivity!!.name,
-					startingActivity!!.time, null))
 			}
 		}
 
 		if (this.mapHandler != null) {
 			this.mapHandler!!.addPolylineFromMarker()
 		}
+	}
+
+	private fun getTitleIconAndColor(): Pair<String, Pair<Int, BitmapDescriptor>> {
+
+		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (ActivitySummaryLocations.altitudeConfidence >= 2u &&
+			ActivitySummaryLocations.speedConfidence >= 1u &&
+			ActivitySummaryLocations.mostLikelyChairlift != null) {
+
+			Pair(ActivitySummaryLocations.mostLikelyChairlift!!.name, Pair(R.drawable.ic_chairlift,
+				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
+		} else {
+
+			val chairliftTerminal: MapItem? = ActivitySummaryLocations.checkIfAtChairliftTerminals()
+			if (chairliftTerminal != null) {
+				Pair(chairliftTerminal.name, Pair(R.drawable.ic_chairlift, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
+			} else {
+
+				val other: MapItem? = ActivitySummaryLocations.checkIfOnOther()
+				if (other != null) {
+					val icon: Int = if (other.getIcon() != null) {
+						other.getIcon()!!
+					} else {
+						R.drawable.ic_missing
+					}
+					Pair(other.name, Pair(icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
+				} else {
+
+					val run: MapItem? = ActivitySummaryLocations.checkIfOnRun()
+					if (run != null) {
+						val icon: Int = if (run.getIcon() != null) {
+							run.getIcon()!!
+						} else {
+							R.drawable.ic_missing
+						}
+						val markerIconColor = when (icon) {
+							R.drawable.ic_easy -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+							R.drawable.ic_moderate -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+							R.drawable.ic_difficult -> bitmapDescriptorFromVector(this, R.drawable.ic_black_marker)
+							else -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)
+						}
+						Pair(run.name, Pair(icon, markerIconColor))
+					} else {
+						Pair("Unknown Location", Pair(R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
+					}
+				}
+			}
+		}
+
+		return returnPair
 	}
 
 	private fun getTimeFromLong(time: Long): String {
@@ -270,5 +304,18 @@ class ActivitySummary : FragmentActivity() {
 		private const val WRITE_JSON_CODE = 509
 
 		private const val WRITE_GEOJSON_CODE = 666
+
+		/**
+		 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994
+		 */
+		private fun bitmapDescriptorFromVector(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
+			val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)
+			vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
+			val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight,
+				Bitmap.Config.ARGB_8888)
+			val canvas = Canvas(bitmap)
+			vectorDrawable.draw(canvas)
+			return BitmapDescriptorFactory.fromBitmap(bitmap)
+		}
 	}
 }

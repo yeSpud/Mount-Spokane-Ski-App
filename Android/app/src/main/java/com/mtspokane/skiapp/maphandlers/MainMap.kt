@@ -277,6 +277,7 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 				// Wait for all the polylines to load before checking permissions.
 				polylineLoads.awaitAll()
 				MtSpokaneMapItems.isSetup = true
+				Log.i(tag, "Finished setting up map items")
 
 				// Request location permission, so that we can get the location of the device.
 				// The result of the permission request is handled by a callback, onRequestPermissionsResult.

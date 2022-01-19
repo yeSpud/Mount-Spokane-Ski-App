@@ -8,7 +8,6 @@ import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.core.content.FileProvider
 import com.mtspokane.skiapp.R
 import org.json.JSONArray
@@ -19,16 +18,8 @@ import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.collections.ArrayList
 
 class SkiingActivity {
-
-	@Deprecated("Don't store and read the name - use the location to determine the name")
-	val name: String
-
-	@Deprecated("Don't store and read the icon - use the location to determine the icon")
-	@DrawableRes
-	val icon: Int?
 
 	val accuracy: Float
 
@@ -46,9 +37,7 @@ class SkiingActivity {
 
 	val time: Long
 
-	constructor(name: String, location: Location, @DrawableRes icon: Int?) {
-		this.name = name
-		this.icon = icon
+	constructor(location: Location) {
 
 		this.accuracy = location.accuracy
 		this.altitude = location.altitude
@@ -72,12 +61,9 @@ class SkiingActivity {
 		this.time = location.time
 	}
 
-	constructor(name: String, @DrawableRes icon: Int?, accuracy: Float, altitude: Double,
-		altitudeAccuracy: Float?, latitude: Double, longitude: Double, speed: Float,
-		        speedAccuracy: Float?, time: Long) {
+	constructor(accuracy: Float, altitude: Double, altitudeAccuracy: Float?, latitude: Double,
+	            longitude: Double, speed: Float, speedAccuracy: Float?, time: Long) {
 
-		this.name = name
-		this.icon = icon
 		this.accuracy = accuracy
 		this.altitude = altitude
 		this.altitudeAccuracy = altitudeAccuracy
@@ -90,10 +76,8 @@ class SkiingActivity {
 
 	companion object {
 
-		val Activities: ArrayList<SkiingActivity> = ArrayList(0)
+		var Activities: Array<SkiingActivity> = emptyArray()
 
-		private const val NAME = "name"
-		private const val ICON = "icon"
 		private const val ACCURACY = "acc"
 		private const val ALTITUDE = "alt"
 		private const val ALTITUDE_ACCURACY = "altacc"
@@ -106,14 +90,8 @@ class SkiingActivity {
 		fun writeActivitiesToFile(context: Context): String {
 
 			val jsonArray = JSONArray()
-			Activities.forEach {
+			this.Activities.forEach {
 				val jsonEntry = JSONObject()
-				jsonEntry.put(NAME, it.name)
-				if (it.icon != null) {
-					jsonEntry.put(ICON, context.resources.getResourceName(it.icon))
-				} else {
-					jsonEntry.put(ICON, null)
-				}
 				jsonEntry.put(ACCURACY, it.accuracy)
 				jsonEntry.put(ALTITUDE, it.altitude)
 				jsonEntry.put(ALTITUDE_ACCURACY, it.altitudeAccuracy)
@@ -160,10 +138,8 @@ class SkiingActivity {
 
 		fun readSkiingActivitiesFromFile(context: Context, filename: String): Array<SkiingActivity> {
 
-			val arrayList = ArrayList<SkiingActivity>(0)
-
 			if (!context.fileList().contains(filename)) {
-				return arrayList.toTypedArray()
+				return emptyArray()
 			}
 
 			val json = readJsonFromFile(context, filename)
@@ -171,17 +147,10 @@ class SkiingActivity {
 			val jsonArray: JSONArray = json.getJSONArray(json.keys().next())
 
 			val count = jsonArray.length()
-			for (i in 0 until count) {
-				val jsonObject: JSONObject = jsonArray.getJSONObject(i)
 
-				val name: String = jsonObject.getString(NAME)
+			val array = Array(count) {
 
-				val iconLocation: String? = jsonObject.opt(ICON) as String?
-				val icon: Int? = if (iconLocation != null) {
-					context.resources.getIdentifier(iconLocation, "drawable", context.packageName)
-				} else {
-					null
-				}
+				val jsonObject: JSONObject = jsonArray.getJSONObject(it)
 
 				val accuracy: Float = parseFloat(jsonObject, ACCURACY)!!
 				val altitude: Double = jsonObject.optDouble(ALTITUDE)
@@ -192,12 +161,11 @@ class SkiingActivity {
 				val speedAccuracy: Float? = parseFloat(jsonObject, SPEED_ACCURACY)
 				val time: Long = jsonObject.optLong(TIME)
 
-				val activity = SkiingActivity(name, icon, accuracy, altitude, altitudeAccuracy,
-					latitude, longitude, speed, speedAccuracy, time)
-				arrayList.add(activity)
+				SkiingActivity(accuracy, altitude, altitudeAccuracy, latitude, longitude, speed,
+					speedAccuracy, time)
 			}
 
-			return arrayList.toTypedArray()
+			return array
 		}
 
 		private fun parseFloat(jsonObject: JSONObject, key: String): Float? {
@@ -217,9 +185,7 @@ class SkiingActivity {
 			val date: String = getDate()
 			val filename = "$date.json"
 
-			val array: Array<SkiingActivity> = readSkiingActivitiesFromFile(context, filename)
-
-			Activities.addAll(array)
+			this.Activities = readSkiingActivitiesFromFile(context, filename)
 		}
 
 		fun getDate(): String {
@@ -266,8 +232,6 @@ class SkiingActivity {
 				featureEntry.put("geometry", geometryJson)
 
 				val propertiesJson = JSONObject()
-				propertiesJson.put(NAME, jsonEntry.getString(NAME))
-				propertiesJson.put(ICON, jsonEntry.opt(ICON))
 				propertiesJson.put(ACCURACY, jsonEntry.opt(ACCURACY))
 				propertiesJson.put(ALTITUDE_ACCURACY, jsonEntry.opt(ALTITUDE_ACCURACY))
 				propertiesJson.put(SPEED, jsonEntry.opt(SPEED))
