@@ -26,12 +26,10 @@ import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.activities.activitysummary.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.MapsActivity
-import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
 
@@ -97,7 +95,7 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onDestroy has been called!")
 		super.onDestroy()
 
-		Locations.visibleLocationUpdates.clear()
+		InAppLocations.visibleLocationUpdates.clear()
 
 		this.locationManager.removeUpdates(this)
 		this.notificationManager.cancel(TRACKING_SERVICE_ID)
@@ -121,7 +119,7 @@ class SkierLocationService : Service(), LocationListener {
 
 	override fun onLocationChanged(location: Location) {
 
-		Locations.updateLocations(location)
+		InAppLocations.updateLocations(location)
 
 		// If we are not on the mountain stop the tracking.
 		if (MtSpokaneMapItems.skiAreaBounds.points.isEmpty()) {
@@ -130,36 +128,36 @@ class SkierLocationService : Service(), LocationListener {
 			this.stopSelf()
 		}
 
-		val chairliftTerminal = Locations.checkIfAtChairliftTerminals()
+		val chairliftTerminal = InAppLocations.checkIfAtChairliftTerminals()
 		if (chairliftTerminal != null) {
 			this.updateUI(R.string.current_chairlift, chairliftTerminal, location)
 			return
 		}
 
-		if (Locations.altitudeConfidence >= 2u && Locations.speedConfidence >= 1u && Locations.mostLikelyChairlift != null) {
-			this.updateUI(R.string.current_chairlift, Locations.mostLikelyChairlift!!, location)
+		if (InAppLocations.altitudeConfidence >= 2u && InAppLocations.speedConfidence >= 1u && InAppLocations.mostLikelyChairlift != null) {
+			this.updateUI(R.string.current_chairlift, InAppLocations.mostLikelyChairlift!!, location)
 			return
 		}
 
-		val other = Locations.checkIfOnOther()
+		val other = InAppLocations.checkIfOnOther()
 		if (other != null) {
 			this.updateUI(R.string.current_other, other, location)
 			return
 		}
 
-		val run = Locations.checkIfOnRun()
+		val run = InAppLocations.checkIfOnRun()
 		if (run != null) {
 			this.updateUI(R.string.current_run, run, location)
 			return
 		}
 
-		Locations.visibleLocationUpdates.forEach { it.updateLocation(this.getString(R.string.app_name)) }
+		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(this.getString(R.string.app_name)) }
 		this.updateNotification(this.getString(R.string.tracking_notice), null)
 	}
 
 	private fun updateUI(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
 		val text: String = this.getString(textResource, mapItem.name)
-		Locations.visibleLocationUpdates.forEach { it.updateLocation(text) }
+		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
 		this.updateNotification(text, mapItem.getIcon())
 		SkiingActivity.Activities = Array(SkiingActivity.Activities.size + 1) {
 			if (SkiingActivity.Activities.size == it) {

@@ -21,7 +21,7 @@ import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.MainMap
-import com.mtspokane.skiapp.skierlocation.Locations
+import com.mtspokane.skiapp.skierlocation.InAppLocations
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +31,7 @@ class MapsActivity : FragmentActivity() {
 
 	private var map: MainMap? = null
 
-	private var locationChangeCallback: Locations.VisibleLocationUpdate? = null
+	private var locationChangeCallback: InAppLocations.VisibleLocationUpdate? = null
 
 	// Boolean used to determine if only night runs are to be shown.
 	private var nightRunsOnly = false
@@ -67,15 +67,15 @@ class MapsActivity : FragmentActivity() {
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
 		mapFragment.getMapAsync(this.map!!)
 
-		this.locationChangeCallback = object : Locations.VisibleLocationUpdate {
+		this.locationChangeCallback = object : InAppLocations.VisibleLocationUpdate {
 			override fun updateLocation(locationString: String) {
 
-				if (Locations.currentLocation == null) {
+				if (InAppLocations.currentLocation == null) {
 					return
 				}
 
 				if (this@MapsActivity.map != null) {
-					this@MapsActivity.map!!.updateMarkerLocation(Locations.currentLocation!!)
+					this@MapsActivity.map!!.updateMarkerLocation(InAppLocations.currentLocation!!)
 				}
 
 				this@MapsActivity.actionBar!!.title = locationString
@@ -88,7 +88,7 @@ class MapsActivity : FragmentActivity() {
 		super.onDestroy()
 
 		// Remove callback from locations.
-		Locations.visibleLocationUpdates.remove(this.locationChangeCallback)
+		InAppLocations.visibleLocationUpdates.remove(this.locationChangeCallback)
 		this.locationChangeCallback = null
 
 		// Reset the map handler.
@@ -191,8 +191,8 @@ class MapsActivity : FragmentActivity() {
 
 			// Add listener for map for a location change.
 			if (this.locationChangeCallback != null) {
-				if (!Locations.visibleLocationUpdates.contains(this.locationChangeCallback!!)) {
-					Locations.visibleLocationUpdates.add(this.locationChangeCallback!!)
+				if (!InAppLocations.visibleLocationUpdates.contains(this.locationChangeCallback!!)) {
+					InAppLocations.visibleLocationUpdates.add(this.locationChangeCallback!!)
 				}
 			}
 		}

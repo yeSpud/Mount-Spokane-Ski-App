@@ -6,7 +6,7 @@ import android.util.Log
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 
-object Locations {
+object InAppLocations {
 
 	var previousLocation: Location? = null
 	private set
