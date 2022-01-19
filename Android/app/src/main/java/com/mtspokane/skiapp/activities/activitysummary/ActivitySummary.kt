@@ -2,15 +2,16 @@ package com.mtspokane.skiapp.activities.activitysummary
 
 import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.LinearLayout
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
@@ -42,6 +43,40 @@ class ActivitySummary : FragmentActivity() {
 	private lateinit var creditDialog: AlertDialog
 
 	var loadedFile: String = "${SkiingActivityManager.getDate()}.json"
+
+	private val exportCallback = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
+
+		if (it != null) {
+
+			val json: JSONObject = SkiingActivityManager.readJsonFromFile(this, this.loadedFile)
+
+			val mimeType = this.contentResolver.getType(it)
+
+			val query: Cursor? = this.contentResolver.query(it, null, null, null, null)
+			val fileName: String? = query?.use { cursor: Cursor ->
+				cursor.moveToFirst()
+				val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+				cursor.getString(nameIndex)
+			}
+
+			if (fileName != null) {
+
+				if (mimeType == JSON_MIME_TYPE && fileName.endsWith(".json")) {
+					SkiingActivityManager.writeToExportFile(this.contentResolver, it, json.toString(4))
+				} else if ((mimeType == GEOJSON_MIME_TYPE || mimeType == "application/octet-stream")
+					&& fileName.endsWith(".geojson")) {
+					val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
+					SkiingActivityManager.writeToExportFile(this.contentResolver, it, geoJson.toString(4))
+				} else {
+					Log.w("exportCallback", "File type unaccounted for: $fileName:$mimeType")
+				}
+			}
+		}
+	}
+
+	private val importCallback = this.registerForActivityResult(ActivityResultContracts.OpenDocument()) {
+		//TODO()
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -89,11 +124,8 @@ class ActivitySummary : FragmentActivity() {
 
 		when (item.itemId) {
 			R.id.open -> this.fileSelectionDialog.showDialog()
-			R.id.export_json -> SkiingActivityManager.createNewFileSAF(this, this.loadedFile,
-				JSON_MIME_TYPE, WRITE_JSON_CODE)
-			R.id.export_geojson -> SkiingActivityManager.createNewFileSAF(this,
-				this.loadedFile.replace("json", "geojson"), GEOJSON_MIME_TYPE,
-				WRITE_GEOJSON_CODE)
+			R.id.export_json -> this.exportCallback.launch(this.loadedFile)
+			R.id.export_geojson -> this.exportCallback.launch(this.loadedFile.replace("json", "geojson"))
 			R.id.share_json -> {
 				val file = File(this.filesDir, this.loadedFile)
 				SkiingActivityManager.shareFile(this, file, JSON_MIME_TYPE)
@@ -114,35 +146,11 @@ class ActivitySummary : FragmentActivity() {
 
 				tmpFile.delete()
 			}
-			R.id.import_activity -> SkiingActivityManager.importFile() // TODO
+			R.id.import_activity -> this.importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
 			R.id.credits -> this.creditDialog.show()
 		}
 
 		return super.onOptionsItemSelected(item)
-	}
-
-	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-		super.onActivityResult(requestCode, resultCode, data)
-
-		if (resultCode == RESULT_OK) {
-
-			if (data == null) {
-				return
-			}
-
-			val fileUri: Uri = data.data ?: return
-			val json: JSONObject = SkiingActivityManager.readJsonFromFile(this, this.loadedFile)
-
-			when (requestCode) {
-				WRITE_JSON_CODE -> SkiingActivityManager.writeToExportFile(this.contentResolver, fileUri,
-					json.toString(4))
-				WRITE_GEOJSON_CODE -> {
-					val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
-					SkiingActivityManager.writeToExportFile(this.contentResolver, fileUri, geoJson.toString(4))
-				}
-				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
-			}
-		}
 	}
 
 	override fun onDestroy() {
@@ -306,13 +314,9 @@ class ActivitySummary : FragmentActivity() {
 
 	companion object {
 
-		private const val JSON_MIME_TYPE = "application/json"
+		const val JSON_MIME_TYPE = "application/json"
 
-		private const val GEOJSON_MIME_TYPE = "application/geojson"
-
-		private const val WRITE_JSON_CODE = 509
-
-		private const val WRITE_GEOJSON_CODE = 666
+		const val GEOJSON_MIME_TYPE = "application/geojson"
 
 		/**
 		 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994

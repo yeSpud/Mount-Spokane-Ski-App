@@ -1,6 +1,5 @@
 package com.mtspokane.skiapp.skiingactivity
 
-import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
@@ -62,8 +61,8 @@ object SkiingActivityManager {
 
 	fun writeToExportFile(contentResolver: ContentResolver, uri: Uri, outText: String) {
 
-		val outputStream: OutputStream = contentResolver.openOutputStream(uri)!!
-		outputStream.use { it.write(outText.toByteArray()) }
+		val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
+		outputStream?.use { it.write(outText.toByteArray()) }
 	}
 
 	fun readJsonFromFile(context: Context, filename: String): JSONObject {
@@ -138,15 +137,6 @@ object SkiingActivityManager {
 		return dateFormat.format(Date())
 	}
 
-	fun createNewFileSAF(activity: Activity, filename: String, mimeType: String, fileCode: Int) {
-
-		val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-		intent.type = mimeType
-		intent.putExtra(Intent.EXTRA_TITLE, filename)
-
-		activity.startActivityForResult(intent, fileCode, null)
-	}
-
 	fun convertJsonToGeoJson(json: JSONObject): JSONObject {
 
 		val geoJson = JSONObject()
@@ -204,9 +194,5 @@ object SkiingActivityManager {
 
 		val chooserIntent = Intent.createChooser(sharingIntent, context.getText(R.string.share_description))
 		context.startActivity(chooserIntent)
-	}
-
-	fun importFile(): Array<SkiingActivity> {
-		TODO()
 	}
 }
