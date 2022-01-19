@@ -104,7 +104,7 @@ class SkierLocationService : Service(), LocationListener {
 
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
-			SkiingActivityManager.writeActivitiesToFile(this)
+			SkiingActivityManager.writeActivitiesToFile(this, SkiingActivityManager.InProgressActivities)
 
 			val pendingIntent: PendingIntent = this.createPendingIntent()
 

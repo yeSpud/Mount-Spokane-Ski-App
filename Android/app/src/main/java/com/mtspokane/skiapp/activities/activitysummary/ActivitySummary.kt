@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.util.Log
@@ -27,6 +28,7 @@ import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
 import com.mtspokane.skiapp.skiingactivity.SkiingActivity
 import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
 import java.io.File
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -74,8 +76,32 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private val importCallback = this.registerForActivityResult(ActivityResultContracts.OpenDocument()) {
-		//TODO()
+	private val importCallback = this.registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+
+		if (uri == null) {
+			return@registerForActivityResult
+		}
+
+		val inputStream: InputStream? = this.contentResolver.openInputStream(uri)
+		if (inputStream == null) {
+			Log.w("importCallback", "Unable to open a file input stream for the imported file.")
+			return@registerForActivityResult
+		}
+
+		val json: JSONObject = inputStream.bufferedReader().useLines {
+
+			val string = it.fold("") { _, inText -> inText }
+
+			JSONObject(string)
+		}
+		inputStream.close()
+
+		val jsonDate = json.keys().next()
+		val jsonArray = json.getJSONArray(jsonDate)
+
+		val skiingActivities: Array<SkiingActivity> = SkiingActivityManager.jsonArrayToSkiingActivities(jsonArray)
+
+		SkiingActivityManager.writeActivitiesToFile(this, skiingActivities, jsonDate)
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {

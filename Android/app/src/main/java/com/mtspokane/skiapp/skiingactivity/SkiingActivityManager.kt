@@ -31,27 +31,34 @@ object SkiingActivityManager {
 	private const val SPEED_ACCURACY = "speedacc"
 	private const val TIME = "time"
 
-	fun writeActivitiesToFile(context: Context): String {
+	fun writeActivitiesToFile(context: Context, activities: Array<SkiingActivity>,
+	                          predefinedDate: String? = null): String {
 
 		val jsonArray = JSONArray()
-		this.InProgressActivities.forEach {
+		activities.forEach {
 			val jsonEntry = JSONObject()
-			jsonEntry.put(ACCURACY, it.accuracy)
-			jsonEntry.put(ALTITUDE, it.altitude)
-			jsonEntry.put(ALTITUDE_ACCURACY, it.altitudeAccuracy)
-			jsonEntry.put(LATITUDE, it.latitude)
-			jsonEntry.put(LONGITUDE, it.longitude)
-			jsonEntry.put(SPEED, it.speed)
-			jsonEntry.put(SPEED_ACCURACY, it.speedAccuracy)
-			jsonEntry.put(TIME, it.time)
+			jsonEntry.put(this.ACCURACY, it.accuracy)
+			jsonEntry.put(this.ALTITUDE, it.altitude)
+			jsonEntry.put(this.ALTITUDE_ACCURACY, it.altitudeAccuracy)
+			jsonEntry.put(this.LATITUDE, it.latitude)
+			jsonEntry.put(this.LONGITUDE, it.longitude)
+			jsonEntry.put(this.SPEED, it.speed)
+			jsonEntry.put(this.SPEED_ACCURACY, it.speedAccuracy)
+			jsonEntry.put(this.TIME, it.time)
 			jsonArray.put(jsonEntry)
 		}
 
 		val jsonObject = JSONObject()
-		val date: String = getDate()
-		jsonObject.put(date, jsonArray)
 
-		val filename = "$date.json"
+		val filename = if (predefinedDate == null) {
+			val date: String = this.getDate()
+			jsonObject.put(date, jsonArray)
+			"$date.json"
+		} else {
+			jsonObject.put(predefinedDate, jsonArray)
+			"$predefinedDate.json"
+		}
+
 		context.openFileOutput(filename, Context.MODE_PRIVATE).use {
 			it.write(jsonObject.toString().toByteArray())
 		}
@@ -86,9 +93,14 @@ object SkiingActivityManager {
 			return emptyArray()
 		}
 
-		val json = readJsonFromFile(context, filename)
+		val json: JSONObject = this.readJsonFromFile(context, filename)
 
 		val jsonArray: JSONArray = json.getJSONArray(json.keys().next())
+
+		return this.jsonArrayToSkiingActivities(jsonArray)
+	}
+
+	fun jsonArrayToSkiingActivities(jsonArray: JSONArray): Array<SkiingActivity> {
 
 		val count = jsonArray.length()
 
@@ -129,7 +141,7 @@ object SkiingActivityManager {
 		val date: String = getDate()
 		val filename = "$date.json"
 
-		this.InProgressActivities = readSkiingActivitiesFromFile(context, filename)
+		this.InProgressActivities = this.readSkiingActivitiesFromFile(context, filename)
 	}
 
 	fun getDate(): String {
