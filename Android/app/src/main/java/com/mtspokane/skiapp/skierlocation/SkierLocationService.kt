@@ -26,6 +26,7 @@ import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activities.InAppLocations
 import com.mtspokane.skiapp.activities.activitysummary.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems

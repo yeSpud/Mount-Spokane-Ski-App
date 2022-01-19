@@ -9,7 +9,6 @@ import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivityDebugBinding
 import com.mtspokane.skiapp.maphandlers.DebugMap
-import com.mtspokane.skiapp.skierlocation.InAppLocations
 
 class DebugActivity : FragmentActivity() {
 

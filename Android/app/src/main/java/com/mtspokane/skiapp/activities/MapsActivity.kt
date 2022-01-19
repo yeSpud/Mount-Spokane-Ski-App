@@ -21,7 +21,6 @@ import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.MainMap
-import com.mtspokane.skiapp.skierlocation.InAppLocations
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
