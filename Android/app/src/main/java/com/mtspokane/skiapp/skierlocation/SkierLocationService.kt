@@ -27,10 +27,11 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.InAppLocations
-import com.mtspokane.skiapp.activities.activitysummary.SkiingActivity
+import com.mtspokane.skiapp.skiingactivity.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.MapsActivity
+import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
 
 class SkierLocationService : Service(), LocationListener {
 
@@ -64,7 +65,7 @@ class SkierLocationService : Service(), LocationListener {
 
 		MtSpokaneMapItems.classesUsingObject.add(this::class)
 
-		SkiingActivity.populateActivitiesArray(this)
+		SkiingActivityManager.populateActivitiesArray(this)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			this.createNotificationChannels()
@@ -101,9 +102,9 @@ class SkierLocationService : Service(), LocationListener {
 		this.locationManager.removeUpdates(this)
 		this.notificationManager.cancel(TRACKING_SERVICE_ID)
 
-		if (SkiingActivity.Activities.isNotEmpty()) {
+		if (SkiingActivityManager.Activities.isNotEmpty()) {
 
-			SkiingActivity.writeActivitiesToFile(this)
+			SkiingActivityManager.writeActivitiesToFile(this)
 
 			val pendingIntent: PendingIntent = this.createPendingIntent()
 
@@ -160,11 +161,11 @@ class SkierLocationService : Service(), LocationListener {
 		val text: String = this.getString(textResource, mapItem.name)
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
 		this.updateNotification(text, mapItem.getIcon())
-		SkiingActivity.Activities = Array(SkiingActivity.Activities.size + 1) {
-			if (SkiingActivity.Activities.size == it) {
+		SkiingActivityManager.Activities = Array(SkiingActivityManager.Activities.size + 1) {
+			if (SkiingActivityManager.Activities.size == it) {
 				SkiingActivity(location)
 			} else {
-				SkiingActivity.Activities[it]
+				SkiingActivityManager.Activities[it]
 			}
 		}
 	}

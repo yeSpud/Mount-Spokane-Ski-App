@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
 import android.app.AlertDialog
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -24,7 +23,8 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
-import com.mtspokane.skiapp.skierlocation.SkierLocationService
+import com.mtspokane.skiapp.skiingactivity.SkiingActivity
+import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -41,7 +41,7 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var creditDialog: AlertDialog
 
-	var loadedFile: String = "${SkiingActivity.getDate()}.json"
+	var loadedFile: String = "${SkiingActivityManager.getDate()}.json"
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -69,7 +69,7 @@ class ActivitySummary : FragmentActivity() {
 		mapFragment.getMapAsync(this.mapHandler!!)
 
 		// If all else fails just load from the current activities array.
-		this.loadActivities(SkiingActivity.Activities)
+		this.loadActivities(SkiingActivityManager.Activities)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -92,19 +92,19 @@ class ActivitySummary : FragmentActivity() {
 
 		when (item.itemId) {
 			R.id.open -> this.fileSelectionDialog.showDialog()
-			R.id.export_json -> SkiingActivity.createNewFileSAF(this, this.loadedFile,
+			R.id.export_json -> SkiingActivityManager.createNewFileSAF(this, this.loadedFile,
 				JSON_MIME_TYPE, WRITE_JSON_CODE)
-			R.id.export_geojson -> SkiingActivity.createNewFileSAF(
-				this, this.loadedFile.replace("json", "geojson"),
-				GEOJSON_MIME_TYPE, WRITE_GEOJSON_CODE)
+			R.id.export_geojson -> SkiingActivityManager.createNewFileSAF(this,
+				this.loadedFile.replace("json", "geojson"), GEOJSON_MIME_TYPE,
+				WRITE_GEOJSON_CODE)
 			R.id.share_json -> {
 				val file = File(this.filesDir, this.loadedFile)
-				SkiingActivity.shareFile(this, file, JSON_MIME_TYPE)
+				SkiingActivityManager.shareFile(this, file, JSON_MIME_TYPE)
 			}
 			R.id.share_geojson -> {
 
-				val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
-				val geojson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
+				val json: JSONObject = SkiingActivityManager.readJsonFromFile(this, this.loadedFile)
+				val geojson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
 
 				val tmpFileName = this.loadedFile.replace("json", "geojson")
 				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use {
@@ -113,10 +113,11 @@ class ActivitySummary : FragmentActivity() {
 
 				val tmpFile = File(this.filesDir, tmpFileName)
 
-				SkiingActivity.shareFile(this, tmpFile, JSON_MIME_TYPE)
+				SkiingActivityManager.shareFile(this, tmpFile, JSON_MIME_TYPE)
 
 				tmpFile.delete()
 			}
+			R.id.import_activity -> SkiingActivityManager.importFile() // TODO
 			R.id.credits -> this.creditDialog.show()
 		}
 
@@ -133,14 +134,14 @@ class ActivitySummary : FragmentActivity() {
 			}
 
 			val fileUri: Uri = data.data ?: return
-			val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
+			val json: JSONObject = SkiingActivityManager.readJsonFromFile(this, this.loadedFile)
 
 			when (requestCode) {
-				WRITE_JSON_CODE -> SkiingActivity.writeToExportFile(this.contentResolver, fileUri,
+				WRITE_JSON_CODE -> SkiingActivityManager.writeToExportFile(this.contentResolver, fileUri,
 					json.toString(4))
 				WRITE_GEOJSON_CODE -> {
-					val geoJson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
-					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, geoJson.toString(4))
+					val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
+					SkiingActivityManager.writeToExportFile(this.contentResolver, fileUri, geoJson.toString(4))
 				}
 				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
 			}

@@ -3,7 +3,6 @@ package com.mtspokane.skiapp.maphandlers
 import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.model.BitmapDescriptor
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
@@ -13,7 +12,8 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.activities.activitysummary.SkiingActivity
+import com.mtspokane.skiapp.skiingactivity.SkiingActivity
+import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -143,14 +143,13 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 						val filename: String? =
 							this@ActivitySummaryMap.activity.intent.extras!!.getString("file")
 						if (filename != null) {
-							val activities: Array<SkiingActivity> = SkiingActivity
-								.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity, filename)
+							val activities: Array<SkiingActivity> = SkiingActivityManager.readSkiingActivitiesFromFile(this@ActivitySummaryMap.activity, filename)
 							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(activities)
 						} else {
-							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivity.Activities)
+							(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivityManager.Activities)
 						}
 					} else {
-						(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivity.Activities)
+						(this@ActivitySummaryMap.activity as ActivitySummary).loadActivities(SkiingActivityManager.Activities)
 					}
 				}
 

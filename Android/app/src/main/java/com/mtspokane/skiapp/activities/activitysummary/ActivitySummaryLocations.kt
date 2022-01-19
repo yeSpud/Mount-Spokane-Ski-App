@@ -4,6 +4,7 @@ import android.util.Log
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.skierlocation.Locations
+import com.mtspokane.skiapp.skiingactivity.SkiingActivity
 
 object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
