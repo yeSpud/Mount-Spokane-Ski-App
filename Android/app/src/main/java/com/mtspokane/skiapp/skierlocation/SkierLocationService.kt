@@ -63,7 +63,7 @@ class SkierLocationService : Service(), LocationListener {
 		this.locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		this.notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-		MtSpokaneMapItems.classesUsingObject.add(this::class)
+		MtSpokaneMapItems.checkoutObject(this::class)
 
 		SkiingActivityManager.resumeActivityTracking(this)
 
@@ -121,12 +121,17 @@ class SkierLocationService : Service(), LocationListener {
 
 	override fun onLocationChanged(location: Location) {
 
+		if (MtSpokaneMapItems.skiAreaBounds == null) {
+			Log.w("SkierLocationService", "Ski bounds have not been set up!")
+			return
+		}
+
 		InAppLocations.updateLocations(location)
 
 		// If we are not on the mountain stop the tracking.
-		if (MtSpokaneMapItems.skiAreaBounds.points.isEmpty()) {
+		if (MtSpokaneMapItems.skiAreaBounds!!.points.isEmpty()) {
 			this.stopSelf()
-		} else if (!MtSpokaneMapItems.skiAreaBounds.locationInsidePoints(location)) {
+		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
 			this.stopSelf()
 		}
 

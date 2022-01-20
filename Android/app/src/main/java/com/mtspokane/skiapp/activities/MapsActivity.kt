@@ -25,6 +25,7 @@ import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class MapsActivity : FragmentActivity() {
 
@@ -60,7 +61,7 @@ class MapsActivity : FragmentActivity() {
 		// Setup the map handler.
 		this.map = MainMap(this)
 
-		MtSpokaneMapItems.classesUsingObject.add(this::class)
+		MtSpokaneMapItems.checkoutObject(this::class)
 
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
@@ -110,34 +111,54 @@ class MapsActivity : FragmentActivity() {
 		// Only execute the following checks if the map handler is not null.
 		if (this.map != null) {
 
+			if (MtSpokaneMapItems.chairlifts == null) {
+				lifecycleScope.launch { MtSpokaneMapItems.initializeChairliftsAsync(this@MapsActivity::class,
+					this@MapsActivity.map!!).start() }
+			}
+
+			if (MtSpokaneMapItems.easyRuns == null) {
+				lifecycleScope.launch { MtSpokaneMapItems.initializeEasyRunsAsync(this@MapsActivity::class,
+					this@MapsActivity.map!!).start() }
+			}
+
+			if (MtSpokaneMapItems.moderateRuns == null) {
+				lifecycleScope.launch { MtSpokaneMapItems.initializeModerateRunsAsync(this@MapsActivity::class,
+					this@MapsActivity.map!!).start() }
+			}
+
+			if (MtSpokaneMapItems.difficultRuns == null) {
+				lifecycleScope.launch { MtSpokaneMapItems.initializeDifficultRunsAsync(this@MapsActivity::class,
+					this@MapsActivity.map!!).start() }
+			}
+
 			val checked = !item.isChecked
 			item.isChecked = checked
 			Log.d("onOptionsItemSelected", "Option selected: $checked")
 
 			when (item.itemId) {
-				R.id.chairlift -> MtSpokaneMapItems.chairlifts.forEach {
+				R.id.chairlift -> MtSpokaneMapItems.chairlifts!!.forEach {
 					it.togglePolyLineVisibility(checked, this.nightRunsOnly)
 				}
-				R.id.easy -> MtSpokaneMapItems.easyRuns.forEach {
+				R.id.easy -> MtSpokaneMapItems.easyRuns!!.forEach {
 					it.togglePolyLineVisibility(checked, this.nightRunsOnly)
 				}
-				R.id.moderate -> MtSpokaneMapItems.moderateRuns.forEach {
+				R.id.moderate -> MtSpokaneMapItems.moderateRuns!!.forEach {
 					it.togglePolyLineVisibility(checked, this.nightRunsOnly)
 				}
-				R.id.difficult -> MtSpokaneMapItems.difficultRuns.forEach {
+				R.id.difficult -> MtSpokaneMapItems.difficultRuns!!.forEach {
 					it.togglePolyLineVisibility(checked, this.nightRunsOnly)
 				}
 				R.id.night -> {
-					MtSpokaneMapItems.chairlifts.forEach {
+					MtSpokaneMapItems.chairlifts!!.forEach {
 						it.togglePolyLineVisibility(it.defaultVisibility, checked)
 					}
-					MtSpokaneMapItems.easyRuns.forEach {
+					MtSpokaneMapItems.easyRuns!!.forEach {
 						it.togglePolyLineVisibility(it.defaultVisibility, checked)
 					}
-					MtSpokaneMapItems.moderateRuns.forEach {
+					MtSpokaneMapItems.moderateRuns!!.forEach {
 						it.togglePolyLineVisibility(it.defaultVisibility, checked)
 					}
-					MtSpokaneMapItems.difficultRuns.forEach {
+					MtSpokaneMapItems.difficultRuns!!.forEach {
 						it.togglePolyLineVisibility(it.defaultVisibility, checked)
 					}
 					this.nightRunsOnly = checked
