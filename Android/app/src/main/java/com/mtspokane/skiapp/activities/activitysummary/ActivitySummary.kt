@@ -28,6 +28,7 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.MapItem
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
 import com.mtspokane.skiapp.skiingactivity.SkiingActivity
 import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
@@ -192,6 +193,8 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		SkiingActivityManager.FinishedAndLoadedActivities = null
+
+		MtSpokaneMapItems.destroyUIItems(this::class)
 	}
 
 	fun loadActivities(activities: Array<SkiingActivity>) {

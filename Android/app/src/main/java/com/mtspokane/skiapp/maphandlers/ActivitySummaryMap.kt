@@ -18,6 +18,7 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -100,48 +101,86 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		this.setAdditionalCallback {
 			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
+				if (MtSpokaneMapItems.skiAreaBounds == null || MtSpokaneMapItems.other == null) {
+					MtSpokaneMapItems.initializeOtherAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+				}
+
+				if (MtSpokaneMapItems.chairliftTerminals == null) {
+					MtSpokaneMapItems.initializeChairliftTerminalsAsync(this@ActivitySummaryMap.activity::class,
+					this@ActivitySummaryMap).await()
+				}
+
+				if (MtSpokaneMapItems.chairlifts == null) {
+					MtSpokaneMapItems.initializeChairliftsAsync(this@ActivitySummaryMap.activity::class,
+					this@ActivitySummaryMap).await()
+					MtSpokaneMapItems.addChairliftPolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+				}
+
+				if (MtSpokaneMapItems.easyRuns == null) {
+					MtSpokaneMapItems.initializeEasyRunsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+					MtSpokaneMapItems.addEasyPolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+				}
+
+				if (MtSpokaneMapItems.moderateRuns == null) {
+					MtSpokaneMapItems.initializeModerateRunsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+					MtSpokaneMapItems.addModeratePolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+				}
+
+				if (MtSpokaneMapItems.difficultRuns == null) {
+					MtSpokaneMapItems.initializeDifficultRunsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+					MtSpokaneMapItems.addDifficultPolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+				}
+
 				val loads = listOf(
 
 					// Add the chairlifts to the map.
 					// Load in the chairlift kml file, and iterate though each placemark.
-					this@ActivitySummaryMap.loadPolylinesAsync("Loading chairlift polylines",
+					this@ActivitySummaryMap.loadPolylinesHeadlessAsync("Loading chairlift polylines",
 						R.raw.lifts, R.color.chairlift, 4.0F, R.drawable.ic_chairlift),
 
 					// Load in the easy runs kml file, and iterate though each placemark.
-					this@ActivitySummaryMap.loadPolylinesAsync("Loading easy polylines",
+					this@ActivitySummaryMap.loadPolylinesHeadlessAsync("Loading easy polylines",
 						R.raw.easy, R.color.easy, 3.0F, R.drawable.ic_easy),
 
 					// Load in the moderate runs kml file, and iterate though each placemark.
-					this@ActivitySummaryMap.loadPolylinesAsync("Loading moderate polylines",
+					this@ActivitySummaryMap.loadPolylinesHeadlessAsync("Loading moderate polylines",
 						R.raw.moderate, R.color.moderate, 2.0F, R.drawable.ic_moderate),
 
 					// Load in the difficult runs kml file, and iterate though each placemark.
-					this@ActivitySummaryMap.loadPolylinesAsync("Loading difficult polylines",
+					this@ActivitySummaryMap.loadPolylinesHeadlessAsync("Loading difficult polylines",
 						R.raw.difficult, R.color.difficult, 1.0F, R.drawable.ic_difficult),
 
 					// Other polygons
 					// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
-					this@ActivitySummaryMap.loadPolygonsAsync("Loading other polygons",
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading other polygons",
 						R.raw.other, R.color.other_polygon_fill, false),
 
 					// Load the chairlift terminal polygons file.
-					this@ActivitySummaryMap.loadPolygonsAsync("Loading chairlift terminal polygons",
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading chairlift terminal polygons",
 						R.raw.lift_terminal_polygons, R.color.chairlift_polygon),
 
 					// Load the chairlift polygons file.
-					this@ActivitySummaryMap.loadPolygonsAsync("Loading chairlift polygons",
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading chairlift polygons",
 						R.raw.lift_polygons, R.color.chairlift_polygon),
 
 					// Load the easy polygons file.
-					this@ActivitySummaryMap.loadPolygonsAsync("Loading easy polygons",
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading easy polygons",
 						R.raw.easy_polygons, R.color.easy_polygon),
 
 					// Load the moderate polygons file.
-					this@ActivitySummaryMap.loadPolygonsAsync("Loading moderate polygons",
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading moderate polygons",
 						R.raw.moderate_polygons, R.color.moderate_polygon),
 
 					// Load the difficult polygons file.
-					this@ActivitySummaryMap.loadPolygonsAsync("Loading difficult polygons",
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading difficult polygons",
 						R.raw.difficult_polygons, R.color.difficult_polygon)
 				)
 

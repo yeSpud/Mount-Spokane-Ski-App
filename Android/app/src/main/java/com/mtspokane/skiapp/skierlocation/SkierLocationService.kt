@@ -160,13 +160,13 @@ class SkierLocationService : Service(), LocationListener {
 		}
 
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(this.getString(R.string.app_name)) }
-		this.updateNotification(this.getString(R.string.tracking_notice), null)
+		this.updateTrackingNotification(this.getString(R.string.tracking_notice), null)
 	}
 
 	private fun appendSkiingActivity(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
 		val text: String = this.getString(textResource, mapItem.name)
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
-		this.updateNotification(text, mapItem.getIcon())
+		this.updateTrackingNotification(text, mapItem.getIcon())
 
 		SkiingActivityManager.InProgressActivities = Array(SkiingActivityManager.InProgressActivities.size + 1) {
 			if (SkiingActivityManager.InProgressActivities.size == it) {
@@ -177,7 +177,7 @@ class SkierLocationService : Service(), LocationListener {
 		}
 	}
 
-	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
+	private fun updateTrackingNotification(title: String, @DrawableRes icon: Int?) {
 
 		val bitmap: Bitmap? = if (icon != null) {
 			drawableToBitmap(AppCompatResources.getDrawable(this, icon)!!)

@@ -35,44 +35,44 @@ class DebugMap(activity: DebugActivity) : MapHandler(activity, CameraPosition.Bu
 
 				// Add the chairlifts to the map.
 				// Load in the chairlift kml file, and iterate though each placemark.
-				this@DebugMap.loadPolylinesAsync("Loading chairlift polylines",
+				this@DebugMap.loadPolylinesHeadlessAsync("Loading chairlift polylines",
 					R.raw.lifts, R.color.chairlift,4.0F, R.drawable.ic_chairlift).start()
 
 				// Load in the easy runs kml file, and iterate though each placemark.
-				this@DebugMap.loadPolylinesAsync("Loading easy polylines", R.raw.easy,
+				this@DebugMap.loadPolylinesHeadlessAsync("Loading easy polylines", R.raw.easy,
 					R.color.easy, 3.0F, R.drawable.ic_easy).start()
 
 				// Load in the moderate runs kml file, and iterate though each placemark.
-				this@DebugMap.loadPolylinesAsync("Loading moderate polylines",
+				this@DebugMap.loadPolylinesHeadlessAsync("Loading moderate polylines",
 					R.raw.moderate, R.color.moderate, 2.0F, R.drawable.ic_moderate).start()
 
 				// Load in the difficult runs kml file, and iterate though each placemark.
-				this@DebugMap.loadPolylinesAsync("Loading difficult polylines",
+				this@DebugMap.loadPolylinesHeadlessAsync("Loading difficult polylines",
 					R.raw.difficult, R.color.difficult, 1.0F, R.drawable.ic_difficult).start()
 
 				// Other polygons
 				// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
-				this@DebugMap.loadPolygonsAsync("Loading other polygons", R.raw.other,
+				this@DebugMap.loadPolygonsHeadlessAsync("Loading other polygons", R.raw.other,
 					R.color.other_polygon_fill, false).start()
 
 				// Load the chairlift terminal polygons file.
-				this@DebugMap.loadPolygonsAsync("Loading chairlift terminal polygons",
+				this@DebugMap.loadPolygonsHeadlessAsync("Loading chairlift terminal polygons",
 					R.raw.lift_terminal_polygons, R.color.chairlift_polygon, true).start()
 
 				// Load the chairlift polygons file.
-				this@DebugMap.loadPolygonsAsync("Loading chairlift polygons",
+				this@DebugMap.loadPolygonsHeadlessAsync("Loading chairlift polygons",
 					R.raw.lift_polygons, R.color.chairlift_polygon, true).start()
 
 				// Load the easy polygons file.
-				this@DebugMap.loadPolygonsAsync("Loading easy polygons",
+				this@DebugMap.loadPolygonsHeadlessAsync("Loading easy polygons",
 					R.raw.easy_polygons, R.color.easy_polygon, true).start()
 
 				// Load the moderate polygons file.
-				this@DebugMap.loadPolygonsAsync("Loading moderate polygons",
+				this@DebugMap.loadPolygonsHeadlessAsync("Loading moderate polygons",
 					R.raw.moderate_polygons, R.color.moderate_polygon, true).start()
 
 				// Load the difficult polygons file.
-				this@DebugMap.loadPolygonsAsync("Loading difficult polygons",
+				this@DebugMap.loadPolygonsHeadlessAsync("Loading difficult polygons",
 					R.raw.difficult_polygons, R.color.difficult_polygon, true).start()
 			}.start()
 		}
