@@ -1,17 +1,18 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
 import android.app.AlertDialog
-import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.LinearLayout
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
@@ -24,8 +25,10 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
-import com.mtspokane.skiapp.skierlocation.SkierLocationService
+import com.mtspokane.skiapp.skiingactivity.SkiingActivity
+import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
 import java.io.File
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,7 +44,65 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var creditDialog: AlertDialog
 
-	var loadedFile: String = "${SkiingActivity.getDate()}.json"
+	var loadedFile: String = "${SkiingActivityManager.getDate()}.json"
+
+	private val exportCallback = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
+
+		if (it != null) {
+
+			val json: JSONObject = SkiingActivityManager.readJsonFromFile(this, this.loadedFile)
+
+			val mimeType = this.contentResolver.getType(it)
+
+			val query: Cursor? = this.contentResolver.query(it, null, null, null, null)
+			val fileName: String? = query?.use { cursor: Cursor ->
+				cursor.moveToFirst()
+				val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+				cursor.getString(nameIndex)
+			}
+
+			if (fileName != null) {
+
+				if (mimeType == JSON_MIME_TYPE && fileName.endsWith(".json")) {
+					SkiingActivityManager.writeToExportFile(this.contentResolver, it, json.toString(4))
+				} else if ((mimeType == GEOJSON_MIME_TYPE || mimeType == "application/octet-stream")
+					&& fileName.endsWith(".geojson")) {
+					val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
+					SkiingActivityManager.writeToExportFile(this.contentResolver, it, geoJson.toString(4))
+				} else {
+					Log.w("exportCallback", "File type unaccounted for: $fileName:$mimeType")
+				}
+			}
+		}
+	}
+
+	private val importCallback = this.registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+
+		if (uri == null) {
+			return@registerForActivityResult
+		}
+
+		val inputStream: InputStream? = this.contentResolver.openInputStream(uri)
+		if (inputStream == null) {
+			Log.w("importCallback", "Unable to open a file input stream for the imported file.")
+			return@registerForActivityResult
+		}
+
+		val json: JSONObject = inputStream.bufferedReader().useLines {
+
+			val string = it.fold("") { _, inText -> inText }
+
+			JSONObject(string)
+		}
+		inputStream.close()
+
+		val jsonDate = json.keys().next()
+		val jsonArray = json.getJSONArray(jsonDate)
+
+		val skiingActivities: Array<SkiingActivity> = SkiingActivityManager.jsonArrayToSkiingActivities(jsonArray)
+
+		SkiingActivityManager.writeActivitiesToFile(this, skiingActivities, jsonDate)
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -67,9 +128,6 @@ class ActivitySummary : FragmentActivity() {
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
 		mapFragment.getMapAsync(this.mapHandler!!)
-
-		// If all else fails just load from the current activities array.
-		this.loadActivities(SkiingActivity.Activities)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -92,19 +150,16 @@ class ActivitySummary : FragmentActivity() {
 
 		when (item.itemId) {
 			R.id.open -> this.fileSelectionDialog.showDialog()
-			R.id.export_json -> SkiingActivity.createNewFileSAF(this, this.loadedFile,
-				JSON_MIME_TYPE, WRITE_JSON_CODE)
-			R.id.export_geojson -> SkiingActivity.createNewFileSAF(
-				this, this.loadedFile.replace("json", "geojson"),
-				GEOJSON_MIME_TYPE, WRITE_GEOJSON_CODE)
+			R.id.export_json -> this.exportCallback.launch(this.loadedFile)
+			R.id.export_geojson -> this.exportCallback.launch(this.loadedFile.replace("json", "geojson"))
 			R.id.share_json -> {
 				val file = File(this.filesDir, this.loadedFile)
-				SkiingActivity.shareFile(this, file, JSON_MIME_TYPE)
+				SkiingActivityManager.shareFile(this, file, JSON_MIME_TYPE)
 			}
 			R.id.share_geojson -> {
 
-				val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
-				val geojson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
+				val json: JSONObject = SkiingActivityManager.readJsonFromFile(this, this.loadedFile)
+				val geojson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
 
 				val tmpFileName = this.loadedFile.replace("json", "geojson")
 				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use {
@@ -113,38 +168,26 @@ class ActivitySummary : FragmentActivity() {
 
 				val tmpFile = File(this.filesDir, tmpFileName)
 
-				SkiingActivity.shareFile(this, tmpFile, JSON_MIME_TYPE)
+				SkiingActivityManager.shareFile(this, tmpFile, JSON_MIME_TYPE)
 
 				tmpFile.delete()
 			}
+			R.id.import_activity -> this.importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
 			R.id.credits -> this.creditDialog.show()
 		}
 
 		return super.onOptionsItemSelected(item)
 	}
 
-	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-		super.onActivityResult(requestCode, resultCode, data)
+	override fun onDestroy() {
+		super.onDestroy()
 
-		if (resultCode == RESULT_OK) {
-
-			if (data == null) {
-				return
-			}
-
-			val fileUri: Uri = data.data ?: return
-			val json: JSONObject = SkiingActivity.readJsonFromFile(this, this.loadedFile)
-
-			when (requestCode) {
-				WRITE_JSON_CODE -> SkiingActivity.writeToExportFile(this.contentResolver, fileUri,
-					json.toString(4))
-				WRITE_GEOJSON_CODE -> {
-					val geoJson: JSONObject = SkiingActivity.convertJsonToGeoJson(json)
-					SkiingActivity.writeToExportFile(this.contentResolver, fileUri, geoJson.toString(4))
-				}
-				else -> Log.w("onActivityResult", "Unaccounted for code: $resultCode")
-			}
+		if (this.mapHandler != null) {
+			this.mapHandler!!.destroy()
+			this.mapHandler = null
 		}
+
+		SkiingActivityManager.FinishedAndLoadedActivities = null
 	}
 
 	fun loadActivities(activities: Array<SkiingActivity>) {
@@ -159,7 +202,7 @@ class ActivitySummary : FragmentActivity() {
 			}
 
 			this.mapHandler!!.locationMarkers.forEach {
-				it.remove()
+				it.destroy()
 			}
 			this.mapHandler!!.locationMarkers = emptyArray()
 		}
@@ -170,46 +213,54 @@ class ActivitySummary : FragmentActivity() {
 
 		var endingActivity: SkiingActivity? = null
 
-		lateinit var endingTitleIconColor: Pair<String, Pair<Int, BitmapDescriptor>>
+		lateinit var endingTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>>
 
-		lateinit var currentTitleIconColor: Pair<String, Pair<Int, BitmapDescriptor>>
+		lateinit var currentTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>>
 
 		for (index in 0 until (activities.size + 1)) {
 
 			if (index == activities.size) {
-				val finalActivityView = if (endingActivity != null) {
-					this.createActivityView(currentTitleIconColor.second.first, currentTitleIconColor.first,
-						endingActivity.time, activities[activities.size - 1].time)
-				} else {
-					this.createActivityView(currentTitleIconColor.second.first, currentTitleIconColor.first,
+				if (currentTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION) {
+					val finalActivityView = if (endingActivity != null) {
+						this.createActivityView(currentTitleDrawableResourceMarkerIcon.second.first,
+							currentTitleDrawableResourceMarkerIcon.first, endingActivity.time,
+							activities[activities.size - 1].time)
+					} else {
+						this.createActivityView(currentTitleDrawableResourceMarkerIcon.second.first,
+							currentTitleDrawableResourceMarkerIcon.first,
 							activities[activities.size - 1].time, null)
+					}
+					this.container.addView(finalActivityView)
+					break
 				}
-				this.container.addView(finalActivityView)
-				break
 			}
 
 			ActivitySummaryLocations.updateLocations(activities[index])
 
 			if (index > 0) {
-				endingTitleIconColor = currentTitleIconColor
+				endingTitleDrawableResourceMarkerIcon = currentTitleDrawableResourceMarkerIcon
 			}
 
-			currentTitleIconColor = this.getTitleIconAndColor()
+			currentTitleDrawableResourceMarkerIcon = this.getTitleDrawableResourceMarkerIcon()
 
 			if (this.mapHandler != null) {
 
-				this.mapHandler!!.addMarker(activities[index].latitude, activities[index].longitude,
-					currentTitleIconColor.second.second)
+				this.mapHandler!!.addActivitySummaryLocationMarker(currentTitleDrawableResourceMarkerIcon.first,
+					activities[index].latitude, activities[index].longitude, currentTitleDrawableResourceMarkerIcon.second.first,
+					currentTitleDrawableResourceMarkerIcon.second.second)
 			}
 
 			if (endingActivity == null) {
 				endingActivity = activities[index]
 			} else {
 
-				if (endingTitleIconColor.first != currentTitleIconColor.first) {
-					this.container.addView(this.createActivityView(endingTitleIconColor.second.first,
-						endingTitleIconColor.first, endingActivity.time, activities[index].time))
-					endingActivity = activities[index]
+				if (endingTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION &&
+					currentTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION) {
+					if (endingTitleDrawableResourceMarkerIcon.first != currentTitleDrawableResourceMarkerIcon.first) {
+						this.container.addView(this.createActivityView(endingTitleDrawableResourceMarkerIcon.second.first,
+							endingTitleDrawableResourceMarkerIcon.first, endingActivity.time, activities[index].time))
+						endingActivity = activities[index]
+					}
 				}
 			}
 		}
@@ -219,7 +270,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private fun getTitleIconAndColor(): Pair<String, Pair<Int, BitmapDescriptor>> {
+	private fun getTitleDrawableResourceMarkerIcon(): Pair<String, Pair<Int, BitmapDescriptor>> {
 
 		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (ActivitySummaryLocations.altitudeConfidence >= 2u &&
 			ActivitySummaryLocations.speedConfidence >= 1u &&
@@ -231,7 +282,8 @@ class ActivitySummary : FragmentActivity() {
 
 			val chairliftTerminal: MapItem? = ActivitySummaryLocations.checkIfAtChairliftTerminals()
 			if (chairliftTerminal != null) {
-				Pair(chairliftTerminal.name, Pair(R.drawable.ic_chairlift, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
+				Pair(chairliftTerminal.name, Pair(R.drawable.ic_chairlift,
+					BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
 			} else {
 
 				val other: MapItem? = ActivitySummaryLocations.checkIfOnOther()
@@ -259,7 +311,7 @@ class ActivitySummary : FragmentActivity() {
 						}
 						Pair(run.name, Pair(icon, markerIconColor))
 					} else {
-						Pair("Unknown Location", Pair(R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
+						Pair(UNKNOWN_LOCATION, Pair(R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
 					}
 				}
 			}
@@ -297,13 +349,11 @@ class ActivitySummary : FragmentActivity() {
 
 	companion object {
 
-		private const val JSON_MIME_TYPE = "application/json"
+		const val JSON_MIME_TYPE = "application/json"
 
-		private const val GEOJSON_MIME_TYPE = "application/geojson"
+		const val GEOJSON_MIME_TYPE = "application/geojson"
 
-		private const val WRITE_JSON_CODE = 509
-
-		private const val WRITE_GEOJSON_CODE = 666
+		private const val UNKNOWN_LOCATION = "Unknown Location"
 
 		/**
 		 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994

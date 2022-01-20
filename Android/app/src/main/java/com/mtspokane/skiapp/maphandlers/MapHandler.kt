@@ -97,6 +97,8 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 		// Set the map view type to satellite.
 		googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
+		// TODO Check if MtSpokaneMapItems have been setup.
+
 		this.map = googleMap
 
 		if (this.additionalCallback != null) {

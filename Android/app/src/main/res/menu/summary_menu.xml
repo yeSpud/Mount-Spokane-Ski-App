@@ -72,10 +72,18 @@
     </item>
 
     <item
-        android:id="@+id/credits"
+        android:id="@+id/import_activity"
         android:checkable="false"
         android:enabled="true"
         android:orderInCategory="3"
+        android:title="@string/import_activity"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/credits"
+        android:checkable="false"
+        android:enabled="true"
+        android:orderInCategory="4"
         android:title="@string/credits"
         android:visible="true" />
 

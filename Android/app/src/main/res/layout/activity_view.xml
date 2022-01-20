@@ -29,12 +29,14 @@
             android:layout_width="wrap_content"
             android:layout_height="13dp"
             android:layout_marginBottom="4dp"
+            android:textColor="@color/white"
             android:textSize="11sp" />
 
         <TextView
             android:id="@+id/end_time"
             android:layout_width="wrap_content"
             android:layout_height="13dp"
+            android:textColor="@color/white"
             android:textSize="11sp" />
 
     </LinearLayout>
@@ -54,6 +56,7 @@
             android:layout_height="30dp"
             android:gravity="center_vertical"
             android:textAlignment="center"
+            android:textColor="@color/white"
             android:textSize="23sp" />
 
     </HorizontalScrollView>
