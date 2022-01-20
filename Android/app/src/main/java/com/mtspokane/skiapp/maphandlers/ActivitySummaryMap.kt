@@ -158,9 +158,17 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 					this@ActivitySummaryMap.map!!.setOnCircleClickListener {
 
 						if (it.tag is ActivitySummaryLocationMarkers) {
-							// TODO
+
+							val activitySummaryLocationMarker: ActivitySummaryLocationMarkers = it.tag as ActivitySummaryLocationMarkers
+
+							if (activitySummaryLocationMarker.marker != null) {
+								activitySummaryLocationMarker.marker!!.isVisible = true
+								activitySummaryLocationMarker.marker!!.showInfoWindow()
+							}
 						}
 					}
+
+					this@ActivitySummaryMap.map!!.setOnInfoWindowCloseListener { it.isVisible = false }
 				}
 
 			}.start()
