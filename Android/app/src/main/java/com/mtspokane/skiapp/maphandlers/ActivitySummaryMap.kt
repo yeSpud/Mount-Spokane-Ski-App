@@ -1,5 +1,7 @@
 package com.mtspokane.skiapp.maphandlers
 
+import android.app.NotificationManager
+import android.content.Context
 import android.graphics.Color
 import android.util.Log
 import androidx.annotation.DrawableRes
@@ -19,6 +21,7 @@ import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -94,6 +97,21 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 			width(8.0F)
 			visible(true)
 		}
+	}
+
+	private fun loadFromIntent(filename: String?) {
+
+		if (filename == null) {
+			return
+		}
+
+		SkiingActivityManager.FinishedAndLoadedActivities = SkiingActivityManager
+			.readSkiingActivitiesFromFile(this.activity, filename)
+		(this.activity as ActivitySummary).loadedFile = filename
+
+		val notificationManager: NotificationManager = this.activity.getSystemService(Context.NOTIFICATION_SERVICE)
+				as NotificationManager
+		notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
 	}
 
 	init {
@@ -186,6 +204,11 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 
 				loads.awaitAll()
 				withContext(Dispatchers.Main) {
+
+					if (this@ActivitySummaryMap.activity.intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_FILENAME)) {
+						this@ActivitySummaryMap.loadFromIntent(this@ActivitySummaryMap.activity.intent
+							.getStringExtra(SkierLocationService.ACTIVITY_SUMMARY_FILENAME))
+					}
 
 					if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
 						(this@ActivitySummaryMap.activity as ActivitySummary)

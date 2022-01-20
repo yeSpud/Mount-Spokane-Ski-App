@@ -25,13 +25,16 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
+import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.InAppLocations
 import com.mtspokane.skiapp.skiingactivity.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.MapsActivity
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
+import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
 
@@ -104,9 +107,10 @@ class SkierLocationService : Service(), LocationListener {
 
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
-			SkiingActivityManager.writeActivitiesToFile(this, SkiingActivityManager.InProgressActivities)
+			val filename: String = SkiingActivityManager.writeActivitiesToFile(this,
+				SkiingActivityManager.InProgressActivities)
 
-			val pendingIntent: PendingIntent = this.createPendingIntent()
+			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, filename)
 
 			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
 				true, R.string.activity_notification_text, pendingIntent)
@@ -190,9 +194,12 @@ class SkierLocationService : Service(), LocationListener {
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")
-	private fun createPendingIntent(): PendingIntent {
+	private fun createPendingIntent(activityToLaunch: KClass<out FragmentActivity>, filename: String?): PendingIntent {
 
-		val notificationIntent = Intent(this, MapsActivity::class.java)
+		val notificationIntent = Intent(this, activityToLaunch.java)
+		if (filename != null) {
+			notificationIntent.putExtra(ACTIVITY_SUMMARY_FILENAME, filename)
+		}
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
@@ -203,7 +210,7 @@ class SkierLocationService : Service(), LocationListener {
 
 	private fun createPersistentNotification(title: String, iconBitmap: Bitmap?): Notification {
 
-		val pendingIntent: PendingIntent = this.createPendingIntent()
+		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class, null)
 
 		val builder: NotificationCompat.Builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
 			false, R.string.tracking_notice, pendingIntent)
@@ -241,6 +248,8 @@ class SkierLocationService : Service(), LocationListener {
 		const val TRACKING_SERVICE_CHANNEL_ID = "skiAppTracker"
 
 		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
+
+		const val ACTIVITY_SUMMARY_FILENAME = "activitySummaryFilename"
 
 		@Deprecated("Sniffing for running services is discouraged.")
 		fun checkIfRunning(activity: MapsActivity): Boolean {
