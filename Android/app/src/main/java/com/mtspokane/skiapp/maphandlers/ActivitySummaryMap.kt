@@ -53,7 +53,8 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 	}
 
 	fun addActivitySummaryLocationMarker(title: String, latitude: Double, longitude: Double,
-	                                     @DrawableRes drawableResource: Int, icon: BitmapDescriptor) {
+	                                     @DrawableRes drawableResource: Int, icon: BitmapDescriptor,
+	                                     debugSnippetText: String?) {
 
 		if (this.map != null) {
 
@@ -61,7 +62,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 
 				if (it == this.locationMarkers.size) {
 					ActivitySummaryLocationMarkers(this.map!!, title, latitude, longitude,
-						drawableResource, icon)
+						drawableResource, icon, debugSnippetText)
 				} else {
 					this.locationMarkers[it]
 				}
@@ -178,7 +179,8 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 
 @UiThread
 class ActivitySummaryLocationMarkers(map: GoogleMap, title: String, latitude: Double, longitude: Double,
-                                     @DrawableRes drawableResource: Int, icon: BitmapDescriptor) {
+                                     @DrawableRes drawableResource: Int, icon: BitmapDescriptor,
+                                     debugSnippetText: String?) {
 
 	var marker: Marker? = null
 	private set
@@ -227,6 +229,10 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, title: String, latitude: Do
 			title(title)
 			zIndex(99.0F)
 			visible(false)
+		}
+
+		if (debugSnippetText != null) {
+			this.marker!!.snippet = debugSnippetText
 		}
 
 		this.circle!!.tag = this

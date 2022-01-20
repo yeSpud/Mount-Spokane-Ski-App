@@ -136,7 +136,8 @@ class SkierLocationService : Service(), LocationListener {
 			return
 		}
 
-		if (InAppLocations.altitudeConfidence >= 2u && InAppLocations.speedConfidence >= 1u && InAppLocations.mostLikelyChairlift != null) {
+		if (InAppLocations.altitudeConfidence >= 1u && InAppLocations.speedConfidence >= 1u &&
+			InAppLocations.mostLikelyChairlift != null) {
 			this.appendSkiingActivity(R.string.current_chairlift, InAppLocations.mostLikelyChairlift!!, location)
 			return
 		}

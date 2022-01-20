@@ -70,6 +70,7 @@ object InAppLocations: Locations<Location>() {
 
 		MtSpokaneMapItems.other.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
+				this.mostLikelyChairlift = null
 				return it
 			}
 		}
@@ -104,6 +105,7 @@ object InAppLocations: Locations<Location>() {
 			MtSpokaneMapItems.difficultRuns).forEach { runDifficulty ->
 			runDifficulty.forEach {
 				if (it.locationInsidePoints(this.currentLocation!!)) {
+					this.mostLikelyChairlift = null
 					return it
 				}
 			}

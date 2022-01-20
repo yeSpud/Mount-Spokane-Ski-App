@@ -21,6 +21,7 @@ import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.mapItem.MapItem
@@ -245,9 +246,25 @@ class ActivitySummary : FragmentActivity() {
 
 			if (this.mapHandler != null) {
 
+				val snippetText: String? = if (BuildConfig.DEBUG) {
+
+					val altitudeString = "Altitude: ${ActivitySummaryLocations.altitudeConfidence}"
+					val speedString = "Speed: ${ActivitySummaryLocations.speedConfidence}"
+					val chairliftString = "Chairlift: ${if (ActivitySummaryLocations.mostLikelyChairlift != null) {
+						ActivitySummaryLocations.mostLikelyChairlift!!.name
+					} else {
+						"Null"
+					}}"
+
+					"$altitudeString | $speedString | $chairliftString"
+				} else {
+					null
+				}
+
 				this.mapHandler!!.addActivitySummaryLocationMarker(currentTitleDrawableResourceMarkerIcon.first,
-					activities[index].latitude, activities[index].longitude, currentTitleDrawableResourceMarkerIcon.second.first,
-					currentTitleDrawableResourceMarkerIcon.second.second)
+					activities[index].latitude, activities[index].longitude,
+					currentTitleDrawableResourceMarkerIcon.second.first,
+					currentTitleDrawableResourceMarkerIcon.second.second, snippetText)
 			}
 
 			if (endingActivity == null) {
@@ -272,7 +289,7 @@ class ActivitySummary : FragmentActivity() {
 
 	private fun getTitleDrawableResourceMarkerIcon(): Pair<String, Pair<Int, BitmapDescriptor>> {
 
-		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (ActivitySummaryLocations.altitudeConfidence >= 2u &&
+		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (ActivitySummaryLocations.altitudeConfidence >= 1u &&
 			ActivitySummaryLocations.speedConfidence >= 1u &&
 			ActivitySummaryLocations.mostLikelyChairlift != null) {
 
@@ -311,7 +328,8 @@ class ActivitySummary : FragmentActivity() {
 						}
 						Pair(run.name, Pair(icon, markerIconColor))
 					} else {
-						Pair(UNKNOWN_LOCATION, Pair(R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
+						Pair(UNKNOWN_LOCATION, Pair(R.drawable.ic_missing,
+							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
 					}
 				}
 			}
