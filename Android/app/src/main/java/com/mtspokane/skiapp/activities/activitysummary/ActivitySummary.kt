@@ -262,13 +262,8 @@ class ActivitySummary : FragmentActivity() {
 
 			val altitudeString = "Altitude: ${ActivitySummaryLocations.altitudeConfidence}"
 			val speedString = "Speed: ${ActivitySummaryLocations.speedConfidence}"
-			val chairliftString = "Chairlift: ${if (ActivitySummaryLocations.mostLikelyChairlift != null) {
-				ActivitySummaryLocations.mostLikelyChairlift!!.name
-			} else {
-				"Null"
-			}}"
 
-			"$altitudeString | $speedString | $chairliftString"
+			"$altitudeString | $speedString"
 		} else {
 			null
 		}
@@ -347,12 +342,11 @@ class ActivitySummary : FragmentActivity() {
 
 	private fun getTitleDrawableResourceMarkerIcon(): Pair<String, Pair<Int, BitmapDescriptor>> {
 
-		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (ActivitySummaryLocations.altitudeConfidence >= 1u &&
-			ActivitySummaryLocations.speedConfidence >= 1u &&
-			ActivitySummaryLocations.mostLikelyChairlift != null) {
+		val chairlift: MapItem? = ActivitySummaryLocations.checkIfIOnChairlift()
+		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (chairlift != null) {
 
-			Pair(ActivitySummaryLocations.mostLikelyChairlift!!.name, Pair(R.drawable.ic_chairlift,
-				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
+			Pair(chairlift.name, Pair(R.drawable.ic_chairlift, BitmapDescriptorFactory
+				.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
 		} else {
 
 			val chairliftTerminal: MapItem? = ActivitySummaryLocations.checkIfAtChairliftTerminals()

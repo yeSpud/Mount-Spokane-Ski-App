@@ -23,18 +23,6 @@ object InAppLocations: Locations<Location>() {
 
 		this.speedConfidence = getSpeedConfidenceValue()
 
-		if (MtSpokaneMapItems.chairlifts != null) {
-
-			MtSpokaneMapItems.chairlifts!!.forEach {
-				if (it.locationInsidePoints(newVariable)) {
-					this.mostLikelyChairlift = it
-				}
-			}
-		} else {
-
-			Log.w("InAppLocations", "Chairlifts have not been set up")
-		}
-
 		this.currentLocation = newVariable
 	}
 
@@ -76,7 +64,28 @@ object InAppLocations: Locations<Location>() {
 
 		MtSpokaneMapItems.other!!.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
-				this.mostLikelyChairlift = null
+				return it
+			}
+		}
+
+		return null
+	}
+
+	override fun checkIfIOnChairlift(): MapItem? {
+
+		if (MtSpokaneMapItems.chairlifts == null || this.currentLocation == null) {
+			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
+			return null
+		}
+
+		if (this.altitudeConfidence < 1u &&
+			this.speedConfidence < 1u) {
+
+			return null
+		}
+
+		MtSpokaneMapItems.chairlifts!!.forEach {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return it
 			}
 		}
@@ -112,7 +121,6 @@ object InAppLocations: Locations<Location>() {
 			MtSpokaneMapItems.difficultRuns!!).forEach { runDifficulty ->
 			runDifficulty.forEach {
 				if (it.locationInsidePoints(this.currentLocation!!)) {
-					this.mostLikelyChairlift = null
 					return it
 				}
 			}

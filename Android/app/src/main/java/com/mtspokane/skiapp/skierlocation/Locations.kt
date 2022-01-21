@@ -16,14 +16,13 @@ abstract class Locations<T> {
 	var speedConfidence: UShort = 0u
 		internal set
 
-	var mostLikelyChairlift: MapItem? = null
-		internal set
-
 	abstract fun updateLocations(newVariable: T)
 
 	abstract fun getVerticalDirection(): VerticalDirection
 
 	abstract fun checkIfOnOther(): MapItem?
+
+	abstract fun checkIfIOnChairlift(): MapItem?
 
 	abstract fun checkIfAtChairliftTerminals(): MapItem?
 
