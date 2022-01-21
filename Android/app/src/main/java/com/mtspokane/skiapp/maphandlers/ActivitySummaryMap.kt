@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Color
 import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.annotation.MainThread
 import androidx.annotation.UiThread
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.GoogleMap
@@ -74,6 +75,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		}
 	}
 
+	@MainThread
 	fun addPolylineFromMarker() {
 
 		if (this.map == null) {
