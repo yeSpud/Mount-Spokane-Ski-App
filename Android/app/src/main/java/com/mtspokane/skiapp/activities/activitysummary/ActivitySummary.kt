@@ -36,7 +36,9 @@ import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.LinkedList
 import java.util.Locale
+import java.util.Queue
 import org.json.JSONObject
 
 class ActivitySummary : FragmentActivity() {
@@ -50,6 +52,8 @@ class ActivitySummary : FragmentActivity() {
 	private lateinit var creditDialog: AlertDialog
 
 	var loadedFile: String = "${SkiingActivityManager.getDate()}.json"
+
+	private var mostRecentlyAddedActivityView: ActivityView? = null
 
 	private val exportCallback = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
 
@@ -218,79 +222,104 @@ class ActivitySummary : FragmentActivity() {
 			return
 		}
 
-		var endingActivity: SkiingActivity? = null
-
-		lateinit var endingTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>>
-
-		lateinit var currentTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>>
-
-		for (index in 0 until (activities.size + 1)) {
-
-			if (index == activities.size) {
-				if (currentTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION) {
-					val finalActivityView = if (endingActivity != null) {
-						this.createActivityView(currentTitleDrawableResourceMarkerIcon.second.first,
-							currentTitleDrawableResourceMarkerIcon.first, endingActivity.time,
-							activities[activities.size - 1].time)
-					} else {
-						this.createActivityView(currentTitleDrawableResourceMarkerIcon.second.first,
-							currentTitleDrawableResourceMarkerIcon.first,
-							activities[activities.size - 1].time, null)
-					}
-					this.container.addView(finalActivityView)
-					break
-				}
-			}
-
-			ActivitySummaryLocations.updateLocations(activities[index])
-
-			if (index > 0) {
-				endingTitleDrawableResourceMarkerIcon = currentTitleDrawableResourceMarkerIcon
-			}
-
-			currentTitleDrawableResourceMarkerIcon = this.getTitleDrawableResourceMarkerIcon()
-
-			if (this.mapHandler != null) {
-
-				val snippetText: String? = if (BuildConfig.DEBUG) {
-
-					val altitudeString = "Altitude: ${ActivitySummaryLocations.altitudeConfidence}"
-					val speedString = "Speed: ${ActivitySummaryLocations.speedConfidence}"
-					val chairliftString = "Chairlift: ${if (ActivitySummaryLocations.mostLikelyChairlift != null) {
-						ActivitySummaryLocations.mostLikelyChairlift!!.name
-					} else {
-						"Null"
-					}}"
-
-					"$altitudeString | $speedString | $chairliftString"
-				} else {
-					null
-				}
-
-				this.mapHandler!!.addActivitySummaryLocationMarker(currentTitleDrawableResourceMarkerIcon.first,
-					activities[index].latitude, activities[index].longitude,
-					currentTitleDrawableResourceMarkerIcon.second.first,
-					currentTitleDrawableResourceMarkerIcon.second.second, snippetText)
-			}
-
-			if (endingActivity == null) {
-				endingActivity = activities[index]
-			} else {
-
-				if (endingTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION &&
-					currentTitleDrawableResourceMarkerIcon.first != UNKNOWN_LOCATION) {
-					if (endingTitleDrawableResourceMarkerIcon.first != currentTitleDrawableResourceMarkerIcon.first) {
-						this.container.addView(this.createActivityView(endingTitleDrawableResourceMarkerIcon.second.first,
-							endingTitleDrawableResourceMarkerIcon.first, endingActivity.time, activities[index].time))
-						endingActivity = activities[index]
-					}
-				}
-			}
-		}
+		val activityQueue: Queue<SkiingActivity> = LinkedList()
+		activityQueue.addAll(activities)
+		this.addToViewRecursively(activityQueue)
+		this.mostRecentlyAddedActivityView = null
 
 		if (this.mapHandler != null) {
 			this.mapHandler!!.addPolylineFromMarker()
 		}
+	}
+
+	private fun addCircleAndMarker(titleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>>,
+	                               skiingActivity: SkiingActivity) {
+
+		if (this.mapHandler == null) {
+			return
+		}
+
+		val snippetText: String? = if (BuildConfig.DEBUG) {
+
+			val altitudeString = "Altitude: ${ActivitySummaryLocations.altitudeConfidence}"
+			val speedString = "Speed: ${ActivitySummaryLocations.speedConfidence}"
+			val chairliftString = "Chairlift: ${if (ActivitySummaryLocations.mostLikelyChairlift != null) {
+				ActivitySummaryLocations.mostLikelyChairlift!!.name
+			} else {
+				"Null"
+			}}"
+
+			"$altitudeString | $speedString | $chairliftString"
+		} else {
+			null
+		}
+
+		this.mapHandler!!.addActivitySummaryLocationMarker(titleDrawableResourceMarkerIcon.first,
+			skiingActivity.latitude, skiingActivity.longitude, titleDrawableResourceMarkerIcon.second.first,
+			titleDrawableResourceMarkerIcon.second.second, snippetText)
+	}
+
+	private fun addToViewRecursively(queue: Queue<SkiingActivity>) {
+
+		val tag = "addToViewRecursively"
+
+		if (queue.isEmpty()) {
+			return
+		}
+
+		val startingActivity: SkiingActivity = queue.remove()
+		ActivitySummaryLocations.updateLocations(startingActivity)
+		val startingTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>> =
+			this.getTitleDrawableResourceMarkerIcon()
+		this.addCircleAndMarker(startingTitleDrawableResourceMarkerIcon, startingActivity)
+		Log.v(tag, "Starting with ${startingTitleDrawableResourceMarkerIcon.first}")
+
+		var endingActivity: SkiingActivity?
+		do {
+
+			endingActivity = queue.peek()
+
+			if (endingActivity == null) {
+				break
+			}
+
+			ActivitySummaryLocations.updateLocations(endingActivity)
+			val endingTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>> =
+				this.getTitleDrawableResourceMarkerIcon()
+			this.addCircleAndMarker(endingTitleDrawableResourceMarkerIcon, endingActivity)
+
+			if ((startingTitleDrawableResourceMarkerIcon.first == endingTitleDrawableResourceMarkerIcon.first)
+				|| (endingTitleDrawableResourceMarkerIcon.first == UNKNOWN_LOCATION)) {
+					Log.v(tag, "Removing ${endingTitleDrawableResourceMarkerIcon.first} from queue")
+				queue.remove()
+			} else {
+				Log.v(tag, "Next item should be ${endingTitleDrawableResourceMarkerIcon.first}")
+				break
+			}
+
+		} while (queue.peek() != null)
+
+		val view: ActivityView = if (endingActivity == null) {
+			this.createActivityView(startingTitleDrawableResourceMarkerIcon.second.first,
+				startingTitleDrawableResourceMarkerIcon.first, startingActivity.time, null)
+		} else {
+			this.createActivityView(startingTitleDrawableResourceMarkerIcon.second.first,
+				startingTitleDrawableResourceMarkerIcon.first, startingActivity.time, endingActivity.time)
+		}
+
+		if (this.mostRecentlyAddedActivityView != null) {
+			if (this.mostRecentlyAddedActivityView!!.title.text == view.title.text) {
+				Log.w(tag, "Found view with same title!")
+			} else {
+				this.mostRecentlyAddedActivityView = view
+				this.container.addView(view)
+			}
+		} else {
+			this.mostRecentlyAddedActivityView = view
+			this.container.addView(view)
+		}
+
+		this.addToViewRecursively(queue)
 	}
 
 	private fun getTitleDrawableResourceMarkerIcon(): Pair<String, Pair<Int, BitmapDescriptor>> {
