@@ -262,8 +262,9 @@ class ActivitySummary : FragmentActivity() {
 
 			val altitudeString = "Altitude: ${ActivitySummaryLocations.altitudeConfidence}"
 			val speedString = "Speed: ${ActivitySummaryLocations.speedConfidence}"
+			val verticalDirectionString = "Vertical: ${ActivitySummaryLocations.getVerticalDirection().name}"
 
-			"$altitudeString | $speedString"
+			"$altitudeString | $speedString | $verticalDirectionString"
 		} else {
 			null
 		}

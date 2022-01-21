@@ -274,6 +274,8 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, title: String, latitude: Do
 			R.drawable.ic_moderate -> Color.BLUE
 			R.drawable.ic_difficult -> Color.BLACK
 			R.drawable.ic_chairlift -> Color.RED
+			R.drawable.ic_parking -> Color.GRAY
+			R.drawable.ic_ski_patrol_icon -> Color.WHITE
 			else -> Color.MAGENTA
 		}
 

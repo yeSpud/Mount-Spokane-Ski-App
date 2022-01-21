@@ -76,8 +76,13 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 			return null
 		}
 
-		if (this.altitudeConfidence < 1u &&
-			this.speedConfidence < 1u) {
+		val vDirection: VerticalDirection = this.getVerticalDirection()
+		if (vDirection == VerticalDirection.DOWN || vDirection == VerticalDirection.DOWN_CERTAIN) {
+
+			return null
+		}
+
+		if (this.altitudeConfidence < 1u || this.speedConfidence < 1u) {
 
 			return null
 		}
