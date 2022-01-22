@@ -20,12 +20,6 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 		this.speedConfidence = this.getSpeedConfidenceValue()
 
-		MtSpokaneMapItems.chairlifts.forEach {
-			if (it.locationInsidePoints(newVariable.latitude, newVariable.longitude)) {
-				this.mostLikelyChairlift = it
-			}
-		}
-
 		this.currentLocation = newVariable
 	}
 
@@ -61,12 +55,39 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 	override fun checkIfOnOther(): MapItem? {
 
-		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
-			Log.w("checkIfOnOther", "Map items are not set up")
+		if (MtSpokaneMapItems.other == null || this.currentLocation == null) {
+			Log.w("checkIfOnOther", "Other map items have not been set up")
 			return null
 		}
 
-		MtSpokaneMapItems.other.forEach {
+		MtSpokaneMapItems.other!!.forEach {
+			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
+				return it
+			}
+		}
+
+		return null
+	}
+
+	override fun checkIfIOnChairlift(): MapItem? {
+
+		if (MtSpokaneMapItems.chairlifts == null || this.currentLocation == null) {
+			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
+			return null
+		}
+
+		val vDirection: VerticalDirection = this.getVerticalDirection()
+		if (vDirection == VerticalDirection.DOWN || vDirection == VerticalDirection.DOWN_CERTAIN) {
+
+			return null
+		}
+
+		if (this.altitudeConfidence < 1u || this.speedConfidence < 1u) {
+
+			return null
+		}
+
+		MtSpokaneMapItems.chairlifts!!.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
 				return it
 			}
@@ -77,12 +98,12 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 	override fun checkIfAtChairliftTerminals(): MapItem? {
 
-		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
-			Log.w("checkChairliftTerminals", "Map items are not set up")
+		if (MtSpokaneMapItems.chairliftTerminals == null || this.currentLocation == null) {
+			Log.w("checkChairliftTerminals", "Chairlift terminals have not been set up")
 			return null
 		}
 
-		MtSpokaneMapItems.chairliftTerminals.forEach {
+		MtSpokaneMapItems.chairliftTerminals!!.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
 				return it
 			}
@@ -93,13 +114,14 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 	override fun checkIfOnRun(): MapItem? {
 
-		if (!MtSpokaneMapItems.isSetup || this.currentLocation == null) {
-			Log.w("checkIfOnRun", "Map items are not set up")
+		if (MtSpokaneMapItems.easyRuns == null || MtSpokaneMapItems.moderateRuns == null ||
+			MtSpokaneMapItems.difficultRuns == null || this.currentLocation == null) {
+			Log.w("checkIfOnRun", "Ski runs have not been set up")
 			return null
 		}
 
-		arrayOf(MtSpokaneMapItems.easyRuns, MtSpokaneMapItems.moderateRuns,
-			MtSpokaneMapItems.difficultRuns).forEach { runDifficulty ->
+		arrayOf(MtSpokaneMapItems.easyRuns!!, MtSpokaneMapItems.moderateRuns!!,
+			MtSpokaneMapItems.difficultRuns!!).forEach { runDifficulty ->
 			runDifficulty.forEach {
 				if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
 					return it

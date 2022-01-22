@@ -252,20 +252,20 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 		return@coroutineScope hashMap
 	}
 
-	fun loadPolylinesAsync(jobDescription: String, @RawRes polylineResource: Int,
+	fun loadPolylinesHeadlessAsync(jobDescription: String, @RawRes polylineResource: Int,
 	                               @ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int): Deferred<Int> {
 		return this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-			val tag = "loadPolylinesAsync"
+			val tag = "loadPolylinesHeadless"
 			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
 			this@MapHandler.loadPolylines(polylineResource, color, zIndex, icon)
 			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
 		}
 	}
 
-	fun loadPolygonsAsync(jobDescription: String, @RawRes polygonResource: Int,
+	fun loadPolygonsHeadlessAsync(jobDescription: String, @RawRes polygonResource: Int,
 	                              @ColorRes color: Int, visible: Boolean = BuildConfig.DEBUG): Deferred<Int> {
 		return this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-			val tag = "loadPolygonsAsync"
+			val tag = "loadPolygonsHeadless"
 			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
 			this@MapHandler.loadPolygons(polygonResource, color, visible)
 			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")

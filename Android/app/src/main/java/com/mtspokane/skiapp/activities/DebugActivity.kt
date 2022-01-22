@@ -90,11 +90,12 @@ class DebugActivity : FragmentActivity() {
 		this.binding.altitudeConfidence.text = this.getString(R.string.altitude_confidence, InAppLocations.altitudeConfidence.toString())
 		this.binding.speedConfidence.text = this.getString(R.string.altitude_confidence, InAppLocations.speedConfidence.toString())
 		this.binding.verticalDirection.text = this.getString(R.string.vertical_direction, InAppLocations.getVerticalDirection().name)
+		/*
 		if (InAppLocations.mostLikelyChairlift != null) {
 			this.binding.chairlift.text = this.getString(R.string.most_likely_chairlift, InAppLocations.mostLikelyChairlift!!.name)
 		} else {
 			binding.chairlift.text = this.getString(R.string.most_likely_chairlift, "null")
-		}
+		}*/
 
 		if (InAppLocations.previousLocation == null) {
 			return

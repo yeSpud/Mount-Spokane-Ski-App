@@ -25,13 +25,16 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
+import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.InAppLocations
 import com.mtspokane.skiapp.skiingactivity.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.MapsActivity
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
+import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
 
@@ -63,7 +66,7 @@ class SkierLocationService : Service(), LocationListener {
 		this.locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		this.notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-		MtSpokaneMapItems.classesUsingObject.add(this::class)
+		MtSpokaneMapItems.checkoutObject(this::class)
 
 		SkiingActivityManager.resumeActivityTracking(this)
 
@@ -104,9 +107,10 @@ class SkierLocationService : Service(), LocationListener {
 
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
-			SkiingActivityManager.writeActivitiesToFile(this, SkiingActivityManager.InProgressActivities)
+			val filename: String = SkiingActivityManager.writeActivitiesToFile(this,
+				SkiingActivityManager.InProgressActivities)
 
-			val pendingIntent: PendingIntent = this.createPendingIntent()
+			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, filename)
 
 			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
 				true, R.string.activity_notification_text, pendingIntent)
@@ -121,12 +125,17 @@ class SkierLocationService : Service(), LocationListener {
 
 	override fun onLocationChanged(location: Location) {
 
+		if (MtSpokaneMapItems.skiAreaBounds == null) {
+			Log.w("SkierLocationService", "Ski bounds have not been set up!")
+			return
+		}
+
 		InAppLocations.updateLocations(location)
 
 		// If we are not on the mountain stop the tracking.
-		if (MtSpokaneMapItems.skiAreaBounds.points.isEmpty()) {
+		if (MtSpokaneMapItems.skiAreaBounds!!.points.isEmpty()) {
 			this.stopSelf()
-		} else if (!MtSpokaneMapItems.skiAreaBounds.locationInsidePoints(location)) {
+		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
 			this.stopSelf()
 		}
 
@@ -136,8 +145,9 @@ class SkierLocationService : Service(), LocationListener {
 			return
 		}
 
-		if (InAppLocations.altitudeConfidence >= 2u && InAppLocations.speedConfidence >= 1u && InAppLocations.mostLikelyChairlift != null) {
-			this.appendSkiingActivity(R.string.current_chairlift, InAppLocations.mostLikelyChairlift!!, location)
+		val chairlift: MapItem? = InAppLocations.checkIfIOnChairlift()
+		if (chairlift != null) {
+			this.appendSkiingActivity(R.string.current_chairlift, chairlift, location)
 			return
 		}
 
@@ -154,13 +164,13 @@ class SkierLocationService : Service(), LocationListener {
 		}
 
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(this.getString(R.string.app_name)) }
-		this.updateNotification(this.getString(R.string.tracking_notice), null)
+		this.updateTrackingNotification(this.getString(R.string.tracking_notice), null)
 	}
 
 	private fun appendSkiingActivity(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
 		val text: String = this.getString(textResource, mapItem.name)
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
-		this.updateNotification(text, mapItem.getIcon())
+		this.updateTrackingNotification(text, mapItem.getIcon())
 
 		SkiingActivityManager.InProgressActivities = Array(SkiingActivityManager.InProgressActivities.size + 1) {
 			if (SkiingActivityManager.InProgressActivities.size == it) {
@@ -171,7 +181,7 @@ class SkierLocationService : Service(), LocationListener {
 		}
 	}
 
-	private fun updateNotification(title: String, @DrawableRes icon: Int?) {
+	private fun updateTrackingNotification(title: String, @DrawableRes icon: Int?) {
 
 		val bitmap: Bitmap? = if (icon != null) {
 			drawableToBitmap(AppCompatResources.getDrawable(this, icon)!!)
@@ -184,9 +194,12 @@ class SkierLocationService : Service(), LocationListener {
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")
-	private fun createPendingIntent(): PendingIntent {
+	private fun createPendingIntent(activityToLaunch: KClass<out FragmentActivity>, filename: String?): PendingIntent {
 
-		val notificationIntent = Intent(this, MapsActivity::class.java)
+		val notificationIntent = Intent(this, activityToLaunch.java)
+		if (filename != null) {
+			notificationIntent.putExtra(ACTIVITY_SUMMARY_FILENAME, filename)
+		}
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
@@ -197,7 +210,7 @@ class SkierLocationService : Service(), LocationListener {
 
 	private fun createPersistentNotification(title: String, iconBitmap: Bitmap?): Notification {
 
-		val pendingIntent: PendingIntent = this.createPendingIntent()
+		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class, null)
 
 		val builder: NotificationCompat.Builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
 			false, R.string.tracking_notice, pendingIntent)
@@ -235,6 +248,8 @@ class SkierLocationService : Service(), LocationListener {
 		const val TRACKING_SERVICE_CHANNEL_ID = "skiAppTracker"
 
 		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
+
+		const val ACTIVITY_SUMMARY_FILENAME = "activitySummaryFilename"
 
 		@Deprecated("Sniffing for running services is discouraged.")
 		fun checkIfRunning(activity: MapsActivity): Boolean {

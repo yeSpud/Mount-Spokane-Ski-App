@@ -18,7 +18,7 @@ android {
         targetSdk 31
 
         def versionNameDate = new Date().format('yyyy.MM.dd:HH.mm')
-        versionCode 12
+        versionCode 13
         versionName "$versionNameDate"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

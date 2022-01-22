@@ -19,7 +19,7 @@
     <string name="tracking_notification_channel_name">Location Tracking</string>
     <string name="tracking_notice">Tracking your location</string>
     <string name="activity_summary_notification_channel_name">Activity Summary</string>
-    <string name="activity_notification_text">Tap here to launch the app and view your activity summary</string>
+    <string name="activity_notification_text">Tap here to view your activity summary</string>
 
     <!-- Menu text -->
     <string name="show_chairlifts">Show Chairlifts</string>
