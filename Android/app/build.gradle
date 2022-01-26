@@ -55,7 +55,10 @@ android {
         viewBinding true
     }
     compileSdkVersion 31
-    buildToolsVersion '31.0.0'
+    buildToolsVersion '32.0.0'
+    dependenciesInfo {
+        includeInBundle true
+    }
 }
 
 dependencies {
