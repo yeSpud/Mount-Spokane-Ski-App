@@ -8,20 +8,14 @@ import android.util.Log
 import androidx.core.content.FileProvider
 import com.mtspokane.skiapp.R
 import java.io.File
-import java.io.FileInputStream
 import java.io.OutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import org.json.JSONArray
 import org.json.JSONObject
 
 object SkiingActivityManager {
 
-	@Deprecated("Use database")
 	var InProgressActivities: Array<SkiingActivity> = emptyArray()
 
-	@Deprecated("Use database")
 	var FinishedAndLoadedActivities: Array<SkiingActivity>? = null
 
 	private const val ACCURACY = "acc"
@@ -33,84 +27,17 @@ object SkiingActivityManager {
 	private const val SPEED_ACCURACY = "speedacc"
 	private const val TIME = "time"
 
-	@Deprecated("Use database")
-	fun writeActivitiesToFile(context: Context, activities: Array<SkiingActivity>,
-	                          predefinedDate: String? = null): String {
-
-		val jsonArray = JSONArray()
-		activities.forEach {
-			val jsonEntry = JSONObject()
-			jsonEntry.put(this.ACCURACY, it.accuracy)
-			jsonEntry.put(this.ALTITUDE, it.altitude)
-			jsonEntry.put(this.ALTITUDE_ACCURACY, it.altitudeAccuracy)
-			jsonEntry.put(this.LATITUDE, it.latitude)
-			jsonEntry.put(this.LONGITUDE, it.longitude)
-			jsonEntry.put(this.SPEED, it.speed)
-			jsonEntry.put(this.SPEED_ACCURACY, it.speedAccuracy)
-			jsonEntry.put(this.TIME, it.time)
-			jsonArray.put(jsonEntry)
-		}
-
-		val jsonObject = JSONObject()
-
-		val filename = if (predefinedDate == null) {
-			val date: String = this.getTodaysDate()
-			jsonObject.put(date, jsonArray)
-			"$date.json"
-		} else {
-			jsonObject.put(predefinedDate, jsonArray)
-			"$predefinedDate.json"
-		}
-
-		context.openFileOutput(filename, Context.MODE_PRIVATE).use {
-			it.write(jsonObject.toString().toByteArray())
-		}
-
-		return filename
-	}
-
 	fun writeToExportFile(contentResolver: ContentResolver, uri: Uri, outText: String) {
 
 		val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
 		outputStream?.use { it.write(outText.toByteArray()) }
 	}
 
-
-	@Deprecated("Use database")
-	fun readJsonFromFile(context: Context, filename: String): JSONObject {
-
-		var json = JSONObject()
-		val fileInputStream: FileInputStream = context.openFileInput(filename)
-		fileInputStream.bufferedReader().useLines {
-
-			val string = it.fold("") { _, inText -> inText }
-
-			json = JSONObject(string)
-		}
-		fileInputStream.close()
-
-		return json
-	}
-
-	@Deprecated("Use database")
-	fun readSkiingActivitiesFromFile(context: Context, filename: String): Array<SkiingActivity> {
-
-		if (!context.fileList().contains(filename)) {
-			return emptyArray()
-		}
-
-		val json: JSONObject = this.readJsonFromFile(context, filename)
-
-		val jsonArray: JSONArray = json.getJSONArray(json.keys().next())
-
-		return this.jsonArrayToSkiingActivities(jsonArray)
-	}
-
 	fun jsonArrayToSkiingActivities(jsonArray: JSONArray): Array<SkiingActivity> {
 
 		val count = jsonArray.length()
 
-		val array = Array(count) {
+		val array: Array<SkiingActivity> = Array(count) {
 
 			val jsonObject: JSONObject = jsonArray.getJSONObject(it)
 
@@ -144,15 +71,45 @@ object SkiingActivityManager {
 
 	fun resumeActivityTracking(context: Context) {
 
-		val date: String = getTodaysDate()
-		val filename = "$date.json"
+		val date: String = TimeManager.getTodaysDate()
 
-		this.InProgressActivities = this.readSkiingActivitiesFromFile(context, filename)
+		val database = ActivityDatabase(context)
+
+		this.InProgressActivities = database.readSkiingActivesFromDatabase(date)
+
+		database.close()
 	}
 
-	fun getTodaysDate(): String {
-		val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-		return dateFormat.format(Date())
+	fun convertSkiingActivitiesToJson(skiingActivities: Array<SkiingActivity>): JSONObject {
+
+		if (skiingActivities.isEmpty()) {
+			val emptyObject = JSONObject()
+			val emptyJsonArray = JSONArray()
+			emptyObject.put(TimeManager.getTodaysDate(), emptyJsonArray)
+			return emptyObject
+		}
+
+		val date = TimeManager.getDateFromLong(skiingActivities[0].time)
+
+		val jsonArray = JSONArray()
+		skiingActivities.forEach {
+
+			val activityObject = JSONObject()
+			activityObject.put(this.ACCURACY, it.accuracy)
+			activityObject.put(this.ALTITUDE, it.altitude)
+			activityObject.put(this.ALTITUDE_ACCURACY, it.altitudeAccuracy)
+			activityObject.put(this.LATITUDE, it.latitude)
+			activityObject.put(this.LONGITUDE, it.longitude)
+			activityObject.put(this.SPEED, it.speed)
+			activityObject.put(this.SPEED_ACCURACY, it.speedAccuracy)
+			activityObject.put(this.TIME, it.time)
+
+			jsonArray.put(activityObject)
+		}
+
+		val jsonObject = JSONObject()
+		jsonObject.put(date, jsonArray)
+		return jsonObject
 	}
 
 	fun convertJsonToGeoJson(json: JSONObject): JSONObject {

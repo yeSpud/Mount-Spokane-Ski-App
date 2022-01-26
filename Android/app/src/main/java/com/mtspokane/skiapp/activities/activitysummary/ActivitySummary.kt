@@ -2,18 +2,17 @@ package com.mtspokane.skiapp.activities.activitysummary
 
 import android.app.AlertDialog
 import android.content.Context
-import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
-import android.provider.OpenableColumns
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
 import androidx.annotation.DrawableRes
@@ -28,6 +27,7 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.MapItem
@@ -35,12 +35,10 @@ import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
+import com.mtspokane.skiapp.databases.TimeManager
 import java.io.File
 import java.io.InputStream
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.LinkedList
-import java.util.Locale
 import java.util.Queue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -60,41 +58,30 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var creditDialog: AlertDialog
 
-	var loadedFile: String = "${SkiingActivityManager.getTodaysDate()}.json"
-
 	private var mostRecentlyAddedActivityView: ActivityView? = null
 
-	private val exportCallback = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
+	private val exportJsonCallback: ActivityResultLauncher<String> = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
 
 		if (it != null) {
 
-			val json: JSONObject = SkiingActivityManager.readJsonFromFile(this, this.loadedFile)
+			val json: JSONObject = this.getActivitySummaryJson()
 
-			val mimeType = this.contentResolver.getType(it)
-
-			val query: Cursor? = this.contentResolver.query(it, null, null, null, null)
-			val fileName: String? = query?.use { cursor: Cursor ->
-				cursor.moveToFirst()
-				val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-				cursor.getString(nameIndex)
-			}
-
-			if (fileName != null) {
-
-				if (mimeType == JSON_MIME_TYPE && fileName.endsWith(".json")) {
-					SkiingActivityManager.writeToExportFile(this.contentResolver, it, json.toString(4))
-				} else if ((mimeType == GEOJSON_MIME_TYPE || mimeType == "application/octet-stream")
-					&& fileName.endsWith(".geojson")) {
-					val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
-					SkiingActivityManager.writeToExportFile(this.contentResolver, it, geoJson.toString(4))
-				} else {
-					Log.w("exportCallback", "File type unaccounted for: $fileName:$mimeType")
-				}
-			}
+			SkiingActivityManager.writeToExportFile(this.contentResolver, it, json.toString(4))
 		}
 	}
 
-	private val importCallback = this.registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+	private val exportGeoJsonCallback: ActivityResultLauncher<String> = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
+
+		if (it != null) {
+
+			val json: JSONObject = this.getActivitySummaryJson()
+
+			val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
+			SkiingActivityManager.writeToExportFile(this.contentResolver, it, geoJson.toString(4))
+		}
+	}
+
+	private val importCallback: ActivityResultLauncher<Array<String>> = this.registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
 
 		if (uri == null) {
 			return@registerForActivityResult
@@ -114,12 +101,9 @@ class ActivitySummary : FragmentActivity() {
 		}
 		inputStream.close()
 
-		val jsonDate = json.keys().next()
-		val jsonArray = json.getJSONArray(jsonDate)
-
-		val skiingActivities: Array<SkiingActivity> = SkiingActivityManager.jsonArrayToSkiingActivities(jsonArray)
-
-		SkiingActivityManager.writeActivitiesToFile(this, skiingActivities, jsonDate)
+		val database = ActivityDatabase(this)
+		database.importJsonToDatabase(json)
+		database.close()
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -168,20 +152,15 @@ class ActivitySummary : FragmentActivity() {
 
 		when (item.itemId) {
 			R.id.open -> this.fileSelectionDialog.showDialog()
-			R.id.export_json -> this.exportCallback.launch(this.loadedFile)
-			R.id.export_geojson -> this.exportCallback.launch(this.loadedFile.replace("json", "geojson"))
+			R.id.export_json -> this.exportJsonCallback.launch("exported.json")
+			R.id.export_geojson -> this.exportGeoJsonCallback.launch("exported.geojson")
 			R.id.share_json -> {
-				val file = File(this.filesDir, this.loadedFile)
-				SkiingActivityManager.shareFile(this, file, JSON_MIME_TYPE)
-			}
-			R.id.share_geojson -> {
 
-				val json: JSONObject = SkiingActivityManager.readJsonFromFile(this, this.loadedFile)
-				val geojson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
+				val json: JSONObject = this.getActivitySummaryJson()
 
-				val tmpFileName = this.loadedFile.replace("json", "geojson")
+				val tmpFileName = "My Skiing Activity.json"
 				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use {
-					it.write(geojson.toString(4).toByteArray())
+					it.write(json.toString(4).toByteArray())
 				}
 
 				val tmpFile = File(this.filesDir, tmpFileName)
@@ -190,11 +169,36 @@ class ActivitySummary : FragmentActivity() {
 
 				tmpFile.delete()
 			}
+			R.id.share_geojson -> {
+
+				val json: JSONObject = this.getActivitySummaryJson()
+
+				val geojson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
+
+				val tmpFileName = "My Skiing Activity.geojson"
+				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use {
+					it.write(geojson.toString(4).toByteArray())
+				}
+
+				val tmpFile = File(this.filesDir, tmpFileName)
+
+				SkiingActivityManager.shareFile(this, tmpFile, GEOJSON_MIME_TYPE)
+
+				tmpFile.delete()
+			}
 			R.id.import_activity -> this.importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
 			R.id.credits -> this.creditDialog.show()
 		}
 
 		return super.onOptionsItemSelected(item)
+	}
+
+	private fun getActivitySummaryJson(): JSONObject {
+		return if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
+			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.FinishedAndLoadedActivities!!)
+		} else {
+			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.InProgressActivities)
+		}
 	}
 
 	override fun onDestroy() {
@@ -276,7 +280,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private suspend fun addToViewRecursively(queue: Queue<SkiingActivity>): Unit = coroutineScope {
+	private suspend fun addToViewRecursively(queue: Queue<SkiingActivity>): Unit = coroutineScope { // FIXME (Still adds Unknown locations and misses others)
 
 		val tag = "addToViewRecursively"
 
@@ -391,12 +395,6 @@ class ActivitySummary : FragmentActivity() {
 		return returnPair
 	}
 
-	private fun getTimeFromLong(time: Long): String {
-		val timeFormatter = SimpleDateFormat("h:mm:ss", Locale.US)
-		val date = Date(time)
-		return timeFormatter.format(date)
-	}
-
 	@MainThread
 	private fun createActivityView(@DrawableRes icon: Int?, titleText: String,
 	                               startTime: Long, endTime: Long?): ActivityView {
@@ -410,10 +408,10 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		activityView.title.text = titleText
-		activityView.startTime.text = this.getTimeFromLong(startTime)
+		activityView.startTime.text = TimeManager.getTimeFromLong(startTime)
 
 		if (endTime != null) {
-			activityView.endTime.text = this.getTimeFromLong(endTime)
+			activityView.endTime.text = TimeManager.getTimeFromLong(endTime)
 		}
 
 		return activityView
@@ -454,38 +452,59 @@ class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(a
 
 		val dialog: AlertDialog = alertDialogBuilder.create()
 
-		val files: Array<File> = this.context.filesDir.listFiles()!!
-		files.forEach { file ->
+		val dates: Array<String> = this.getTableDates()
+		dates.forEach { date: String ->
 
-			if (file.name.matches(fileRegex)) {
+			val textView = TextView(this.context)
+			textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.WRAP_CONTENT)
+			textView.text = date
+			textView.textSize = 25.0F
+			textView.setOnClickListener {
 
-				val textView = TextView(this.context)
-				textView.layoutParams = ViewGroup.LayoutParams(
-					ViewGroup.LayoutParams.MATCH_PARENT,
-					ViewGroup.LayoutParams.WRAP_CONTENT)
-				textView.text = file.name
-				textView.textSize = 25.0F
-				textView.setOnClickListener {
+				val database = ActivityDatabase(this.activity)
 
-					SkiingActivityManager.FinishedAndLoadedActivities = SkiingActivityManager.readSkiingActivitiesFromFile(this.context, file.name)
+				SkiingActivityManager.FinishedAndLoadedActivities = database.readSkiingActivesFromDatabase(date)
 
-					if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
-						this.activity.loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
-						this.activity.loadedFile = file.name
-					}
+				database.close()
 
-					dialog.dismiss()
+				if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
+					this.activity.loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
 				}
 
-				binding.files.addView(textView)
+				dialog.dismiss()
 			}
+
+			binding.files.addView(textView)
 		}
 
 		dialog.show()
 	}
 
-	companion object {
+	private fun getTableDates(): Array<String> {
 
-		val fileRegex: Regex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d.json")
+		val dates = mutableListOf<String>()
+
+		val database = ActivityDatabase(this.activity)
+		val result = database.readableDatabase.query("sqlite_master", arrayOf("name"), "type=?",
+			arrayOf("table"), null, null, "name ASC")
+
+		with(result) {
+
+			val nameColumn: Int = this.getColumnIndex("name")
+
+			while (this.moveToNext()) {
+				val date = this.getString(nameColumn)
+
+				// TODO Add date checker before adding
+
+				dates.add(date)
+			}
+
+		}
+		result.close()
+		database.close()
+
+		return dates.toTypedArray()
 	}
 }

@@ -33,7 +33,9 @@ import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.MapsActivity
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivityManager
+import com.mtspokane.skiapp.databases.TimeManager
 import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
@@ -107,10 +109,12 @@ class SkierLocationService : Service(), LocationListener {
 
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
-			val filename: String = SkiingActivityManager.writeActivitiesToFile(this,
-				SkiingActivityManager.InProgressActivities)
+			val database = ActivityDatabase(this)
+			database.writeSkiingActivitiesToDatabase(SkiingActivityManager.InProgressActivities)
+			database.close()
 
-			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, filename)
+			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class,
+				TimeManager.getTodaysDate())
 
 			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
 				true, R.string.activity_notification_text, pendingIntent)
@@ -194,11 +198,12 @@ class SkierLocationService : Service(), LocationListener {
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")
-	private fun createPendingIntent(activityToLaunch: KClass<out FragmentActivity>, filename: String?): PendingIntent {
+	private fun createPendingIntent(activityToLaunch: KClass<out FragmentActivity>, date: String?): PendingIntent {
 
 		val notificationIntent = Intent(this, activityToLaunch.java)
-		if (filename != null) {
-			notificationIntent.putExtra(ACTIVITY_SUMMARY_FILENAME, filename)
+		if (date != null && TimeManager.isValidDateFormat(date)) {
+
+			notificationIntent.putExtra(ACTIVITY_SUMMARY_LAUNCH_DATE, date)
 		}
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -249,7 +254,7 @@ class SkierLocationService : Service(), LocationListener {
 
 		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
 
-		const val ACTIVITY_SUMMARY_FILENAME = "activitySummaryFilename"
+		const val ACTIVITY_SUMMARY_LAUNCH_DATE = "activitySummaryLaunchDate"
 
 		@Deprecated("Sniffing for running services is discouraged.")
 		fun checkIfRunning(activity: MapsActivity): Boolean {
