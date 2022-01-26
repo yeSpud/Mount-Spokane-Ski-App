@@ -23,7 +23,7 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
-import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
+import com.mtspokane.skiapp.databases.SkiingActivityManager
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

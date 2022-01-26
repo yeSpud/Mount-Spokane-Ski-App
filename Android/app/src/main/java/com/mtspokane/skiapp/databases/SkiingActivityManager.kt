@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.skiingactivity
+package com.mtspokane.skiapp.databases
 
 import android.content.ContentResolver
 import android.content.Context
@@ -18,8 +18,10 @@ import org.json.JSONObject
 
 object SkiingActivityManager {
 
+	@Deprecated("Use database")
 	var InProgressActivities: Array<SkiingActivity> = emptyArray()
 
+	@Deprecated("Use database")
 	var FinishedAndLoadedActivities: Array<SkiingActivity>? = null
 
 	private const val ACCURACY = "acc"
@@ -31,6 +33,7 @@ object SkiingActivityManager {
 	private const val SPEED_ACCURACY = "speedacc"
 	private const val TIME = "time"
 
+	@Deprecated("Use database")
 	fun writeActivitiesToFile(context: Context, activities: Array<SkiingActivity>,
 	                          predefinedDate: String? = null): String {
 
@@ -51,7 +54,7 @@ object SkiingActivityManager {
 		val jsonObject = JSONObject()
 
 		val filename = if (predefinedDate == null) {
-			val date: String = this.getDate()
+			val date: String = this.getTodaysDate()
 			jsonObject.put(date, jsonArray)
 			"$date.json"
 		} else {
@@ -72,6 +75,8 @@ object SkiingActivityManager {
 		outputStream?.use { it.write(outText.toByteArray()) }
 	}
 
+
+	@Deprecated("Use database")
 	fun readJsonFromFile(context: Context, filename: String): JSONObject {
 
 		var json = JSONObject()
@@ -87,6 +92,7 @@ object SkiingActivityManager {
 		return json
 	}
 
+	@Deprecated("Use database")
 	fun readSkiingActivitiesFromFile(context: Context, filename: String): Array<SkiingActivity> {
 
 		if (!context.fileList().contains(filename)) {
@@ -138,13 +144,13 @@ object SkiingActivityManager {
 
 	fun resumeActivityTracking(context: Context) {
 
-		val date: String = getDate()
+		val date: String = getTodaysDate()
 		val filename = "$date.json"
 
 		this.InProgressActivities = this.readSkiingActivitiesFromFile(context, filename)
 	}
 
-	fun getDate(): String {
+	fun getTodaysDate(): String {
 		val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 		return dateFormat.format(Date())
 	}

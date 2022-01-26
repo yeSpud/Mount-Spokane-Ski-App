@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.skiingactivity
+package com.mtspokane.skiapp.databases
 
 import android.location.Location
 import android.os.Build

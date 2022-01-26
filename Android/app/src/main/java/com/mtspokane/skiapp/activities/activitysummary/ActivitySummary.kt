@@ -33,8 +33,8 @@ import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
-import com.mtspokane.skiapp.skiingactivity.SkiingActivity
-import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
+import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.databases.SkiingActivityManager
 import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
@@ -60,7 +60,7 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var creditDialog: AlertDialog
 
-	var loadedFile: String = "${SkiingActivityManager.getDate()}.json"
+	var loadedFile: String = "${SkiingActivityManager.getTodaysDate()}.json"
 
 	private var mostRecentlyAddedActivityView: ActivityView? = null
 
