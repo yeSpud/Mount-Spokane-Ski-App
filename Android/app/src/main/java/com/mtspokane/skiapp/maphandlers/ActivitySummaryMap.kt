@@ -21,9 +21,10 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
-import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
+import com.mtspokane.skiapp.databases.SkiingActivityManager
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -101,15 +102,16 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		}
 	}
 
-	private fun loadFromIntent(filename: String?) {
+	private fun loadFromIntent(date: String?) {
 
-		if (filename == null) {
+		if (date == null) {
 			return
 		}
 
-		SkiingActivityManager.FinishedAndLoadedActivities = SkiingActivityManager
-			.readSkiingActivitiesFromFile(this.activity, filename)
-		(this.activity as ActivitySummary).loadedFile = filename
+		val database = ActivityDatabase(this.activity)
+		SkiingActivityManager.FinishedAndLoadedActivities = ActivityDatabase
+			.readSkiingActivesFromDatabase(date, database.readableDatabase)
+		database.close()
 
 		val notificationManager: NotificationManager = this.activity.getSystemService(Context.NOTIFICATION_SERVICE)
 				as NotificationManager
@@ -207,9 +209,9 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 				loads.awaitAll()
 				withContext(Dispatchers.Main) {
 
-					if (this@ActivitySummaryMap.activity.intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_FILENAME)) {
+					if (this@ActivitySummaryMap.activity.intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
 						this@ActivitySummaryMap.loadFromIntent(this@ActivitySummaryMap.activity.intent
-							.getStringExtra(SkierLocationService.ACTIVITY_SUMMARY_FILENAME))
+							.getStringExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE))
 					}
 
 					if (SkiingActivityManager.FinishedAndLoadedActivities != null) {

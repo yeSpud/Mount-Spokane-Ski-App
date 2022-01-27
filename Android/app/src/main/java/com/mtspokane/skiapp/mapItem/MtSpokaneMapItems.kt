@@ -313,12 +313,14 @@ object MtSpokaneMapItems {
 	fun destroyUIItems(classUsingObject: KClass<out ContextWrapper>) {
 
 		this.classesUsingObject.remove(classUsingObject)
+
 		if (this.classesUsingObject.isNotEmpty()) {
 			return
 		}
 
 		this.skiAreaBounds?.destroyUIItems()
 
+		@Suppress("UNCHECKED_CAST")
 		val mapItems: Array<Array<UIMapItem>?> = arrayOf(this.other, this.chairliftTerminals,
 			this.chairlifts as Array<UIMapItem>?, this.easyRuns as Array<UIMapItem>?,
 			this.moderateRuns as Array<UIMapItem>?, this.difficultRuns as Array<UIMapItem>?)

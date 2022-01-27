@@ -197,16 +197,12 @@ class MapsActivity : FragmentActivity() {
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
-			// Check if the location service has already been started.
-			if (!SkierLocationService.checkIfRunning(this)) {
+			val serviceIntent = Intent(this, SkierLocationService::class.java)
 
-				val serviceIntent = Intent(this, SkierLocationService::class.java)
-
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-					this.startForegroundService(serviceIntent)
-				} else {
-					this.startService(serviceIntent)
-				}
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				this.startForegroundService(serviceIntent)
+			} else {
+				this.startService(serviceIntent)
 			}
 
 			// Add listener for map for a location change.

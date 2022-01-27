@@ -28,12 +28,14 @@ import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.InAppLocations
-import com.mtspokane.skiapp.skiingactivity.SkiingActivity
+import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.MapsActivity
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.skiingactivity.SkiingActivityManager
+import com.mtspokane.skiapp.databases.ActivityDatabase
+import com.mtspokane.skiapp.databases.SkiingActivityManager
+import com.mtspokane.skiapp.databases.TimeManager
 import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
@@ -46,7 +48,7 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
 
-		val notification: Notification = createPersistentNotification("", null)
+		val notification: Notification = this.createPersistentNotification("", null)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			this.startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
@@ -75,8 +77,8 @@ class SkierLocationService : Service(), LocationListener {
 		}
 
 		if (this.locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-				2F, this)
+			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000,
+				1F, this)
 		}
 	}
 
@@ -107,10 +109,13 @@ class SkierLocationService : Service(), LocationListener {
 
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
-			val filename: String = SkiingActivityManager.writeActivitiesToFile(this,
-				SkiingActivityManager.InProgressActivities)
+			val database = ActivityDatabase(this)
+			ActivityDatabase.writeSkiingActivitiesToDatabase(SkiingActivityManager.InProgressActivities,
+				database.writableDatabase)
+			database.close()
 
-			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class, filename)
+			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class,
+				TimeManager.getTodaysDate())
 
 			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
 				true, R.string.activity_notification_text, pendingIntent)
@@ -189,16 +194,17 @@ class SkierLocationService : Service(), LocationListener {
 			null
 		}
 
-		val notification: Notification = createPersistentNotification(title, bitmap)
+		val notification: Notification = this.createPersistentNotification(title, bitmap)
 		this.notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")
-	private fun createPendingIntent(activityToLaunch: KClass<out FragmentActivity>, filename: String?): PendingIntent {
+	private fun createPendingIntent(activityToLaunch: KClass<out FragmentActivity>, date: String?): PendingIntent {
 
 		val notificationIntent = Intent(this, activityToLaunch.java)
-		if (filename != null) {
-			notificationIntent.putExtra(ACTIVITY_SUMMARY_FILENAME, filename)
+		if (date != null && TimeManager.isValidDateFormat(date)) {
+
+			notificationIntent.putExtra(ACTIVITY_SUMMARY_LAUNCH_DATE, date)
 		}
 
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -249,20 +255,7 @@ class SkierLocationService : Service(), LocationListener {
 
 		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
 
-		const val ACTIVITY_SUMMARY_FILENAME = "activitySummaryFilename"
-
-		@Deprecated("Sniffing for running services is discouraged.")
-		fun checkIfRunning(activity: MapsActivity): Boolean {
-
-			val activityManager: ActivityManager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-			activityManager.getRunningServices(Int.MAX_VALUE).forEach {
-				if (it.service.className == SkierLocationService::class.java.name) {
-					return true
-				}
-			}
-
-			return false
-		}
+		const val ACTIVITY_SUMMARY_LAUNCH_DATE = "activitySummaryLaunchDate"
 
 		/**
 		 * @author https://studiofreya.com/2018/08/15/android-notification-large-icon-from-vector-xml/
