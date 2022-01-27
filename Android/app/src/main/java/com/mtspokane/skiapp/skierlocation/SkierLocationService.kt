@@ -48,7 +48,7 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
 
-		val notification: Notification = createPersistentNotification("", null)
+		val notification: Notification = this.createPersistentNotification("", null)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			this.startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
@@ -77,8 +77,8 @@ class SkierLocationService : Service(), LocationListener {
 		}
 
 		if (this.locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
-				2F, this)
+			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000,
+				1F, this)
 		}
 	}
 
@@ -194,7 +194,7 @@ class SkierLocationService : Service(), LocationListener {
 			null
 		}
 
-		val notification: Notification = createPersistentNotification(title, bitmap)
+		val notification: Notification = this.createPersistentNotification(title, bitmap)
 		this.notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
@@ -256,19 +256,6 @@ class SkierLocationService : Service(), LocationListener {
 		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
 
 		const val ACTIVITY_SUMMARY_LAUNCH_DATE = "activitySummaryLaunchDate"
-
-		@Deprecated("Sniffing for running services is discouraged.")
-		fun checkIfRunning(activity: MapsActivity): Boolean {
-
-			val activityManager: ActivityManager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-			activityManager.getRunningServices(Int.MAX_VALUE).forEach {
-				if (it.service.className == SkierLocationService::class.java.name) {
-					return true
-				}
-			}
-
-			return false
-		}
 
 		/**
 		 * @author https://studiofreya.com/2018/08/15/android-notification-large-icon-from-vector-xml/

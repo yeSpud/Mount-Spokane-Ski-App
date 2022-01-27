@@ -58,7 +58,7 @@
     <string name="close_button">Close</string>
 
     <!-- File selection -->
-    <string name="select_file">Select a file</string>
+    <string name="select_file">Select a date</string>
     <string name="cancel">Cancel</string>
 
     <!-- Debug view -->

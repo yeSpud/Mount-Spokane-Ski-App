@@ -39,7 +39,6 @@ import com.mtspokane.skiapp.databases.TimeManager
 import java.io.File
 import java.io.InputStream
 import java.util.LinkedList
-import java.util.Queue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -58,6 +57,7 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var creditDialog: AlertDialog
 
+	@Deprecated("Fix this")
 	private var mostRecentlyAddedActivityView: ActivityView? = null
 
 	private val exportJsonCallback: ActivityResultLauncher<String> = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
@@ -239,7 +239,7 @@ class ActivitySummary : FragmentActivity() {
 					return@async
 				}
 
-				val activityQueue: Queue<SkiingActivity> = LinkedList()
+				val activityQueue: LinkedList<SkiingActivity> = LinkedList()
 				activityQueue.addAll(activities)
 				this@ActivitySummary.addToViewRecursively(activityQueue)
 				this@ActivitySummary.mostRecentlyAddedActivityView = null
@@ -255,8 +255,8 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	@AnyThread
-	private suspend fun addCircleAndMarker(titleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>>,
-	                               skiingActivity: SkiingActivity): Unit = coroutineScope {
+	private suspend fun addCircleAndMarker(titleDrawableResourceMarkerIcon: ActivityItem,
+	                                       skiingActivity: SkiingActivity): Unit = coroutineScope {
 
 		if (this@ActivitySummary.mapHandler == null) {
 			return@coroutineScope
@@ -274,59 +274,80 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		withContext(Dispatchers.Main) {
-			this@ActivitySummary.mapHandler!!.addActivitySummaryLocationMarker(titleDrawableResourceMarkerIcon.first,
-				skiingActivity.latitude, skiingActivity.longitude, titleDrawableResourceMarkerIcon.second.first,
-				titleDrawableResourceMarkerIcon.second.second, snippetText)
+			this@ActivitySummary.mapHandler!!.addActivitySummaryLocationMarker(titleDrawableResourceMarkerIcon.name,
+				skiingActivity.latitude, skiingActivity.longitude, titleDrawableResourceMarkerIcon.drawableResource,
+				titleDrawableResourceMarkerIcon.markerIcon, snippetText)
 		}
 	}
 
-	private suspend fun addToViewRecursively(queue: Queue<SkiingActivity>): Unit = coroutineScope { // FIXME (Still adds Unknown locations and misses others)
+	private suspend fun addToViewRecursively(linkedList: LinkedList<SkiingActivity>): Unit = coroutineScope { // FIXME (Still adds Unknown locations and misses others)
 
 		val tag = "addToViewRecursively"
+		//Log.v(tag, "Starting size of queue: ${linkedList.size} items")
 
-		if (queue.isEmpty()) {
+		// If the list is empty then return now.
+		if (linkedList.isEmpty()) {
 			return@coroutineScope
 		}
 
-		val startingActivity: SkiingActivity = queue.remove()
+		// Get the starting activity from the list. Be sure it is removed.
+		val startingActivity: SkiingActivity = linkedList.removeFirst()
+
+		// Update the locations.
 		ActivitySummaryLocations.updateLocations(startingActivity)
-		val startingTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>> =
-			this@ActivitySummary.getTitleDrawableResourceMarkerIcon()
-		this@ActivitySummary.addCircleAndMarker(startingTitleDrawableResourceMarkerIcon, startingActivity)
-		Log.v(tag, "Starting with ${startingTitleDrawableResourceMarkerIcon.first}")
 
-		var endingActivity: SkiingActivity?
-		do {
+		// Get the starting activity item.
+		val startingActivityItem: ActivityItem = this@ActivitySummary.getActivityItem()
+		Log.v(tag, "Starting with ${startingActivityItem.name} (${linkedList.size} items left)")
 
-			endingActivity = queue.peek()
+		// Add the starting circle to the map.
+		this@ActivitySummary.addCircleAndMarker(startingActivityItem, startingActivity)
 
-			if (endingActivity == null) {
-				break
+		// If the starting location is unknown skip it.
+		if (startingActivityItem.name == UNKNOWN_LOCATION) {
+			this@ActivitySummary.addToViewRecursively(linkedList)
+			return@coroutineScope
+		}
+
+		// Get the ending activity, and continue to update it until the list is empty (or other... see below).
+		var endingActivity: SkiingActivity? = null
+		while(linkedList.isNotEmpty()) {
+
+			// Remove the now first item in the list as a potential ending activity.
+			val potentialEndingActivity: SkiingActivity = linkedList.first
+
+			// Update the locations.
+			ActivitySummaryLocations.updateLocations(potentialEndingActivity)
+
+			// Get the ending activity item.
+			val potentialEndingActivityItem: ActivityItem = this@ActivitySummary.getActivityItem()
+
+			// Add the circle to the map.
+			this@ActivitySummary.addCircleAndMarker(potentialEndingActivityItem, potentialEndingActivity)
+
+			// If the ending activity isn't unknown then check if it has matching names.
+			if (potentialEndingActivityItem.name != UNKNOWN_LOCATION) {
+
+				// If the names don't match exit the while loop.
+				if (startingActivityItem.name != potentialEndingActivityItem.name) {
+
+					Log.v(tag, "Next item should be ${potentialEndingActivityItem.name} (${linkedList.size} items left)")
+					break
+				}
 			}
 
-			ActivitySummaryLocations.updateLocations(endingActivity)
-			val endingTitleDrawableResourceMarkerIcon: Pair<String, Pair<Int, BitmapDescriptor>> =
-				this@ActivitySummary.getTitleDrawableResourceMarkerIcon()
-			this@ActivitySummary.addCircleAndMarker(endingTitleDrawableResourceMarkerIcon, endingActivity)
-
-			if ((startingTitleDrawableResourceMarkerIcon.first == endingTitleDrawableResourceMarkerIcon.first)
-				|| (endingTitleDrawableResourceMarkerIcon.first == UNKNOWN_LOCATION)) {
-					Log.v(tag, "Removing ${endingTitleDrawableResourceMarkerIcon.first} from queue")
-				queue.remove()
-			} else {
-				Log.v(tag, "Next item should be ${endingTitleDrawableResourceMarkerIcon.first}")
-				break
-			}
-
-		} while (queue.peek() != null)
+			// Otherwise continue looping and officially remove that first item from the list.
+			endingActivity = linkedList.removeFirst()
+		}
 
 		withContext(Dispatchers.Main) {
+
 			val view: ActivityView = if (endingActivity == null) {
-				this@ActivitySummary.createActivityView(startingTitleDrawableResourceMarkerIcon.second.first,
-					startingTitleDrawableResourceMarkerIcon.first, startingActivity.time, null)
+				this@ActivitySummary.createActivityView(startingActivityItem.drawableResource,
+					startingActivityItem.name, startingActivity.time, null)
 			} else {
-				this@ActivitySummary.createActivityView(startingTitleDrawableResourceMarkerIcon.second.first,
-					startingTitleDrawableResourceMarkerIcon.first, startingActivity.time, endingActivity.time)
+				this@ActivitySummary.createActivityView(startingActivityItem.drawableResource,
+					startingActivityItem.name, startingActivity.time, endingActivity.time)
 			}
 
 			if (this@ActivitySummary.mostRecentlyAddedActivityView != null) {
@@ -342,22 +363,23 @@ class ActivitySummary : FragmentActivity() {
 			}
 		}
 
-		this@ActivitySummary.addToViewRecursively(queue)
+		this@ActivitySummary.addToViewRecursively(linkedList)
 	}
 
-	private fun getTitleDrawableResourceMarkerIcon(): Pair<String, Pair<Int, BitmapDescriptor>> {
+
+	private fun getActivityItem(): ActivityItem {
 
 		val chairlift: MapItem? = ActivitySummaryLocations.checkIfIOnChairlift()
-		val returnPair: Pair<String, Pair<Int, BitmapDescriptor>> = if (chairlift != null) {
+		val returnPair: ActivityItem = if (chairlift != null) {
 
-			Pair(chairlift.name, Pair(R.drawable.ic_chairlift, BitmapDescriptorFactory
-				.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
+			ActivityItem(chairlift.name, R.drawable.ic_chairlift, BitmapDescriptorFactory
+				.defaultMarker(BitmapDescriptorFactory.HUE_RED))
 		} else {
 
 			val chairliftTerminal: MapItem? = ActivitySummaryLocations.checkIfAtChairliftTerminals()
 			if (chairliftTerminal != null) {
-				Pair(chairliftTerminal.name, Pair(R.drawable.ic_chairlift,
-					BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
+				ActivityItem(chairliftTerminal.name, R.drawable.ic_chairlift, BitmapDescriptorFactory
+					.defaultMarker(BitmapDescriptorFactory.HUE_RED))
 			} else {
 
 				val other: MapItem? = ActivitySummaryLocations.checkIfOnOther()
@@ -367,7 +389,7 @@ class ActivitySummary : FragmentActivity() {
 					} else {
 						R.drawable.ic_missing
 					}
-					Pair(other.name, Pair(icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
+					ActivityItem(other.name, icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
 				} else {
 
 					val run: MapItem? = ActivitySummaryLocations.checkIfOnRun()
@@ -383,10 +405,10 @@ class ActivitySummary : FragmentActivity() {
 							R.drawable.ic_difficult -> bitmapDescriptorFromVector(this, R.drawable.ic_black_marker)
 							else -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)
 						}
-						Pair(run.name, Pair(icon, markerIconColor))
+						ActivityItem(run.name, icon, markerIconColor)
 					} else {
-						Pair(UNKNOWN_LOCATION, Pair(R.drawable.ic_missing,
-							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)))
+						ActivityItem(UNKNOWN_LOCATION, R.drawable.ic_missing, BitmapDescriptorFactory
+							.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
 					}
 				}
 			}
@@ -439,6 +461,9 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 }
+
+private data class ActivityItem(val name: String, @DrawableRes val drawableResource: Int = R.drawable.ic_missing,
+                                val markerIcon: BitmapDescriptor)
 
 class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(activity) {
 
