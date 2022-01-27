@@ -280,10 +280,9 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private suspend fun addToViewRecursively(linkedList: LinkedList<SkiingActivity>): Unit = coroutineScope { // FIXME (Still adds Unknown locations and misses others)
+	private suspend fun addToViewRecursively(linkedList: LinkedList<SkiingActivity>): Unit = coroutineScope { // FIXME (still duplicated locations and misses others)
 
 		val tag = "addToViewRecursively"
-		//Log.v(tag, "Starting size of queue: ${linkedList.size} items")
 
 		// If the list is empty then return now.
 		if (linkedList.isEmpty()) {
