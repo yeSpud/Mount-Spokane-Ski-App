@@ -109,9 +109,8 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		}
 
 		val database = ActivityDatabase(this.activity)
-
-		SkiingActivityManager.FinishedAndLoadedActivities = database.readSkiingActivesFromDatabase(date)
-
+		SkiingActivityManager.FinishedAndLoadedActivities = ActivityDatabase
+			.readSkiingActivesFromDatabase(date, database.readableDatabase)
 		database.close()
 
 		val notificationManager: NotificationManager = this.activity.getSystemService(Context.NOTIFICATION_SERVICE)

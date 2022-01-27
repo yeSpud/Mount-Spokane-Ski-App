@@ -110,7 +110,8 @@ class SkierLocationService : Service(), LocationListener {
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
 			val database = ActivityDatabase(this)
-			database.writeSkiingActivitiesToDatabase(SkiingActivityManager.InProgressActivities)
+			ActivityDatabase.writeSkiingActivitiesToDatabase(SkiingActivityManager.InProgressActivities,
+				database.writableDatabase)
 			database.close()
 
 			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class,

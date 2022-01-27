@@ -74,9 +74,7 @@ object SkiingActivityManager {
 		val date: String = TimeManager.getTodaysDate()
 
 		val database = ActivityDatabase(context)
-
-		this.InProgressActivities = database.readSkiingActivesFromDatabase(date)
-
+		this.InProgressActivities = ActivityDatabase.readSkiingActivesFromDatabase(date, database.readableDatabase)
 		database.close()
 	}
 

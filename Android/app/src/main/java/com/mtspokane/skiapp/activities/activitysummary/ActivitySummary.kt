@@ -102,7 +102,7 @@ class ActivitySummary : FragmentActivity() {
 		inputStream.close()
 
 		val database = ActivityDatabase(this)
-		database.importJsonToDatabase(json)
+		ActivityDatabase.importJsonToDatabase(json, database.writableDatabase)
 		database.close()
 	}
 
@@ -452,7 +452,10 @@ class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(a
 
 		val dialog: AlertDialog = alertDialogBuilder.create()
 
-		val dates: Array<String> = this.getTableDates()
+		val db = ActivityDatabase(this.activity)
+		val dates: Array<String> = ActivityDatabase.getTables(db.readableDatabase)
+		db.close()
+
 		dates.forEach { date: String ->
 
 			val textView = TextView(this.context)
@@ -463,9 +466,8 @@ class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(a
 			textView.setOnClickListener {
 
 				val database = ActivityDatabase(this.activity)
-
-				SkiingActivityManager.FinishedAndLoadedActivities = database.readSkiingActivesFromDatabase(date)
-
+				SkiingActivityManager.FinishedAndLoadedActivities = ActivityDatabase
+					.readSkiingActivesFromDatabase(date, database.readableDatabase)
 				database.close()
 
 				if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
@@ -479,32 +481,5 @@ class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(a
 		}
 
 		dialog.show()
-	}
-
-	private fun getTableDates(): Array<String> {
-
-		val dates = mutableListOf<String>()
-
-		val database = ActivityDatabase(this.activity)
-		val result = database.readableDatabase.query("sqlite_master", arrayOf("name"),
-			"type=?", arrayOf("table"), null, null, "name ASC")
-
-		with(result) {
-
-			val nameColumn: Int = this.getColumnIndex("name")
-
-			while (this.moveToNext()) {
-				val date = this.getString(nameColumn)
-
-				if (TimeManager.isValidDateFormat(date)) {
-					dates.add(date)
-				}
-			}
-
-		}
-		result.close()
-		database.close()
-
-		return dates.toTypedArray()
 	}
 }
