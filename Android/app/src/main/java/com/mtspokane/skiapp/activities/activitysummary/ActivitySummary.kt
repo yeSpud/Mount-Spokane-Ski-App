@@ -486,8 +486,8 @@ class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(a
 		val dates = mutableListOf<String>()
 
 		val database = ActivityDatabase(this.activity)
-		val result = database.readableDatabase.query("sqlite_master", arrayOf("name"), "type=?",
-			arrayOf("table"), null, null, "name ASC")
+		val result = database.readableDatabase.query("sqlite_master", arrayOf("name"),
+			"type=?", arrayOf("table"), null, null, "name ASC")
 
 		with(result) {
 
@@ -496,9 +496,9 @@ class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(a
 			while (this.moveToNext()) {
 				val date = this.getString(nameColumn)
 
-				// TODO Add date checker before adding
-
-				dates.add(date)
+				if (TimeManager.isValidDateFormat(date)) {
+					dates.add(date)
+				}
 			}
 
 		}

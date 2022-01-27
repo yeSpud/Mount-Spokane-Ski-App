@@ -2,7 +2,7 @@ package com.mtspokane.skiapp.databases
 
 class ActivityDatabaseTable(private val tableName: String) {
 
-	val SQL_CREATE_ENTRIES: String = "CREATE TABLE ${this.tableName} (" +
+	val SQL_CREATE_ENTRIES: String = "CREATE TABLE '${this.tableName}'(" +
 			"$ACCURACY_COLUMN REAL NOT NULL," +
 			"$ALTITUDE_COLUMN REAL NOT NULL," +
 			"$ALTITUDE_ACCURACY_COLUMN REAL," +
