@@ -24,6 +24,7 @@ class ActivityDatabase(val context: Context): SQLiteOpenHelper(context, this.DAT
 				if (it.name.contains(Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))) {
 					val legacyJson: JSONObject = this.readJsonFromFile(it.name)
 					importJsonToDatabase(legacyJson, db)
+					it.delete()
 				}
 			}
 		} else {
@@ -149,8 +150,15 @@ class ActivityDatabase(val context: Context): SQLiteOpenHelper(context, this.DAT
 
 		fun readSkiingActivesFromDatabase(date: String, database: SQLiteDatabase): Array<SkiingActivity> {
 
-			if (TimeManager.isValidDateFormat(date)) {
-				Log.w("readActivesFromDatabase", "Invalid date: $date")
+			val tag = "readActivesFromDatabase"
+
+			if (!TimeManager.isValidDateFormat(date)) {
+				Log.w(tag, "Invalid date: $date")
+				return emptyArray()
+			}
+
+			if (!this.getTables(database).contains(date)) {
+				Log.i(tag, "No entry for $date")
 				return emptyArray()
 			}
 
@@ -160,7 +168,7 @@ class ActivityDatabase(val context: Context): SQLiteOpenHelper(context, this.DAT
 				ActivityDatabaseTable.SPEED_COLUMN, ActivityDatabaseTable.SPEED_ACCURACY_COLUMN,
 				ActivityDatabaseTable.TIME_COLUMN)
 
-			val result: Cursor = database.query(date, allColumns, null,
+			val result: Cursor = database.query("'$date'", allColumns, null,
 				null, null, null, "${ActivityDatabaseTable.TIME_COLUMN} ASC")
 
 			val skiingActivitiesList = mutableListOf<SkiingActivity>()
