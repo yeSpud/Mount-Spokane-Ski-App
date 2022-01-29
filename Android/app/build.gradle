@@ -92,9 +92,12 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0-native-mt'
 
-    // Room (database)
-    //implementation "androidx.room:room-runtime:2.4.1"
-    //annotationProcessor "androidx.room:room-compiler:2.4.1"
+    // Room (elevation database)
+    implementation "androidx.room:room-runtime:2.4.1"
+    annotationProcessor "androidx.room:room-compiler:2.4.1"
+
+    // Volley (elevation API)
+    implementation 'com.android.volley:volley:1.2.1'
 
     // Leak canary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8.1'
