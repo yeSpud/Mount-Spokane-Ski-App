@@ -22,12 +22,19 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.JsonRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databases.ActivityDatabase
+import com.mtspokane.skiapp.databases.ElevationDao
+import com.mtspokane.skiapp.databases.ElevationDatabase
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.MapItem
@@ -231,24 +238,68 @@ class ActivitySummary : FragmentActivity() {
 			this.mapHandler!!.locationMarkers = emptyArray()
 		}
 
+		val altitudeDatabase: ElevationDatabase = Room.databaseBuilder(this,
+			ElevationDatabase::class.java, ElevationDatabase.NAME).build()
+
+		val baseElevationDao: ElevationDao = altitudeDatabase.elevationDao()
+
+		// Get missing elevations
+		val missingPointsList: MutableList<Pair<Double, Double>> = mutableListOf()
+
 		lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
 
-			async(Dispatchers.IO, CoroutineStart.LAZY) {
+			activities.forEach {
+				val baseElevationAtPoint: Double? = baseElevationDao.getElevationAtLocation(it.latitude,
+					it.longitude)
 
-				if (activities.isEmpty()) {
-					return@async
+				if (baseElevationAtPoint == null) {
+
+					// Add to missing point list.
+					missingPointsList.add(Pair(it.latitude, it.longitude))
+				}
+			}
+
+			if (missingPointsList.isNotEmpty()) {
+
+				// TODO Try to add missing points to elevation database.
+				// https://api.open-elevation.com/api/v1/lookup?locations=lat,lng|lat,lng|...
+				var queryURL = "https://api.open-elevation.com/api/v1/lookup?locations="
+				missingPointsList.forEach {
+					queryURL += "${it.first},${it.second}|"
 				}
 
-				val activityQueue: LinkedList<SkiingActivity> = LinkedList()
-				activityQueue.addAll(activities)
-				this@ActivitySummary.addToViewRecursively(activityQueue)
-				this@ActivitySummary.mostRecentlyAddedActivityView = null
-			}.await()
+				val networkQueue = Volley.newRequestQueue(this@ActivitySummary)
 
-			if (this@ActivitySummary.mapHandler != null) {
-				withContext(Dispatchers.Main) {
-					this@ActivitySummary.mapHandler!!.addPolylineFromMarker()
-				}
+				val networkRequest: JsonRequest<JSONObject> = JsonObjectRequest(Request.Method.GET,
+					queryURL, null, {
+
+						// TODO
+
+						lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
+
+							async(Dispatchers.IO, CoroutineStart.LAZY) {
+
+								if (activities.isEmpty()) {
+									return@async
+								}
+
+								val activityQueue: LinkedList<SkiingActivity> = LinkedList()
+								activityQueue.addAll(activities)
+								this@ActivitySummary.addToViewRecursively(activityQueue)
+								this@ActivitySummary.mostRecentlyAddedActivityView = null
+							}.await()
+
+							if (this@ActivitySummary.mapHandler != null) {
+								withContext(Dispatchers.Main) {
+									this@ActivitySummary.mapHandler!!.addPolylineFromMarker()
+								}
+							}
+						}.start()
+					}, null
+				)
+
+				networkQueue.add(networkRequest)
+
 			}
 
 		}.start()

@@ -14,6 +14,6 @@ interface ElevationDao {
 	fun getAll(): List<Elevation>
 
 	@Query("SELECT elevation FROM Elevation WHERE latitude = :latitude AND longitude = :longitude")
-	fun getElevationAtLocation(latitude: Double, longitude: Double): Array<Double>
+	fun getElevationAtLocation(latitude: Double, longitude: Double): Double?
 
 }

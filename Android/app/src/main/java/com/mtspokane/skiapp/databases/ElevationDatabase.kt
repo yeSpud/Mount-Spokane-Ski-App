@@ -8,4 +8,7 @@ abstract class ElevationDatabase: RoomDatabase() {
 
 	abstract fun elevationDao(): ElevationDao
 
+	companion object {
+		const val NAME = "BaseElevation.db"
+	}
 }
