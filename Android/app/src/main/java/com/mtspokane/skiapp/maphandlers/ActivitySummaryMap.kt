@@ -286,7 +286,7 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, title: String, latitude: Do
 			strokeColor(color)
 			fillColor(color)
 			clickable(true)
-			radius(8.0)
+			radius(4.0)
 			zIndex(50.0F)
 			visible(true)
 		}
