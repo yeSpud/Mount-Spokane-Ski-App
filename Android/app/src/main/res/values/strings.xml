@@ -31,6 +31,8 @@
 
     <!-- Activity summary -->
     <string name="activity_summary_title">Activity Summary</string>
+    <string name="max_speed">Max Speed: %d mph</string>
+    <string name="average_speed">Average Speed: %d mph</string>
 
     <!-- Skiing activity layout -->
     <string name="icon_description">Location icon</string>

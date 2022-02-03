@@ -39,6 +39,7 @@ import com.mtspokane.skiapp.databases.TimeManager
 import java.io.File
 import java.io.InputStream
 import java.util.LinkedList
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -310,6 +311,9 @@ class ActivitySummary : FragmentActivity() {
 
 		// Get the ending activity, and continue to update it until the list is empty (or other... see below).
 		var endingActivity: SkiingActivity? = null
+		var maxSpeed = 0.0F
+		var speedSum = 0.0F
+		var sum = 0
 		while(linkedList.isNotEmpty()) {
 
 			// Remove the now first item in the list as a potential ending activity.
@@ -335,6 +339,13 @@ class ActivitySummary : FragmentActivity() {
 				}
 			}
 
+			if (potentialEndingActivity.speed > maxSpeed) {
+				maxSpeed = potentialEndingActivity.speed
+			}
+
+			speedSum += potentialEndingActivity.speed
+			sum++
+
 			// Otherwise continue looping and officially remove that first item from the list.
 			endingActivity = linkedList.removeFirst()
 		}
@@ -343,10 +354,12 @@ class ActivitySummary : FragmentActivity() {
 
 			val view: ActivityView = if (endingActivity == null) {
 				this@ActivitySummary.createActivityView(startingActivityItem.drawableResource,
-					startingActivityItem.name, startingActivity.time, null)
+					startingActivityItem.name, maxSpeed, speedSum / sum,
+					startingActivity.time, null)
 			} else {
 				this@ActivitySummary.createActivityView(startingActivityItem.drawableResource,
-					startingActivityItem.name, startingActivity.time, endingActivity.time)
+					startingActivityItem.name, maxSpeed, speedSum / sum,
+					startingActivity.time, endingActivity.time)
 			}
 
 			if (this@ActivitySummary.mostRecentlyAddedActivityView != null) {
@@ -417,8 +430,8 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	@MainThread
-	private fun createActivityView(@DrawableRes icon: Int?, titleText: String,
-	                               startTime: Long, endTime: Long?): ActivityView {
+	private fun createActivityView(@DrawableRes icon: Int?, titleText: String, maxSpeed: Float,
+	                               averageSpeed: Float, startTime: Long, endTime: Long?): ActivityView {
 
 		val activityView = ActivityView(this)
 
@@ -429,6 +442,24 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		activityView.title.text = titleText
+
+		// Convert from meters per second to miles per hour.
+		val conversion = 0.44704f
+
+		try {
+			activityView.maxSpeed.text = this.getString(R.string.max_speed, (maxSpeed / conversion)
+				.roundToInt())
+		} catch (e: IllegalArgumentException) {
+			activityView.maxSpeed.text = this.getString(R.string.max_speed, 0)
+		}
+
+		try {
+			activityView.averageSpeed.text = this.getString(R.string.average_speed,
+				(averageSpeed / conversion).roundToInt())
+		} catch (e: IllegalArgumentException) {
+			activityView.averageSpeed.text = this.getString(R.string.average_speed, 0)
+		}
+
 		activityView.startTime.text = TimeManager.getTimeFromLong(startTime)
 
 		if (endTime != null) {

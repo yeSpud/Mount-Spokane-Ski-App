@@ -11,11 +11,15 @@ class ActivityView : ConstraintLayout {
 
 	val icon: ImageView
 
+	val title: TextView
+
+	val maxSpeed: TextView
+
+	val averageSpeed: TextView
+
 	val startTime: TextView
 
 	val endTime: TextView
-
-	val title: TextView
 
 	constructor(context: Context): this(context, null)
 
@@ -27,8 +31,10 @@ class ActivityView : ConstraintLayout {
 		inflate(context, R.layout.activity_view, this)
 
 		this.icon = findViewById(R.id.icon)
+		this.title = findViewById(R.id.title_view)
+		this.maxSpeed = findViewById(R.id.max_speed)
+		this.averageSpeed = findViewById(R.id.average_speed)
 		this.startTime = findViewById(R.id.start_time)
 		this.endTime = findViewById(R.id.end_time)
-		this.title = findViewById(R.id.title_view)
 	}
 }
