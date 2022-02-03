@@ -27,7 +27,7 @@ import com.google.maps.android.ktx.addPolygon
 import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
 import com.mtspokane.skiapp.BuildConfig
-import com.mtspokane.skiapp.mapItem.VisibleUIMapItem
+import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import java.util.Locale
 import kotlin.Throws
 import kotlinx.coroutines.CoroutineStart
@@ -123,13 +123,13 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 	@AnyThread
 	@Throws(NullPointerException::class)
 	suspend fun loadPolylines(@RawRes fileRes: Int, @ColorRes color: Int, zIndex: Float,
-	                          @DrawableRes icon: Int? = null): List<VisibleUIMapItem> = coroutineScope {
+	                          @DrawableRes icon: Int? = null): List<PolylineMapItem> = coroutineScope {
 
 		if (this@MapHandler.map == null) {
 			throw NullPointerException("Map has not been setup yet!")
 		}
 
-		val hashMap: HashMap<String, VisibleUIMapItem> = HashMap()
+		val hashMap: HashMap<String, PolylineMapItem> = HashMap()
 
 		// Load the polyline from the file, and iterate though each placemark.
 		this@MapHandler.parseKmlFile(fileRes).forEach {
@@ -180,7 +180,7 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 				val night = polylineHasProperty(polylineProperties, "night run")
 
 				// Create a new map item for the polyline (since its not in the hashmap).
-				val mapItem = VisibleUIMapItem(name, MutableList(1) { polyline }, isNightRun = night, icon = icon)
+				val mapItem = PolylineMapItem(name, MutableList(1) { polyline }, isNightRun = night, icon = icon)
 
 				// Add the map item to the hashmap.
 				hashMap[name] = mapItem

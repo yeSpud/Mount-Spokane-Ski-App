@@ -1,6 +1,6 @@
 package com.mtspokane.skiapp.skierlocation
 
-import com.mtspokane.skiapp.mapItem.MapItem
+import com.mtspokane.skiapp.mapItem.MapMarker
 
 abstract class Locations<T> {
 
@@ -20,13 +20,13 @@ abstract class Locations<T> {
 
 	abstract fun getVerticalDirection(): VerticalDirection
 
-	abstract fun checkIfOnOther(): MapItem?
+	abstract fun checkIfOnOther(): MapMarker?
 
-	abstract fun checkIfIOnChairlift(): MapItem?
+	abstract fun checkIfIOnChairlift(): MapMarker?
 
-	abstract fun checkIfAtChairliftTerminals(): MapItem?
+	abstract fun checkIfAtChairliftTerminals(): MapMarker?
 
-	abstract fun checkIfOnRun(): MapItem?
+	abstract fun checkIfOnRun(): MapMarker?
 
 	abstract fun getSpeedConfidenceValue(): UShort
 

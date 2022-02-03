@@ -17,25 +17,25 @@ object MtSpokaneMapItems {
 
 	private val classesUsingObject: MutableList<KClass<out ContextWrapper>> = mutableListOf()
 
-	var skiAreaBounds: UIMapItem? = null
+	var skiAreaBounds: PolygonMapItem? = null
 	private set
 
-	var other: List<UIMapItem>? = null // Should be 9
+	var other: List<PolygonMapItem>? = null // Should be 9
 	private set
 
-	var chairliftTerminals: List<UIMapItem>? = null // Should be size 6
+	var chairliftTerminals: List<PolygonMapItem>? = null // Should be size 6
 	private set
 
-	var chairlifts: List<VisibleUIMapItem>? = null // Should be size 6
+	var chairlifts: List<PolylineMapItem>? = null // Should be size 6
 	private set
 
-	var easyRuns: List<VisibleUIMapItem>? = null // Should be size 22
+	var easyRuns: List<PolylineMapItem>? = null // Should be size 22
 	private set
 
-	var moderateRuns: List<VisibleUIMapItem>? = null // Should be size 19
+	var moderateRuns: List<PolylineMapItem>? = null // Should be size 19
 	private set
 
-	var difficultRuns: List<VisibleUIMapItem>? = null // Should be size 25
+	var difficultRuns: List<PolylineMapItem>? = null // Should be size 25
 	private set
 
 	fun checkoutObject(classUsingObject: KClass<out ContextWrapper>) {
@@ -71,13 +71,13 @@ object MtSpokaneMapItems {
 						boundsPoints.add(it.points)
 					}
 
-					this@MtSpokaneMapItems.skiAreaBounds = UIMapItem(skiAreaBoundsKeyName,
+					this@MtSpokaneMapItems.skiAreaBounds = PolygonMapItem(skiAreaBoundsKeyName,
 						bounds.toMutableList(), boundsPoints)
 					hashmap.remove(skiAreaBoundsKeyName)
 				}
 			}
 
-			val othersList: MutableList<UIMapItem> = mutableListOf()
+			val othersList: MutableList<PolygonMapItem> = mutableListOf()
 
 			hashmap.keys.forEach {
 
@@ -100,20 +100,20 @@ object MtSpokaneMapItems {
 				}
 
 				withContext(Dispatchers.Main) {
-					val uiMapItem: UIMapItem = if (uiMapItemPolygons != null) {
+					val polygonMapItem: PolygonMapItem = if (uiMapItemPolygons != null) {
 
 						val uiMapItemPoints: MutableList<List<LatLng>> = mutableListOf()
 						uiMapItemPolygons.forEach { p ->
 							uiMapItemPoints.add(p.points)
 						}
 
-						UIMapItem(it, uiMapItemPolygons.toMutableList(), uiMapItemPoints, icon)
+						PolygonMapItem(it, uiMapItemPolygons.toMutableList(), uiMapItemPoints, icon)
 					} else {
 						Log.w(tag, "No polygon for $it")
-						UIMapItem(it, mutableListOf(), mutableListOf(), icon)
+						PolygonMapItem(it, mutableListOf(), mutableListOf(), icon)
 					}
 
-					othersList.add(uiMapItem)
+					othersList.add(polygonMapItem)
 				}
 			}
 
@@ -136,7 +136,7 @@ object MtSpokaneMapItems {
 			val hashmap: HashMap<String, List<Polygon>> = mapHandler.loadPolygons(R.raw.lift_terminal_polygons,
 				R.color.chairlift_polygon)
 
-			val chairliftTerminalList: MutableList<UIMapItem> = mutableListOf()
+			val chairliftTerminalList: MutableList<PolygonMapItem> = mutableListOf()
 
 			hashmap.keys.forEach {
 
@@ -144,21 +144,21 @@ object MtSpokaneMapItems {
 
 				withContext(Dispatchers.Main) {
 
-					val uiMapItem: UIMapItem = if (polygonList != null) {
+					val polygonMapItem: PolygonMapItem = if (polygonList != null) {
 
 						val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
 						polygonList.forEach { p ->
 							polygonPoints.add(p.points)
 						}
 
-						UIMapItem(it, polygonList.toMutableList(), polygonPoints, R.drawable.ic_chairlift)
+						PolygonMapItem(it, polygonList.toMutableList(), polygonPoints, R.drawable.ic_chairlift)
 					} else {
 
 						Log.w(tag, "No polygon for $it")
-						UIMapItem(it, mutableListOf(), mutableListOf(), R.drawable.ic_chairlift)
+						PolygonMapItem(it, mutableListOf(), mutableListOf(), R.drawable.ic_chairlift)
 					}
 
-					chairliftTerminalList.add(uiMapItem)
+					chairliftTerminalList.add(polygonMapItem)
 				}
 			}
 
@@ -198,7 +198,7 @@ object MtSpokaneMapItems {
 
 			if (this@MtSpokaneMapItems.chairlifts != null) {
 
-				this@MtSpokaneMapItems.chairlifts!!.forEach { visibleMapItem: VisibleUIMapItem ->
+				this@MtSpokaneMapItems.chairlifts!!.forEach { visibleMapItem: PolylineMapItem ->
 
 					val polygons: List<Polygon>? = hashmap[visibleMapItem.name]
 					if (polygons != null) {
@@ -254,9 +254,9 @@ object MtSpokaneMapItems {
 
 			if (this@MtSpokaneMapItems.easyRuns != null) {
 
-				this@MtSpokaneMapItems.easyRuns!!.forEach { visibleUIMapItem: VisibleUIMapItem ->
+				this@MtSpokaneMapItems.easyRuns!!.forEach { polylineMapItem: PolylineMapItem ->
 
-					val polygons: List<Polygon>? = hashmap[visibleUIMapItem.name]
+					val polygons: List<Polygon>? = hashmap[polylineMapItem.name]
 					if (polygons != null) {
 
 						val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
@@ -267,8 +267,8 @@ object MtSpokaneMapItems {
 							}
 						}
 
-						visibleUIMapItem.polygons.addAll(polygons)
-						visibleUIMapItem.points.addAll(polygonPoints)
+						polylineMapItem.polygons.addAll(polygons)
+						polylineMapItem.points.addAll(polygonPoints)
 					}
 				}
 
@@ -310,9 +310,9 @@ object MtSpokaneMapItems {
 
 			if (this@MtSpokaneMapItems.moderateRuns != null) {
 
-				this@MtSpokaneMapItems.moderateRuns!!.forEach { visibleUIMapItem: VisibleUIMapItem ->
+				this@MtSpokaneMapItems.moderateRuns!!.forEach { polylineMapItem: PolylineMapItem ->
 
-					val polygons: List<Polygon>? = hashmap[visibleUIMapItem.name]
+					val polygons: List<Polygon>? = hashmap[polylineMapItem.name]
 					if (polygons != null) {
 
 						val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
@@ -323,8 +323,8 @@ object MtSpokaneMapItems {
 							}
 						}
 
-						visibleUIMapItem.polygons.addAll(polygons)
-						visibleUIMapItem.points.addAll(polygonPoints)
+						polylineMapItem.polygons.addAll(polygons)
+						polylineMapItem.points.addAll(polygonPoints)
 					}
 				}
 
@@ -365,9 +365,9 @@ object MtSpokaneMapItems {
 
 			if (this@MtSpokaneMapItems.difficultRuns != null) {
 
-				this@MtSpokaneMapItems.difficultRuns!!.forEach { visibleUIMapItem: VisibleUIMapItem ->
+				this@MtSpokaneMapItems.difficultRuns!!.forEach { polylineMapItem: PolylineMapItem ->
 
-					val polygons: List<Polygon>? = hashmap[visibleUIMapItem.name]
+					val polygons: List<Polygon>? = hashmap[polylineMapItem.name]
 					if (polygons != null) {
 
 						val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
@@ -378,8 +378,8 @@ object MtSpokaneMapItems {
 							}
 						}
 
-						visibleUIMapItem.polygons.addAll(polygons)
-						visibleUIMapItem.points.addAll(polygonPoints)
+						polylineMapItem.polygons.addAll(polygons)
+						polylineMapItem.points.addAll(polygonPoints)
 					}
 				}
 
@@ -401,7 +401,7 @@ object MtSpokaneMapItems {
 
 		this.skiAreaBounds?.destroyUIItems()
 
-		val mapItems: Array<List<UIMapItem>?> = arrayOf(this.other, this.chairliftTerminals,
+		val mapItems: Array<List<PolygonMapItem>?> = arrayOf(this.other, this.chairliftTerminals,
 			this.chairlifts, this.easyRuns, this.moderateRuns, this.difficultRuns)
 		mapItems.forEach { array ->
 			array?.forEach {

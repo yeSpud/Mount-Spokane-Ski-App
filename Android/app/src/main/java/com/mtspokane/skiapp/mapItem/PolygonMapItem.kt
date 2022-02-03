@@ -7,8 +7,8 @@ import com.google.android.gms.maps.model.Polygon
 import com.google.maps.android.PolyUtil
 import com.mtspokane.skiapp.databases.SkiingActivity
 
-open class UIMapItem(name: String, val polygons: MutableList<Polygon>, val points: MutableList<List<LatLng>>,
-                     @DrawableRes icon: Int? = null) : MapItem(name, icon) {
+open class PolygonMapItem(val name: String, val polygons: MutableList<Polygon>, val points: MutableList<List<LatLng>>,
+						  @DrawableRes val icon: Int? = null) {
 
 	open fun destroyUIItems() {
 		this.polygons.clear()

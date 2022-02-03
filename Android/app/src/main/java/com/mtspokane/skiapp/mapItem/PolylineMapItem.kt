@@ -3,8 +3,8 @@ package com.mtspokane.skiapp.mapItem
 import androidx.annotation.DrawableRes
 import com.google.android.gms.maps.model.Polyline
 
-class VisibleUIMapItem(name: String, val polylines: MutableList<Polyline>, @DrawableRes icon: Int? = null,
-	private val isNightRun: Boolean = false) : UIMapItem(name, mutableListOf(), mutableListOf(), icon = icon) {
+class PolylineMapItem(name: String, val polylines: MutableList<Polyline>, @DrawableRes icon: Int? = null,
+					  private val isNightRun: Boolean = false) : PolygonMapItem(name, mutableListOf(), mutableListOf(), icon = icon) {
 
 	var defaultVisibility = true
 		private set
