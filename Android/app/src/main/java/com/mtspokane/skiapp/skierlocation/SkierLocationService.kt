@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp.skierlocation
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -175,7 +174,7 @@ class SkierLocationService : Service(), LocationListener {
 	private fun appendSkiingActivity(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
 		val text: String = this.getString(textResource, mapItem.name)
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
-		this.updateTrackingNotification(text, mapItem.getIcon())
+		this.updateTrackingNotification(text, mapItem.icon)
 
 		SkiingActivityManager.InProgressActivities = Array(SkiingActivityManager.InProgressActivities.size + 1) {
 			if (SkiingActivityManager.InProgressActivities.size == it) {

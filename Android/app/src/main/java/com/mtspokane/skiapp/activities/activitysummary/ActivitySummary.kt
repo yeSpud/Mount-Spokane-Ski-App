@@ -379,6 +379,7 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 
+	@Deprecated("Inline this")
 	private fun getActivityItem(): ActivityItem {
 
 		val chairlift: MapItem? = ActivitySummaryLocations.checkIfIOnChairlift()
@@ -396,21 +397,13 @@ class ActivitySummary : FragmentActivity() {
 
 				val other: MapItem? = ActivitySummaryLocations.checkIfOnOther()
 				if (other != null) {
-					val icon: Int = if (other.getIcon() != null) {
-						other.getIcon()!!
-					} else {
-						R.drawable.ic_missing
-					}
+					val icon: Int = other.icon ?: R.drawable.ic_missing
 					ActivityItem(other.name, icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
 				} else {
 
 					val run: MapItem? = ActivitySummaryLocations.checkIfOnRun()
 					if (run != null) {
-						val icon: Int = if (run.getIcon() != null) {
-							run.getIcon()!!
-						} else {
-							R.drawable.ic_missing
-						}
+						val icon: Int = run.icon ?: R.drawable.ic_missing
 						val markerIconColor = when (icon) {
 							R.drawable.ic_easy -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
 							R.drawable.ic_moderate -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
@@ -492,6 +485,7 @@ class ActivitySummary : FragmentActivity() {
 	}
 }
 
+@Deprecated("Use more specific classes")
 private data class ActivityItem(val name: String, @DrawableRes val drawableResource: Int = R.drawable.ic_missing,
                                 val markerIcon: BitmapDescriptor)
 

@@ -123,8 +123,7 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 	@AnyThread
 	@Throws(NullPointerException::class)
 	suspend fun loadPolylines(@RawRes fileRes: Int, @ColorRes color: Int, zIndex: Float,
-	                          @DrawableRes icon: Int? = null):
-			Array<VisibleUIMapItem> = coroutineScope {
+	                          @DrawableRes icon: Int? = null): List<VisibleUIMapItem> = coroutineScope {
 
 		if (this@MapHandler.map == null) {
 			throw NullPointerException("Map has not been setup yet!")
@@ -181,7 +180,7 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 				val night = polylineHasProperty(polylineProperties, "night run")
 
 				// Create a new map item for the polyline (since its not in the hashmap).
-				val mapItem = VisibleUIMapItem(name, arrayOf(polyline), isNightRun = night, icon = icon)
+				val mapItem = VisibleUIMapItem(name, MutableList(1) { polyline }, isNightRun = night, icon = icon)
 
 				// Add the map item to the hashmap.
 				hashMap[name] = mapItem
@@ -189,23 +188,23 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 			} else {
 
 				// Add the polyline to the map item.
-				hashMap[name]!!.addAdditionalPolyLine(polyline)
+				hashMap[name]!!.polylines.add(polyline)
 			}
 		}
 
-		return@coroutineScope hashMap.values.toTypedArray()
+		return@coroutineScope hashMap.values.toList()
 	}
 
 	@AnyThread
 	@Throws(NullPointerException::class)
 	suspend fun loadPolygons(@RawRes fileRes: Int, @ColorRes color: Int, visible: Boolean = BuildConfig.DEBUG):
-			HashMap<String, Array<Polygon>> = coroutineScope {
+			HashMap<String, List<Polygon>> = coroutineScope {
 
 		if (this@MapHandler.map == null) {
 			throw NullPointerException("Map has not been setup yet!")
 		}
 
-		val hashMap: HashMap<String, Array<Polygon>> = HashMap()
+		val hashMap: HashMap<String, List<Polygon>> = HashMap()
 
 		// Load the polygons file.
 		this@MapHandler.parseKmlFile(fileRes).forEach { placemark ->
@@ -232,20 +231,12 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 			Log.d("loadPolygons", "Loading polygon for $name")
 
 			if (hashMap[name] == null) {
-				val array: Array<Polygon> = Array(1) { polygon }
-				hashMap[name] = array
+				hashMap[name] = List(1) { polygon }
 			} else {
-				val oldArray: Array<Polygon>? = hashMap[name]
-				if (oldArray != null) {
-					val largerArray: Array<Polygon> = Array(oldArray.size + 1) {
-						if (it == oldArray.size) {
-							polygon
-						} else {
-							oldArray[it]
-						}
-					}
-					hashMap[name] = largerArray
-				}
+
+				val list: MutableList<Polygon> = hashMap[name]!!.toMutableList()
+				list.add(polygon)
+				hashMap[name] = list.toList()
 			}
 		}
 

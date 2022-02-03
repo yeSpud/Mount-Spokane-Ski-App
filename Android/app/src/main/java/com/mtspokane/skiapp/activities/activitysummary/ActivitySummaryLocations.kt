@@ -61,7 +61,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		}
 
 		MtSpokaneMapItems.other!!.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return it
 			}
 		}
@@ -88,7 +88,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		}
 
 		MtSpokaneMapItems.chairlifts!!.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return it
 			}
 		}
@@ -104,7 +104,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		}
 
 		MtSpokaneMapItems.chairliftTerminals!!.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return it
 			}
 		}
@@ -123,7 +123,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		arrayOf(MtSpokaneMapItems.easyRuns!!, MtSpokaneMapItems.moderateRuns!!,
 			MtSpokaneMapItems.difficultRuns!!).forEach { runDifficulty ->
 			runDifficulty.forEach {
-				if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
+				if (it.locationInsidePoints(this.currentLocation!!)) {
 					return it
 				}
 			}

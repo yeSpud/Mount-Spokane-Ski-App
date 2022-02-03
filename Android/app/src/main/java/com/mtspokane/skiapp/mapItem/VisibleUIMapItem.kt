@@ -3,8 +3,8 @@ package com.mtspokane.skiapp.mapItem
 import androidx.annotation.DrawableRes
 import com.google.android.gms.maps.model.Polyline
 
-class VisibleUIMapItem(name: String, private var polyline: Array<Polyline>, @DrawableRes icon: Int? = null,
-	private val isNightRun: Boolean = false) : UIMapItem(name, icon = icon) {
+class VisibleUIMapItem(name: String, val polylines: MutableList<Polyline>, @DrawableRes icon: Int? = null,
+	private val isNightRun: Boolean = false) : UIMapItem(name, mutableListOf(), mutableListOf(), icon = icon) {
 
 	var defaultVisibility = true
 		private set
@@ -13,20 +13,7 @@ class VisibleUIMapItem(name: String, private var polyline: Array<Polyline>, @Dra
 
 	override fun destroyUIItems() {
 		super.destroyUIItems()
-		this.polyline = emptyArray()
-	}
-
-	fun addAdditionalPolyLine(polyline: Polyline) {
-
-		val array: Array<Polyline> = Array(this.polyline.size + 1) {
-			if (it == this.polyline.size) {
-				polyline
-			} else {
-				this.polyline[it]
-			}
-		}
-
-		this.polyline = array
+		this.polylines.clear()
 	}
 
 	/**
@@ -48,7 +35,7 @@ class VisibleUIMapItem(name: String, private var polyline: Array<Polyline>, @Dra
 	}
 
 	private fun updateVisibility() {
-		this.polyline.forEach {
+		this.polylines.forEach {
 			it.isVisible = this.defaultVisibility && (this.isNightRun >= this.nightOnlyVisibility)
 		}
 	}

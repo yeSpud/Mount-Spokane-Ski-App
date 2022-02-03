@@ -129,6 +129,7 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 				withContext(Dispatchers.Main) {
 					Log.v("onMapReady", "Checking location permissions...")
 					if (this@MainMap.activity.locationEnabled) {
+						Log.v("onMapReady", "Location tracking enabled")
 						this@MainMap.setupLocation()
 					} else {
 
