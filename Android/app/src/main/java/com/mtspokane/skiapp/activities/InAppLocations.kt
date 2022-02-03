@@ -148,20 +148,18 @@ object InAppLocations: Locations<Location>() {
 		val maxChairliftSpeed = 550.0F * 0.00508F
 
 		// 150 feet per minute to meters per second.
-		val minChairliftSpeed = 150.0F * 0.00508F
+		//val minChairliftSpeed = 150.0F * 0.00508F
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			if (this.currentLocation!!.speedAccuracyMetersPerSecond > 0.0F &&
 				this.previousLocation!!.speedAccuracyMetersPerSecond > 0.0F) {
-				if ((this.currentLocation!!.speed - this.currentLocation!!.speedAccuracyMetersPerSecond >=
-							minChairliftSpeed) && (this.currentLocation!!.speed +
-							this.currentLocation!!.speedAccuracyMetersPerSecond <= maxChairliftSpeed)) {
+				if (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracyMetersPerSecond <= maxChairliftSpeed) {
 					return 2u
 				}
 			}
 		}
 
-		return if (this.currentLocation!!.speed in minChairliftSpeed..maxChairliftSpeed) {
+		return if (this.currentLocation!!.speed <= maxChairliftSpeed) {
 			1u
 		} else {
 			0u

@@ -146,19 +146,17 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		val maxChairliftSpeed = 550.0F * 0.00508F
 
 		// 150 feet per minute to meters per second.
-		val minChairliftSpeed = 150.0F * 0.00508F
+		//val minChairliftSpeed = 150.0F * 0.00508F
 
 		if (this.currentLocation!!.speedAccuracy != null && this.previousLocation!!.speedAccuracy != null) {
 			if (this.currentLocation!!.speedAccuracy!! > 0.0F && this.previousLocation!!.speedAccuracy!! > 0.0F) {
-				if ((this.currentLocation!!.speed - this.currentLocation!!.speedAccuracy!!
-							>= minChairliftSpeed) && (this.currentLocation!!.speed +
-							this.currentLocation!!.speedAccuracy!! <= maxChairliftSpeed)) {
+				if (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracy!! <= maxChairliftSpeed) {
 					return 2u
 				}
 			}
 		}
 
-		return if (this.currentLocation!!.speed in minChairliftSpeed..maxChairliftSpeed) {
+		return if (this.currentLocation!!.speed <= maxChairliftSpeed) {
 			1u
 		} else {
 			0u
