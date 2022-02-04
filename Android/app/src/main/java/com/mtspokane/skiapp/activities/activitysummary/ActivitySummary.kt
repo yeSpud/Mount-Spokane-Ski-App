@@ -2,8 +2,7 @@ package com.mtspokane.skiapp.activities.activitysummary
 
 import android.app.AlertDialog
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -15,30 +14,28 @@ import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
-import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.content.ContextCompat
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
-import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
+import com.mtspokane.skiapp.mapItem.MapMarker
 import java.io.File
 import java.io.InputStream
 import java.util.LinkedList
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -255,8 +252,7 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	@AnyThread
-	private suspend fun addCircleAndMarker(titleDrawableResourceMarkerIcon: ActivityItem,
-	                                       skiingActivity: SkiingActivity): Unit = coroutineScope {
+	private suspend fun addMapMarkerToMap(mapMarker: MapMarker): Unit = coroutineScope {
 
 		if (this@ActivitySummary.mapHandler == null) {
 			return@coroutineScope
@@ -274,9 +270,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		withContext(Dispatchers.Main) {
-			this@ActivitySummary.mapHandler!!.addActivitySummaryLocationMarker(titleDrawableResourceMarkerIcon.name,
-				skiingActivity.latitude, skiingActivity.longitude, titleDrawableResourceMarkerIcon.drawableResource,
-				titleDrawableResourceMarkerIcon.markerIcon, snippetText)
+			this@ActivitySummary.mapHandler!!.addActivitySummaryLocationMarker(mapMarker, snippetText)
 		}
 	}
 
@@ -296,20 +290,23 @@ class ActivitySummary : FragmentActivity() {
 		ActivitySummaryLocations.updateLocations(startingActivity)
 
 		// Get the starting activity item.
-		val startingActivityItem: ActivityItem = this@ActivitySummary.getActivityItem()
-		Log.v(tag, "Starting with ${startingActivityItem.name} (${linkedList.size} items left)")
+		val startingMapMarker: MapMarker = this@ActivitySummary.getActivityItem()
+		Log.v(tag, "Starting with ${startingMapMarker.name} (${linkedList.size} items left)")
 
 		// Add the starting circle to the map.
-		this@ActivitySummary.addCircleAndMarker(startingActivityItem, startingActivity)
+		this@ActivitySummary.addMapMarkerToMap(startingMapMarker)
 
 		// If the starting location is unknown skip it.
-		if (startingActivityItem.name == UNKNOWN_LOCATION) {
+		if (startingMapMarker.name == UNKNOWN_LOCATION) {
 			this@ActivitySummary.addToViewRecursively(linkedList)
 			return@coroutineScope
 		}
 
 		// Get the ending activity, and continue to update it until the list is empty (or other... see below).
 		var endingActivity: SkiingActivity? = null
+		var maxSpeed = 0.0F
+		var speedSum = 0.0F
+		var sum = 0
 		while(linkedList.isNotEmpty()) {
 
 			// Remove the now first item in the list as a potential ending activity.
@@ -319,21 +316,28 @@ class ActivitySummary : FragmentActivity() {
 			ActivitySummaryLocations.updateLocations(potentialEndingActivity)
 
 			// Get the ending activity item.
-			val potentialEndingActivityItem: ActivityItem = this@ActivitySummary.getActivityItem()
+			val potentialEndingMapMarker: MapMarker = this@ActivitySummary.getActivityItem()
 
 			// Add the circle to the map.
-			this@ActivitySummary.addCircleAndMarker(potentialEndingActivityItem, potentialEndingActivity)
+			this@ActivitySummary.addMapMarkerToMap(potentialEndingMapMarker)
 
 			// If the ending activity isn't unknown then check if it has matching names.
-			if (potentialEndingActivityItem.name != UNKNOWN_LOCATION) {
+			if (potentialEndingMapMarker.name != UNKNOWN_LOCATION) {
 
 				// If the names don't match exit the while loop.
-				if (startingActivityItem.name != potentialEndingActivityItem.name) {
+				if (startingMapMarker.name != potentialEndingMapMarker.name) {
 
-					Log.v(tag, "Next item should be ${potentialEndingActivityItem.name} (${linkedList.size} items left)")
+					Log.v(tag, "Next item should be ${potentialEndingMapMarker.name} (${linkedList.size} items left)")
 					break
 				}
 			}
+
+			if (potentialEndingActivity.speed > maxSpeed) {
+				maxSpeed = potentialEndingActivity.speed
+			}
+
+			speedSum += potentialEndingActivity.speed
+			sum++
 
 			// Otherwise continue looping and officially remove that first item from the list.
 			endingActivity = linkedList.removeFirst()
@@ -342,11 +346,11 @@ class ActivitySummary : FragmentActivity() {
 		withContext(Dispatchers.Main) {
 
 			val view: ActivityView = if (endingActivity == null) {
-				this@ActivitySummary.createActivityView(startingActivityItem.drawableResource,
-					startingActivityItem.name, startingActivity.time, null)
+				this@ActivitySummary.createActivityView(startingMapMarker, maxSpeed,
+						speedSum / sum, null)
 			} else {
-				this@ActivitySummary.createActivityView(startingActivityItem.drawableResource,
-					startingActivityItem.name, startingActivity.time, endingActivity.time)
+				this@ActivitySummary.createActivityView(startingMapMarker, maxSpeed,
+						speedSum / sum, endingActivity.time)
 			}
 
 			if (this@ActivitySummary.mostRecentlyAddedActivityView != null) {
@@ -365,50 +369,26 @@ class ActivitySummary : FragmentActivity() {
 		this@ActivitySummary.addToViewRecursively(linkedList)
 	}
 
+	private fun getActivityItem(): MapMarker {
 
-	private fun getActivityItem(): ActivityItem {
-
-		val chairlift: MapItem? = ActivitySummaryLocations.checkIfIOnChairlift()
-		val returnPair: ActivityItem = if (chairlift != null) {
-
-			ActivityItem(chairlift.name, R.drawable.ic_chairlift, BitmapDescriptorFactory
-				.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+		val chairlift: MapMarker? = ActivitySummaryLocations.checkIfIOnChairlift()
+		val returnPair: MapMarker = if (chairlift != null) {
+			chairlift
 		} else {
 
-			val chairliftTerminal: MapItem? = ActivitySummaryLocations.checkIfAtChairliftTerminals()
+			val chairliftTerminal: MapMarker? = ActivitySummaryLocations.checkIfAtChairliftTerminals()
 			if (chairliftTerminal != null) {
-				ActivityItem(chairliftTerminal.name, R.drawable.ic_chairlift, BitmapDescriptorFactory
-					.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+				chairliftTerminal
 			} else {
 
-				val other: MapItem? = ActivitySummaryLocations.checkIfOnOther()
+				val other: MapMarker? = ActivitySummaryLocations.checkIfOnOther()
 				if (other != null) {
-					val icon: Int = if (other.getIcon() != null) {
-						other.getIcon()!!
-					} else {
-						R.drawable.ic_missing
-					}
-					ActivityItem(other.name, icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+					other
 				} else {
 
-					val run: MapItem? = ActivitySummaryLocations.checkIfOnRun()
-					if (run != null) {
-						val icon: Int = if (run.getIcon() != null) {
-							run.getIcon()!!
-						} else {
-							R.drawable.ic_missing
-						}
-						val markerIconColor = when (icon) {
-							R.drawable.ic_easy -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-							R.drawable.ic_moderate -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
-							R.drawable.ic_difficult -> bitmapDescriptorFromVector(this, R.drawable.ic_black_marker)
-							else -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)
-						}
-						ActivityItem(run.name, icon, markerIconColor)
-					} else {
-						ActivityItem(UNKNOWN_LOCATION, R.drawable.ic_missing, BitmapDescriptorFactory
-							.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
-					}
+					val run: MapMarker? = ActivitySummaryLocations.checkIfOnRun()
+					run ?: MapMarker(UNKNOWN_LOCATION, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_missing, BitmapDescriptorFactory
+									.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
 				}
 			}
 		}
@@ -417,19 +397,33 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	@MainThread
-	private fun createActivityView(@DrawableRes icon: Int?, titleText: String,
-	                               startTime: Long, endTime: Long?): ActivityView {
+	private fun createActivityView(mapMarker: MapMarker, maxSpeed: Float, averageSpeed: Float,
+								   endTime: Long?): ActivityView {
 
 		val activityView = ActivityView(this)
 
-		if (icon != null) {
-			activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, icon))
-		} else {
-			activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_missing))
+		activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, mapMarker.icon))
+
+		activityView.title.text = mapMarker.name
+
+		// Convert from meters per second to miles per hour.
+		val conversion = 0.44704f
+
+		try {
+			activityView.maxSpeed.text = this.getString(R.string.max_speed, (maxSpeed / conversion)
+				.roundToInt())
+		} catch (e: IllegalArgumentException) {
+			activityView.maxSpeed.text = this.getString(R.string.max_speed, 0)
 		}
 
-		activityView.title.text = titleText
-		activityView.startTime.text = TimeManager.getTimeFromLong(startTime)
+		try {
+			activityView.averageSpeed.text = this.getString(R.string.average_speed,
+				(averageSpeed / conversion).roundToInt())
+		} catch (e: IllegalArgumentException) {
+			activityView.averageSpeed.text = this.getString(R.string.average_speed, 0)
+		}
+
+		activityView.startTime.text = TimeManager.getTimeFromLong(mapMarker.skiingActivity.time)
 
 		if (endTime != null) {
 			activityView.endTime.text = TimeManager.getTimeFromLong(endTime)
@@ -445,24 +439,8 @@ class ActivitySummary : FragmentActivity() {
 		const val GEOJSON_MIME_TYPE = "application/geojson"
 
 		private const val UNKNOWN_LOCATION = "Unknown Location"
-
-		/**
-		 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994
-		 */
-		private fun bitmapDescriptorFromVector(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
-			val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)
-			vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
-			val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight,
-				Bitmap.Config.ARGB_8888)
-			val canvas = Canvas(bitmap)
-			vectorDrawable.draw(canvas)
-			return BitmapDescriptorFactory.fromBitmap(bitmap)
-		}
 	}
 }
-
-private data class ActivityItem(val name: String, @DrawableRes val drawableResource: Int = R.drawable.ic_missing,
-                                val markerIcon: BitmapDescriptor)
 
 class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(activity) {
 

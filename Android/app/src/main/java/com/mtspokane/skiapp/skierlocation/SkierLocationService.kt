@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp.skierlocation
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -29,13 +28,13 @@ import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.InAppLocations
 import com.mtspokane.skiapp.databases.SkiingActivity
-import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.MapsActivity
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
+import com.mtspokane.skiapp.mapItem.MapMarker
 import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
@@ -150,7 +149,7 @@ class SkierLocationService : Service(), LocationListener {
 			return
 		}
 
-		val chairlift: MapItem? = InAppLocations.checkIfIOnChairlift()
+		val chairlift: MapMarker? = InAppLocations.checkIfIOnChairlift()
 		if (chairlift != null) {
 			this.appendSkiingActivity(R.string.current_chairlift, chairlift, location)
 			return
@@ -172,10 +171,10 @@ class SkierLocationService : Service(), LocationListener {
 		this.updateTrackingNotification(this.getString(R.string.tracking_notice), null)
 	}
 
-	private fun appendSkiingActivity(@StringRes textResource: Int, mapItem: MapItem, location: Location) {
-		val text: String = this.getString(textResource, mapItem.name)
+	private fun appendSkiingActivity(@StringRes textResource: Int, mapMarker: MapMarker, location: Location) {
+		val text: String = this.getString(textResource, mapMarker.name)
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
-		this.updateTrackingNotification(text, mapItem.getIcon())
+		this.updateTrackingNotification(text, mapMarker.icon)
 
 		SkiingActivityManager.InProgressActivities = Array(SkiingActivityManager.InProgressActivities.size + 1) {
 			if (SkiingActivityManager.InProgressActivities.size == it) {

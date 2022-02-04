@@ -1,10 +1,19 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.util.Log
-import com.mtspokane.skiapp.mapItem.MapItem
+import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.skierlocation.Locations
 import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.mapItem.MapMarker
 
 object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
@@ -53,7 +62,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		}
 	}
 
-	override fun checkIfOnOther(): MapItem? {
+	override fun checkIfOnOther(): MapMarker? {
 
 		if (MtSpokaneMapItems.other == null || this.currentLocation == null) {
 			Log.w("checkIfOnOther", "Other map items have not been set up")
@@ -61,15 +70,26 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		}
 
 		MtSpokaneMapItems.other!!.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
-				return it
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+
+				when (it.icon) {
+					R.drawable.ic_parking -> MapMarker(it.name, this.currentLocation!!, it.icon,
+							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+							Color.GRAY)
+					R.drawable.ic_ski_patrol_icon -> MapMarker(it.name, this.currentLocation!!, it.icon,
+							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+							Color.WHITE)
+					else -> MapMarker(it.name, this.currentLocation!!, it.icon ?: R.drawable.ic_missing,
+							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+							Color.MAGENTA)
+				}
 			}
 		}
 
 		return null
 	}
 
-	override fun checkIfIOnChairlift(): MapItem? {
+	override fun checkIfIOnChairlift(): MapMarker? {
 
 		if (MtSpokaneMapItems.chairlifts == null || this.currentLocation == null) {
 			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
@@ -88,15 +108,16 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		}
 
 		MtSpokaneMapItems.chairlifts!!.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
-				return it
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_chairlift,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 			}
 		}
 
 		return null
 	}
 
-	override fun checkIfAtChairliftTerminals(): MapItem? {
+	override fun checkIfAtChairliftTerminals(): MapMarker? {
 
 		if (MtSpokaneMapItems.chairliftTerminals == null || this.currentLocation == null) {
 			Log.w("checkChairliftTerminals", "Chairlift terminals have not been set up")
@@ -104,15 +125,16 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		}
 
 		MtSpokaneMapItems.chairliftTerminals!!.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
-				return it
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_chairlift,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 			}
 		}
 
 		return null
 	}
 
-	override fun checkIfOnRun(): MapItem? {
+	override fun checkIfOnRun(): MapMarker? {
 
 		if (MtSpokaneMapItems.easyRuns == null || MtSpokaneMapItems.moderateRuns == null ||
 			MtSpokaneMapItems.difficultRuns == null || this.currentLocation == null) {
@@ -120,12 +142,27 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 			return null
 		}
 
-		arrayOf(MtSpokaneMapItems.easyRuns!!, MtSpokaneMapItems.moderateRuns!!,
-			MtSpokaneMapItems.difficultRuns!!).forEach { runDifficulty ->
-			runDifficulty.forEach {
-				if (it.locationInsidePoints(this.currentLocation!!.latitude, this.currentLocation!!.longitude)) {
-					return it
-				}
+		MtSpokaneMapItems.easyRuns!!.forEach {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_easy,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
+						Color.GREEN)
+			}
+		}
+
+		MtSpokaneMapItems.moderateRuns!!.forEach {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_moderate,
+				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE), Color.BLUE)
+			}
+		}
+
+		MtSpokaneMapItems.difficultRuns!!.forEach {
+			if (it.locationInsidePoints(this.currentLocation!!)) {
+				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_difficult,
+						/*this.bitmapDescriptorFromVector(context, R.drawable.ic_black_marker)*/
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
+						Color.BLACK)
 			}
 		}
 
@@ -146,22 +183,33 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		val maxChairliftSpeed = 550.0F * 0.00508F
 
 		// 150 feet per minute to meters per second.
-		val minChairliftSpeed = 150.0F * 0.00508F
+		//val minChairliftSpeed = 150.0F * 0.00508F
 
 		if (this.currentLocation!!.speedAccuracy != null && this.previousLocation!!.speedAccuracy != null) {
 			if (this.currentLocation!!.speedAccuracy!! > 0.0F && this.previousLocation!!.speedAccuracy!! > 0.0F) {
-				if ((this.currentLocation!!.speed - this.currentLocation!!.speedAccuracy!!
-							>= minChairliftSpeed) && (this.currentLocation!!.speed +
-							this.currentLocation!!.speedAccuracy!! <= maxChairliftSpeed)) {
+				if (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracy!! <= maxChairliftSpeed) {
 					return 2u
 				}
 			}
 		}
 
-		return if (this.currentLocation!!.speed in minChairliftSpeed..maxChairliftSpeed) {
+		return if (this.currentLocation!!.speed <= maxChairliftSpeed) {
 			1u
 		} else {
 			0u
 		}
+	}
+
+	/**
+	 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994
+	 */
+	private fun bitmapDescriptorFromVector(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
+		val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)
+		vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
+		val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight,
+				Bitmap.Config.ARGB_8888)
+		val canvas = Canvas(bitmap)
+		vectorDrawable.draw(canvas)
+		return BitmapDescriptorFactory.fromBitmap(bitmap)
 	}
 }

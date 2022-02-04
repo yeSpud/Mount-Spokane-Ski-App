@@ -2,14 +2,11 @@ package com.mtspokane.skiapp.maphandlers
 
 import android.app.NotificationManager
 import android.content.Context
-import android.graphics.Color
 import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
 import androidx.annotation.UiThread
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.LatLng
@@ -25,6 +22,7 @@ import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import com.mtspokane.skiapp.databases.SkiingActivityManager
+import com.mtspokane.skiapp.mapItem.MapMarker
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -58,17 +56,14 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		super.destroy()
 	}
 
-	fun addActivitySummaryLocationMarker(title: String, latitude: Double, longitude: Double,
-	                                     @DrawableRes drawableResource: Int, icon: BitmapDescriptor,
-	                                     debugSnippetText: String?) {
+	fun addActivitySummaryLocationMarker(mapMarker: MapMarker, debugSnippetText: String?) {
 
 		if (this.map != null) {
 
 			this.locationMarkers = Array(this.locationMarkers.size + 1) {
 
 				if (it == this.locationMarkers.size) {
-					ActivitySummaryLocationMarkers(this.map!!, title, latitude, longitude,
-						drawableResource, icon, debugSnippetText)
+					ActivitySummaryLocationMarkers(this.map!!, mapMarker, debugSnippetText)
 				} else {
 					this.locationMarkers[it]
 				}
@@ -244,9 +239,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 }
 
 @UiThread
-class ActivitySummaryLocationMarkers(map: GoogleMap, title: String, latitude: Double, longitude: Double,
-                                     @DrawableRes drawableResource: Int, icon: BitmapDescriptor,
-                                     debugSnippetText: String?) {
+class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debugSnippetText: String?) {
 
 	var marker: Marker? = null
 	private set
@@ -269,38 +262,28 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, title: String, latitude: Do
 
 	init {
 
-		val location = LatLng(latitude, longitude)
-
-		val color: Int = when (drawableResource) {
-			R.drawable.ic_easy -> Color.GREEN
-			R.drawable.ic_moderate -> Color.BLUE
-			R.drawable.ic_difficult -> Color.BLACK
-			R.drawable.ic_chairlift -> Color.RED
-			R.drawable.ic_parking -> Color.GRAY
-			R.drawable.ic_ski_patrol_icon -> Color.WHITE
-			else -> Color.MAGENTA
-		}
+		val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
 
 		this.circle = map.addCircle {
 			center(location)
-			strokeColor(color)
-			fillColor(color)
+			strokeColor(mapMarker.circleColor)
+			fillColor(mapMarker.circleColor)
 			clickable(true)
-			radius(8.0)
+			radius(3.0)
 			zIndex(50.0F)
 			visible(true)
 		}
 
 		this.marker = map.addMarker {
 			position(location)
-			icon(icon)
-			title(title)
+			icon(mapMarker.markerColor)
+			title(mapMarker.name)
 			zIndex(99.0F)
 			visible(false)
 		}
 
 		if (debugSnippetText != null) {
-			this.marker!!.snippet = debugSnippetText
+			this.marker!!.snippet = debugSnippetText // TODO Add speed and altitude
 		}
 
 		this.circle!!.tag = this
