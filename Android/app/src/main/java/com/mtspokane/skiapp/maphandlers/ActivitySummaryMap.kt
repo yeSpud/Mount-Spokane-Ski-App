@@ -264,31 +264,20 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debug
 
 		val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
 
-		/*
-		val color: Int = when (drawableResource) {
-			R.drawable.ic_easy -> Color.GREEN
-			R.drawable.ic_moderate -> Color.BLUE
-			R.drawable.ic_difficult -> Color.BLACK
-			R.drawable.ic_chairlift -> Color.RED
-			R.drawable.ic_parking -> Color.GRAY
-			R.drawable.ic_ski_patrol_icon -> Color.WHITE
-			else -> Color.MAGENTA
-		}*/
-
 		this.circle = map.addCircle {
 			center(location)
 			strokeColor(mapMarker.circleColor)
 			fillColor(mapMarker.circleColor)
 			clickable(true)
-			radius(4.0)
+			radius(3.0)
 			zIndex(50.0F)
 			visible(true)
 		}
 
 		this.marker = map.addMarker {
 			position(location)
-			icon(icon)
-			title(title)
+			icon(mapMarker.markerColor)
+			title(mapMarker.name)
 			zIndex(99.0F)
 			visible(false)
 		}

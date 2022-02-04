@@ -369,8 +369,6 @@ class ActivitySummary : FragmentActivity() {
 		this@ActivitySummary.addToViewRecursively(linkedList)
 	}
 
-
-	@Deprecated("Inline this")
 	private fun getActivityItem(): MapMarker {
 
 		val chairlift: MapMarker? = ActivitySummaryLocations.checkIfIOnChairlift()
