@@ -87,7 +87,7 @@ object MtSpokaneMapItems {
 					"Lodge 1" -> R.drawable.ic_lodge
 					"Lodge 2" -> R.drawable.ic_lodge
 					"Yurt" -> R.drawable.ic_yurt
-					"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
+					"Vista House" -> R.drawable.ic_vista_house
 					"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
 					"Lodge 1 Parking Lot" -> R.drawable.ic_parking
 					"Lodge 2 Parking Lot" -> R.drawable.ic_parking
