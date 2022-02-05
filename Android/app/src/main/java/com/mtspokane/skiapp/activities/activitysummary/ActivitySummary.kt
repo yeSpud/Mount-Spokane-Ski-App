@@ -52,8 +52,6 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var fileSelectionDialog: FileSelectionDialog
 
-	private lateinit var creditDialog: AlertDialog
-
 	@Deprecated("Fix this")
 	private var mostRecentlyAddedActivityView: ActivityView? = null
 
@@ -112,11 +110,6 @@ class ActivitySummary : FragmentActivity() {
 		this.container = binding.container
 
 		this.fileSelectionDialog = FileSelectionDialog(this)
-
-		val creditDialogBuilder = AlertDialog.Builder(this)
-		creditDialogBuilder.setView(R.layout.icon_credits)
-		creditDialogBuilder.setPositiveButton(R.string.close_button) { dialog, _ -> dialog.dismiss() }
-		this.creditDialog = creditDialogBuilder.create()
 
 		// Be sure to show the action bar.
 		this.actionBar!!.setDisplayShowTitleEnabled(true)
@@ -184,7 +177,6 @@ class ActivitySummary : FragmentActivity() {
 				tmpFile.delete()
 			}
 			R.id.import_activity -> this.importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
-			R.id.credits -> this.creditDialog.show()
 		}
 
 		return super.onOptionsItemSelected(item)
