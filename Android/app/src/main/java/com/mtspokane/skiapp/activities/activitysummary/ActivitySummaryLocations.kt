@@ -199,17 +199,4 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 			0u
 		}
 	}
-
-	/**
-	 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994
-	 */
-	private fun bitmapDescriptorFromVector(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
-		val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)
-		vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
-		val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight,
-				Bitmap.Config.ARGB_8888)
-		val canvas = Canvas(bitmap)
-		vectorDrawable.draw(canvas)
-		return BitmapDescriptorFactory.fromBitmap(bitmap)
-	}
 }
