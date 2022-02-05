@@ -148,16 +148,7 @@ class ActivitySummary : FragmentActivity() {
 
 				val json: JSONObject = this.getActivitySummaryJson()
 
-				val tmpFileName = "My Skiing Activity.json"
-				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use {
-					it.write(json.toString(4).toByteArray())
-				}
-
-				val tmpFile = File(this.filesDir, tmpFileName)
-
-				SkiingActivityManager.shareFile(this, tmpFile, JSON_MIME_TYPE)
-
-				tmpFile.delete()
+				this.writeToShareFile("My Skiing Activity.json", json, JSON_MIME_TYPE)
 			}
 			R.id.share_geojson -> {
 
@@ -165,21 +156,26 @@ class ActivitySummary : FragmentActivity() {
 
 				val geojson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
 
-				val tmpFileName = "My Skiing Activity.geojson"
-				this.openFileOutput(tmpFileName, Context.MODE_PRIVATE).use {
-					it.write(geojson.toString(4).toByteArray())
-				}
-
-				val tmpFile = File(this.filesDir, tmpFileName)
-
-				SkiingActivityManager.shareFile(this, tmpFile, GEOJSON_MIME_TYPE)
-
-				tmpFile.delete()
+				this.writeToShareFile("My Skiing Activity.geojson", geojson, GEOJSON_MIME_TYPE)
 			}
 			R.id.import_activity -> this.importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
 		}
 
 		return super.onOptionsItemSelected(item)
+	}
+
+	private fun writeToShareFile(filename: String, jsonToWrite: JSONObject, mime: String) {
+
+		val tmpFile = File(this.filesDir, filename)
+		if (tmpFile.exists()) {
+			tmpFile.delete()
+		}
+
+		this.openFileOutput(filename, Context.MODE_PRIVATE).use {
+			it.write(jsonToWrite.toString(4).toByteArray())
+		}
+
+		SkiingActivityManager.shareFile(this, tmpFile, mime)
 	}
 
 	private fun getActivitySummaryJson(): JSONObject {
