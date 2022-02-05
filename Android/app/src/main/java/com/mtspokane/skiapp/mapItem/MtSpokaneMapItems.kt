@@ -84,8 +84,8 @@ object MtSpokaneMapItems {
 				val uiMapItemPolygons: List<Polygon>? = hashmap[it]
 
 				val icon: Int? = when (it) {
-					"Lodge 1" -> R.drawable.ic_missing // TODO Lodge icon
-					"Lodge 2" -> R.drawable.ic_missing // TODO Lodge icon
+					"Lodge 1" -> R.drawable.ic_lodge
+					"Lodge 2" -> R.drawable.ic_lodge
 					"Yurt" -> R.drawable.ic_yurt
 					"Vista House" -> R.drawable.ic_missing // TODO Vista house icon
 					"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
