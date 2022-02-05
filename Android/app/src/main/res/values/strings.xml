@@ -48,16 +48,6 @@
     <string name="share_geojson">Share current activity as GeoJSON</string>
     <string name="share_description">Share file using</string>
     <string name="import_activity">Import activity</string>
-    <string name="credits">Icon credits</string>
-
-    <!-- Icon credits -->
-    <string name="chairlift_icon_description">Chairlift icon</string>
-    <string name="chairlift_icon_credits">Ski Lift by MiNo from NounProject.com</string>
-    <string name="yurt_icon_description">Yurt icon</string>
-    <string name="yurt_credits">Yurt by Grégory Montigny from NounProject.com</string>
-    <string name="parking_icon_description">Parking icon</string>
-    <string name="parking_icon_credits">Parking licensed under Apache License 2.0</string>
-    <string name="close_button">Close</string>
 
     <!-- File selection -->
     <string name="select_file">Select a date</string>

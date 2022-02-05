@@ -79,12 +79,4 @@
         android:title="@string/import_activity"
         android:visible="true" />
 
-    <item
-        android:id="@+id/credits"
-        android:checkable="false"
-        android:enabled="true"
-        android:orderInCategory="4"
-        android:title="@string/credits"
-        android:visible="true" />
-
 </menu>

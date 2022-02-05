@@ -72,7 +72,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		MtSpokaneMapItems.other!!.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
 
-				when (it.icon) {
+				return when (it.icon) {
 					R.drawable.ic_parking -> MapMarker(it.name, this.currentLocation!!, it.icon,
 							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 							Color.GRAY)
@@ -198,18 +198,5 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		} else {
 			0u
 		}
-	}
-
-	/**
-	 * @author https://stackoverflow.com/questions/42365658/custom-marker-in-google-maps-in-android-with-vector-asset-icon/45564994#45564994
-	 */
-	private fun bitmapDescriptorFromVector(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
-		val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)
-		vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
-		val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight,
-				Bitmap.Config.ARGB_8888)
-		val canvas = Canvas(bitmap)
-		vectorDrawable.draw(canvas)
-		return BitmapDescriptorFactory.fromBitmap(bitmap)
 	}
 }
