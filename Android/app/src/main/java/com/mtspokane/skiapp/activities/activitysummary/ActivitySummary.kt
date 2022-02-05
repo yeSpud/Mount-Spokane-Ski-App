@@ -282,7 +282,7 @@ class ActivitySummary : FragmentActivity() {
 		ActivitySummaryLocations.updateLocations(startingActivity)
 
 		// Get the starting activity item.
-		val startingMapMarker: MapMarker = this@ActivitySummary.getActivityItem()
+		val startingMapMarker: MapMarker = this@ActivitySummary.getMapMarker()
 		Log.v(tag, "Starting with ${startingMapMarker.name} (${linkedList.size} items left)")
 
 		// Add the starting circle to the map.
@@ -308,7 +308,7 @@ class ActivitySummary : FragmentActivity() {
 			ActivitySummaryLocations.updateLocations(potentialEndingActivity)
 
 			// Get the ending activity item.
-			val potentialEndingMapMarker: MapMarker = this@ActivitySummary.getActivityItem()
+			val potentialEndingMapMarker: MapMarker = this@ActivitySummary.getMapMarker()
 
 			// Add the circle to the map.
 			this@ActivitySummary.addMapMarkerToMap(potentialEndingMapMarker)
@@ -361,31 +361,32 @@ class ActivitySummary : FragmentActivity() {
 		this@ActivitySummary.addToViewRecursively(linkedList)
 	}
 
-	private fun getActivityItem(): MapMarker {
+	private fun getMapMarker(): MapMarker {
 
-		val chairlift: MapMarker? = ActivitySummaryLocations.checkIfIOnChairlift()
-		val returnPair: MapMarker = if (chairlift != null) {
-			chairlift
-		} else {
-
-			val chairliftTerminal: MapMarker? = ActivitySummaryLocations.checkIfAtChairliftTerminals()
-			if (chairliftTerminal != null) {
-				chairliftTerminal
-			} else {
-
-				val other: MapMarker? = ActivitySummaryLocations.checkIfOnOther()
-				if (other != null) {
-					other
-				} else {
-
-					val run: MapMarker? = ActivitySummaryLocations.checkIfOnRun()
-					run ?: MapMarker(UNKNOWN_LOCATION, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_missing, BitmapDescriptorFactory
-									.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
-				}
-			}
+		var marker: MapMarker? = ActivitySummaryLocations.checkIfIOnChairlift()
+		if (marker != null) {
+			return marker
 		}
 
-		return returnPair
+		marker = ActivitySummaryLocations.checkIfAtChairliftTerminals()
+		if (marker != null) {
+			return marker
+		}
+
+		marker = ActivitySummaryLocations.checkIfOnOther()
+		if (marker != null) {
+			return marker
+		}
+
+		marker = ActivitySummaryLocations.checkIfOnRun()
+		if (marker != null) {
+			return marker
+		}
+
+		Log.w("getMapMarker", "Unable to determine location")
+		return  MapMarker(UNKNOWN_LOCATION, ActivitySummaryLocations.currentLocation!!,
+			R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+			Color.MAGENTA)
 	}
 
 	@MainThread
