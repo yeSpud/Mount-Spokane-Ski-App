@@ -72,7 +72,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		MtSpokaneMapItems.other!!.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
 
-				when (it.icon) {
+				return when (it.icon) {
 					R.drawable.ic_parking -> MapMarker(it.name, this.currentLocation!!, it.icon,
 							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 							Color.GRAY)
