@@ -32,6 +32,7 @@ import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
 import com.mtspokane.skiapp.mapItem.MapMarker
+import com.mtspokane.skiapp.maphandlers.ActivitySummaryLocationMarkers
 import java.io.File
 import java.io.InputStream
 import java.util.LinkedList
@@ -205,15 +206,18 @@ class ActivitySummary : FragmentActivity() {
 
 		if (this.mapHandler != null) {
 
-			if (this.mapHandler!!.polyline != null) {
-				this.mapHandler!!.polyline!!.remove()
-				this.mapHandler!!.polyline = null
-			}
+			with(this.mapHandler!!) {
 
-			this.mapHandler!!.locationMarkers.forEach {
-				it.destroy()
+				if (this.polyline != null) {
+					this.polyline!!.remove()
+					this.polyline = null
+				}
+
+				this.locationMarkers.forEach {
+					it.destroy()
+				}
+				this.locationMarkers.clear()
 			}
-			this.mapHandler!!.locationMarkers = emptyArray()
 		}
 
 		lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
@@ -258,7 +262,9 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		withContext(Dispatchers.Main) {
-			this@ActivitySummary.mapHandler!!.addActivitySummaryLocationMarker(mapMarker, snippetText)
+			val foo = ActivitySummaryLocationMarkers(this@ActivitySummary.mapHandler!!.map!!,
+				mapMarker, snippetText)
+			this@ActivitySummary.mapHandler!!.locationMarkers.add(foo)
 		}
 	}
 

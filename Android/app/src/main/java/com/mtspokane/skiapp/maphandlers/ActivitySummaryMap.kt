@@ -3,6 +3,8 @@ package com.mtspokane.skiapp.maphandlers
 import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
+import android.view.View
+import android.widget.TextView
 import androidx.annotation.MainThread
 import androidx.annotation.UiThread
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +25,7 @@ import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.skierlocation.SkierLocationService
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.mapItem.MapMarker
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -33,7 +36,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 	.target(LatLng(47.923275586525094, -117.10265189409256)).tilt(45.0F)
 	.bearing(317.50552F).zoom(14.279241F).build()) {
 
-	var locationMarkers: Array<ActivitySummaryLocationMarkers> = emptyArray()
+	var locationMarkers: MutableList<ActivitySummaryLocationMarkers> = mutableListOf()
 
 	var polyline: Polyline? = null
 
@@ -45,7 +48,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 			this.locationMarkers.forEach {
 				it.destroy()
 			}
-			this.locationMarkers = emptyArray()
+			this.locationMarkers.clear()
 		}
 
 		if (this.polyline != null) {
@@ -54,21 +57,6 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		}
 
 		super.destroy()
-	}
-
-	fun addActivitySummaryLocationMarker(mapMarker: MapMarker, debugSnippetText: String?) {
-
-		if (this.map != null) {
-
-			this.locationMarkers = Array(this.locationMarkers.size + 1) {
-
-				if (it == this.locationMarkers.size) {
-					ActivitySummaryLocationMarkers(this.map!!, mapMarker, debugSnippetText)
-				} else {
-					this.locationMarkers[it]
-				}
-			}
-		}
 	}
 
 	@MainThread
@@ -113,9 +101,58 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
 	}
 
+	internal inner class CustomInfoWindow : GoogleMap.InfoWindowAdapter {
+
+		private val markerView: View = this@ActivitySummaryMap.activity.layoutInflater.inflate(R.layout.info_window,
+			null)
+
+		override fun getInfoContents(marker: Marker): View? {
+
+			if (marker.tag is Pair<*, *>) {
+
+				val markerInfo: Pair<MapMarker, String?> = marker.tag as Pair<MapMarker, String?>
+
+				val name: TextView = this.markerView.findViewById(R.id.marker_name)
+				name.text = markerInfo.first.name
+
+				val altitude: TextView = markerView.findViewById(R.id.marker_altitude)
+				altitude.text = this@ActivitySummaryMap.activity.getString(R.string.marker_altitude, markerInfo.first
+					.skiingActivity.altitude.roundToInt()) // TODO Convert to feet & catch round NaN
+
+				val speed: TextView = this.markerView.findViewById(R.id.marker_speed)
+
+				// Convert from meters per second to miles per hour.
+				val speedConversion = 0.44704f
+
+				speed.text = this@ActivitySummaryMap.activity.getString(R.string.marker_speed, (markerInfo.first
+					.skiingActivity.speed / speedConversion).roundToInt()) // TODO Catch round NaN
+
+				if (markerInfo.second != null) {
+
+					val debug: TextView = this.markerView.findViewById(R.id.marker_debug)
+					debug.text = markerInfo.second
+				}
+
+				return this.markerView
+
+			} else {
+
+				return null
+			}
+		}
+
+		override fun getInfoWindow(marker: Marker): View? {
+
+			return null
+		}
+	}
+
 	init {
 
 		this.setAdditionalCallback {
+
+			it.setInfoWindowAdapter(CustomInfoWindow())
+
 			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
 				if (MtSpokaneMapItems.skiAreaBounds == null || MtSpokaneMapItems.other == null) {
@@ -282,9 +319,12 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debug
 			visible(false)
 		}
 
+		this.marker!!.tag = Pair(mapMarker, debugSnippetText)
+
+		/*
 		if (debugSnippetText != null) {
-			this.marker!!.snippet = debugSnippetText // TODO Add speed and altitude
-		}
+			this.marker!!.snippet = debugSnippetText
+		}*/
 
 		this.circle!!.tag = this
 	}
