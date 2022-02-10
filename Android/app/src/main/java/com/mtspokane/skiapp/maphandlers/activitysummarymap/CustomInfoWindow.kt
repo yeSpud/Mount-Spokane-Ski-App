@@ -1,5 +1,6 @@
 package com.mtspokane.skiapp.maphandlers.activitysummarymap
 
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import com.google.android.gms.maps.GoogleMap
@@ -11,22 +12,28 @@ import kotlin.math.roundToInt
 
 class CustomInfoWindow(private val activity: ActivitySummary) : GoogleMap.InfoWindowAdapter {
 
-	private val markerView: View = this.activity.layoutInflater.inflate(R.layout.info_window, null)
-
 	override fun getInfoContents(marker: Marker): View? {
+		Log.v("CustomInfoWindow", "getInfoContents called")
+		return null
+	}
+
+	override fun getInfoWindow(marker: Marker): View? {
+		Log.v("CustomInfoWindow", "getInfoWindow called")
 
 		if (marker.tag is Pair<*, *>) {
 
 			val markerInfo: Pair<MapMarker, String?> = marker.tag as Pair<MapMarker, String?>
 
-			val name: TextView = this.markerView.findViewById(R.id.marker_name)
+			val markerView: View = this.activity.layoutInflater.inflate(R.layout.info_window, null)
+
+			val name: TextView = markerView.findViewById(R.id.marker_name)
 			name.text = markerInfo.first.name
 
 			val altitude: TextView = markerView.findViewById(R.id.marker_altitude)
 			altitude.text = this.activity.getString(R.string.marker_altitude, markerInfo.first
 				.skiingActivity.altitude.roundToInt()) // TODO Convert to feet & catch round NaN
 
-			val speed: TextView = this.markerView.findViewById(R.id.marker_speed)
+			val speed: TextView = markerView.findViewById(R.id.marker_speed)
 
 			// Convert from meters per second to miles per hour.
 			val speedConversion = 0.44704f
@@ -36,19 +43,15 @@ class CustomInfoWindow(private val activity: ActivitySummary) : GoogleMap.InfoWi
 
 			if (markerInfo.second != null) {
 
-				val debug: TextView = this.markerView.findViewById(R.id.marker_debug)
+				val debug: TextView = markerView.findViewById(R.id.marker_debug)
 				debug.text = markerInfo.second
 			}
 
-			return this.markerView
+			return markerView
 
 		} else {
 
 			return null
 		}
-	}
-
-	override fun getInfoWindow(marker: Marker): View? {
-		return null
 	}
 }

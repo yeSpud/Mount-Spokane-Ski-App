@@ -96,9 +96,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 
 	init {
 
-		this.setAdditionalCallback {
-
-			it.setInfoWindowAdapter(CustomInfoWindow(this.activity as ActivitySummary))
+		this.setAdditionalCallback { _ ->
 
 			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
@@ -201,20 +199,26 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 							.loadActivities(SkiingActivityManager.InProgressActivities)
 					}
 
-					this@ActivitySummaryMap.map!!.setOnCircleClickListener {
+					with(this@ActivitySummaryMap.map!!) {
 
-						if (it.tag is ActivitySummaryLocationMarkers) {
+						this.setInfoWindowAdapter(CustomInfoWindow(this@ActivitySummaryMap.activity))
 
-							val activitySummaryLocationMarker: ActivitySummaryLocationMarkers = it.tag as ActivitySummaryLocationMarkers
+						this.setOnCircleClickListener {
 
-							if (activitySummaryLocationMarker.marker != null) {
-								activitySummaryLocationMarker.marker!!.isVisible = true
-								activitySummaryLocationMarker.marker!!.showInfoWindow()
+							if (it.tag is ActivitySummaryLocationMarkers) {
+
+								val activitySummaryLocationMarker: ActivitySummaryLocationMarkers = it.tag as ActivitySummaryLocationMarkers
+
+								if (activitySummaryLocationMarker.marker != null) {
+									activitySummaryLocationMarker.marker!!.isVisible = true
+									activitySummaryLocationMarker.marker!!.showInfoWindow()
+								}
 							}
 						}
-					}
 
-					this@ActivitySummaryMap.map!!.setOnInfoWindowCloseListener { it.isVisible = false }
+						this.setOnInfoWindowCloseListener { it.isVisible = false }
+
+					}
 				}
 
 			}.start()
