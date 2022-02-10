@@ -18,7 +18,7 @@ object InAppLocations: Locations<Location>() {
 	override fun updateLocations(newVariable: Location) {
 		this.previousLocation = this.currentLocation
 
-		this.altitudeConfidence = when (getVerticalDirection()) {
+		this.altitudeConfidence = when (this.getVerticalDirection()) {
 			VerticalDirection.UP_CERTAIN -> 3u
 			VerticalDirection.UP -> 2u
 			VerticalDirection.FLAT -> 1u
