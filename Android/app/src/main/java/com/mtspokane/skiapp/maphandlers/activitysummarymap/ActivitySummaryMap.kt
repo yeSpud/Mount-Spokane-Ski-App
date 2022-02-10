@@ -1,22 +1,15 @@
-package com.mtspokane.skiapp.maphandlers
+package com.mtspokane.skiapp.maphandlers.activitysummarymap
 
+import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
-import android.view.View
-import android.widget.TextView
 import androidx.annotation.MainThread
-import androidx.annotation.UiThread
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.RoundCap
-import com.google.maps.android.ktx.addCircle
-import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
@@ -24,14 +17,14 @@ import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.mainactivity.SkierLocationService
 import com.mtspokane.skiapp.databases.SkiingActivityManager
-import com.mtspokane.skiapp.mapItem.MapMarker
-import kotlin.math.roundToInt
+import com.mtspokane.skiapp.maphandlers.MapHandler
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 
+@SuppressLint("PotentialBehaviorOverride")
 class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, CameraPosition.Builder()
 	.target(LatLng(47.923275586525094, -117.10265189409256)).tilt(45.0F)
 	.bearing(317.50552F).zoom(14.279241F).build()) {
@@ -101,57 +94,11 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
 	}
 
-	internal inner class CustomInfoWindow : GoogleMap.InfoWindowAdapter {
-
-		private val markerView: View = this@ActivitySummaryMap.activity.layoutInflater.inflate(R.layout.info_window,
-			null)
-
-		override fun getInfoContents(marker: Marker): View? {
-
-			if (marker.tag is Pair<*, *>) {
-
-				val markerInfo: Pair<MapMarker, String?> = marker.tag as Pair<MapMarker, String?>
-
-				val name: TextView = this.markerView.findViewById(R.id.marker_name)
-				name.text = markerInfo.first.name
-
-				val altitude: TextView = markerView.findViewById(R.id.marker_altitude)
-				altitude.text = this@ActivitySummaryMap.activity.getString(R.string.marker_altitude, markerInfo.first
-					.skiingActivity.altitude.roundToInt()) // TODO Convert to feet & catch round NaN
-
-				val speed: TextView = this.markerView.findViewById(R.id.marker_speed)
-
-				// Convert from meters per second to miles per hour.
-				val speedConversion = 0.44704f
-
-				speed.text = this@ActivitySummaryMap.activity.getString(R.string.marker_speed, (markerInfo.first
-					.skiingActivity.speed / speedConversion).roundToInt()) // TODO Catch round NaN
-
-				if (markerInfo.second != null) {
-
-					val debug: TextView = this.markerView.findViewById(R.id.marker_debug)
-					debug.text = markerInfo.second
-				}
-
-				return this.markerView
-
-			} else {
-
-				return null
-			}
-		}
-
-		override fun getInfoWindow(marker: Marker): View? {
-
-			return null
-		}
-	}
-
 	init {
 
 		this.setAdditionalCallback {
 
-			it.setInfoWindowAdapter(CustomInfoWindow())
+			it.setInfoWindowAdapter(CustomInfoWindow(this.activity as ActivitySummary))
 
 			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
@@ -272,60 +219,5 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 
 			}.start()
 		}
-	}
-}
-
-@UiThread
-class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debugSnippetText: String?) {
-
-	var marker: Marker? = null
-	private set
-
-	var circle: Circle? = null
-	private set
-
-	fun destroy() {
-
-		if (this.marker != null) {
-			this.marker!!.remove()
-			this.marker = null
-		}
-
-		if (this.circle != null) {
-			this.circle!!.remove()
-			this.circle = null
-		}
-	}
-
-	init {
-
-		val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
-
-		this.circle = map.addCircle {
-			center(location)
-			strokeColor(mapMarker.circleColor)
-			fillColor(mapMarker.circleColor)
-			clickable(true)
-			radius(3.0)
-			zIndex(50.0F)
-			visible(true)
-		}
-
-		this.marker = map.addMarker {
-			position(location)
-			icon(mapMarker.markerColor)
-			title(mapMarker.name)
-			zIndex(99.0F)
-			visible(false)
-		}
-
-		this.marker!!.tag = Pair(mapMarker, debugSnippetText)
-
-		/*
-		if (debugSnippetText != null) {
-			this.marker!!.snippet = debugSnippetText
-		}*/
-
-		this.circle!!.tag = this
 	}
 }
