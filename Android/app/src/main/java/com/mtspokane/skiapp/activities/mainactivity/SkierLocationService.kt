@@ -143,10 +143,12 @@ class SkierLocationService : Service(), LocationListener {
 			Toast.makeText(this, R.string.bounds_missing,
 				Toast.LENGTH_LONG).show()
 			this.stopSelf()
+			return
 		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
 			Toast.makeText(this, R.string.out_of_bounds,
 				Toast.LENGTH_LONG).show()
 			this.stopSelf()
+			return
 		}
 
 		var mapMarker: MapMarker? = InAppLocations.checkIfAtChairliftTerminals()
