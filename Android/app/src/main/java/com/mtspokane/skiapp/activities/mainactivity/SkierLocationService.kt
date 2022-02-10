@@ -82,12 +82,10 @@ class SkierLocationService : Service(), LocationListener {
 	@RequiresApi(Build.VERSION_CODES.O)
 	private fun createNotificationChannels() {
 
-		val trackingNotificationChannel = NotificationChannel(
-			TRACKING_SERVICE_CHANNEL_ID,
+		val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
 			this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
 
-		val progressNotificationChannel = NotificationChannel(
-			ACTIVITY_SUMMARY_CHANNEL_ID,
+		val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
 			this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -109,15 +107,15 @@ class SkierLocationService : Service(), LocationListener {
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
 			val database = ActivityDatabase(this)
-			ActivityDatabase.writeSkiingActivitiesToDatabase(SkiingActivityManager.InProgressActivities,
-				database.writableDatabase)
+			ActivityDatabase.writeSkiingActivitiesToDatabase(SkiingActivityManager.InProgressActivities
+				.toTypedArray(), database.writableDatabase)
 			database.close()
+			SkiingActivityManager.InProgressActivities.clear()
 
 			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class,
 				TimeManager.getTodaysDate())
 
-			val builder: NotificationCompat.Builder = this.getNotificationBuilder(
-				ACTIVITY_SUMMARY_CHANNEL_ID,
+			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
 				true, R.string.activity_notification_text, pendingIntent)
 
 			val notification: Notification = builder.build()
@@ -177,13 +175,7 @@ class SkierLocationService : Service(), LocationListener {
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
 		this.updateTrackingNotification(text, mapMarker.icon)
 
-		SkiingActivityManager.InProgressActivities = Array(SkiingActivityManager.InProgressActivities.size + 1) {
-			if (SkiingActivityManager.InProgressActivities.size == it) {
-				SkiingActivity(location)
-			} else {
-				SkiingActivityManager.InProgressActivities[it]
-			}
-		}
+		SkiingActivityManager.InProgressActivities.add(SkiingActivity(location))
 	}
 
 	private fun updateTrackingNotification(title: String, @DrawableRes icon: Int?) {

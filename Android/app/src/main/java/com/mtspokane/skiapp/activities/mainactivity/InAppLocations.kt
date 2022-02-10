@@ -13,7 +13,7 @@ import com.mtspokane.skiapp.activities.Locations
 
 object InAppLocations: Locations<Location>() {
 
-	var visibleLocationUpdates: ArrayList<VisibleLocationUpdate> = ArrayList(0)
+	var visibleLocationUpdates: MutableList<VisibleLocationUpdate> = mutableListOf()
 
 	override fun updateLocations(newVariable: Location) {
 		this.previousLocation = this.currentLocation

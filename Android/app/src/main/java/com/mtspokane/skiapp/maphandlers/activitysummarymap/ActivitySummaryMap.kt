@@ -196,7 +196,7 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 							.loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
 					} else {
 						(this@ActivitySummaryMap.activity as ActivitySummary)
-							.loadActivities(SkiingActivityManager.InProgressActivities)
+							.loadActivities(SkiingActivityManager.InProgressActivities.toTypedArray())
 					}
 
 					with(this@ActivitySummaryMap.map!!) {

@@ -179,7 +179,8 @@ class ActivitySummary : FragmentActivity() {
 		return if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
 			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.FinishedAndLoadedActivities!!)
 		} else {
-			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.InProgressActivities)
+			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager
+				.InProgressActivities.toTypedArray())
 		}
 	}
 
