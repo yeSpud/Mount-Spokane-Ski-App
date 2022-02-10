@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.activities
+package com.mtspokane.skiapp.activities.mainactivity
 
 import android.graphics.Color
 import android.location.Location
@@ -9,16 +9,16 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.skierlocation.Locations
+import com.mtspokane.skiapp.activities.Locations
 
 object InAppLocations: Locations<Location>() {
 
-	var visibleLocationUpdates: ArrayList<VisibleLocationUpdate> = ArrayList(0)
+	var visibleLocationUpdates: MutableList<VisibleLocationUpdate> = mutableListOf()
 
 	override fun updateLocations(newVariable: Location) {
 		this.previousLocation = this.currentLocation
 
-		this.altitudeConfidence = when (getVerticalDirection()) {
+		this.altitudeConfidence = when (this.getVerticalDirection()) {
 			VerticalDirection.UP_CERTAIN -> 3u
 			VerticalDirection.UP -> 2u
 			VerticalDirection.FLAT -> 1u

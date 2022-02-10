@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.skierlocation
+package com.mtspokane.skiapp.activities.mainactivity
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -19,6 +19,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
@@ -26,10 +27,8 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.InAppLocations
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.activities.MapsActivity
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivityManager
@@ -79,6 +78,8 @@ class SkierLocationService : Service(), LocationListener {
 			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000,
 				1F, this)
 		}
+
+		Toast.makeText(this, R.string.starting_tracking, Toast.LENGTH_SHORT).show()
 	}
 
 	@RequiresApi(Build.VERSION_CODES.O)
@@ -109,9 +110,10 @@ class SkierLocationService : Service(), LocationListener {
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
 			val database = ActivityDatabase(this)
-			ActivityDatabase.writeSkiingActivitiesToDatabase(SkiingActivityManager.InProgressActivities,
-				database.writableDatabase)
+			ActivityDatabase.writeSkiingActivitiesToDatabase(SkiingActivityManager.InProgressActivities
+				.toTypedArray(), database.writableDatabase)
 			database.close()
+			SkiingActivityManager.InProgressActivities.clear()
 
 			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class,
 				TimeManager.getTodaysDate())
@@ -138,32 +140,38 @@ class SkierLocationService : Service(), LocationListener {
 
 		// If we are not on the mountain stop the tracking.
 		if (MtSpokaneMapItems.skiAreaBounds!!.points.isEmpty()) {
+			Toast.makeText(this, R.string.bounds_missing,
+				Toast.LENGTH_LONG).show()
 			this.stopSelf()
+			return
 		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
+			Toast.makeText(this, R.string.out_of_bounds,
+				Toast.LENGTH_LONG).show()
 			this.stopSelf()
-		}
-
-		val chairliftTerminal = InAppLocations.checkIfAtChairliftTerminals()
-		if (chairliftTerminal != null) {
-			this.appendSkiingActivity(R.string.current_chairlift, chairliftTerminal, location)
 			return
 		}
 
-		val chairlift: MapMarker? = InAppLocations.checkIfIOnChairlift()
-		if (chairlift != null) {
-			this.appendSkiingActivity(R.string.current_chairlift, chairlift, location)
+		var mapMarker: MapMarker? = InAppLocations.checkIfAtChairliftTerminals()
+		if (mapMarker != null) {
+			this.appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
 			return
 		}
 
-		val other = InAppLocations.checkIfOnOther()
-		if (other != null) {
-			this.appendSkiingActivity(R.string.current_other, other, location)
+		mapMarker = InAppLocations.checkIfIOnChairlift()
+		if (mapMarker != null) {
+			this.appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
 			return
 		}
 
-		val run = InAppLocations.checkIfOnRun()
-		if (run != null) {
-			this.appendSkiingActivity(R.string.current_run, run, location)
+		mapMarker = InAppLocations.checkIfOnOther()
+		if (mapMarker != null) {
+			this.appendSkiingActivity(R.string.current_other, mapMarker, location)
+			return
+		}
+
+		mapMarker = InAppLocations.checkIfOnRun()
+		if (mapMarker != null) {
+			this.appendSkiingActivity(R.string.current_run, mapMarker, location)
 			return
 		}
 
@@ -176,13 +184,7 @@ class SkierLocationService : Service(), LocationListener {
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
 		this.updateTrackingNotification(text, mapMarker.icon)
 
-		SkiingActivityManager.InProgressActivities = Array(SkiingActivityManager.InProgressActivities.size + 1) {
-			if (SkiingActivityManager.InProgressActivities.size == it) {
-				SkiingActivity(location)
-			} else {
-				SkiingActivityManager.InProgressActivities[it]
-			}
-		}
+		SkiingActivityManager.InProgressActivities.add(SkiingActivity(location))
 	}
 
 	private fun updateTrackingNotification(title: String, @DrawableRes icon: Int?) {

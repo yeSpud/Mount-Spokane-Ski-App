@@ -18,7 +18,7 @@ android {
         targetSdk 31
 
         def versionNameDate = new Date().format('yyyy.MM.dd:HH.mm')
-        versionCode 17
+        versionCode 18
         versionName "$versionNameDate"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -93,8 +93,8 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0-native-mt'
 
     // Room (elevation database)
-    implementation "androidx.room:room-runtime:2.4.1"
-    annotationProcessor "androidx.room:room-compiler:2.4.1"
+    //implementation "androidx.room:room-runtime:2.4.1"
+    //kapt "androidx.room:room-compiler:2.4.1"
 
     // Volley (elevation API)
     implementation 'com.android.volley:volley:1.2.1'

@@ -14,7 +14,7 @@ import org.json.JSONObject
 
 object SkiingActivityManager {
 
-	var InProgressActivities: Array<SkiingActivity> = emptyArray()
+	val InProgressActivities: MutableList<SkiingActivity> = mutableListOf()
 
 	var FinishedAndLoadedActivities: Array<SkiingActivity>? = null
 
@@ -74,7 +74,8 @@ object SkiingActivityManager {
 		val date: String = TimeManager.getTodaysDate()
 
 		val database = ActivityDatabase(context)
-		this.InProgressActivities = ActivityDatabase.readSkiingActivesFromDatabase(date, database.readableDatabase)
+		this.InProgressActivities.addAll(ActivityDatabase.readSkiingActivesFromDatabase(date,
+			database.readableDatabase))
 		database.close()
 	}
 

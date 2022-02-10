@@ -1,6 +1,5 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
-import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
 import android.net.Uri
@@ -8,9 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
@@ -25,13 +22,13 @@ import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
-import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.maphandlers.ActivitySummaryMap
+import com.mtspokane.skiapp.maphandlers.activitysummarymap.ActivitySummaryMap
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
 import com.mtspokane.skiapp.mapItem.MapMarker
+import com.mtspokane.skiapp.maphandlers.activitysummarymap.ActivitySummaryLocationMarkers
 import java.io.File
 import java.io.InputStream
 import java.util.LinkedList
@@ -182,7 +179,8 @@ class ActivitySummary : FragmentActivity() {
 		return if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
 			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.FinishedAndLoadedActivities!!)
 		} else {
-			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.InProgressActivities)
+			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager
+				.InProgressActivities.toTypedArray())
 		}
 	}
 
@@ -205,15 +203,18 @@ class ActivitySummary : FragmentActivity() {
 
 		if (this.mapHandler != null) {
 
-			if (this.mapHandler!!.polyline != null) {
-				this.mapHandler!!.polyline!!.remove()
-				this.mapHandler!!.polyline = null
-			}
+			with(this.mapHandler!!) {
 
-			this.mapHandler!!.locationMarkers.forEach {
-				it.destroy()
+				if (this.polyline != null) {
+					this.polyline!!.remove()
+					this.polyline = null
+				}
+
+				this.locationMarkers.forEach {
+					it.destroy()
+				}
+				this.locationMarkers.clear()
 			}
-			this.mapHandler!!.locationMarkers = emptyArray()
 		}
 
 		lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
@@ -258,7 +259,9 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		withContext(Dispatchers.Main) {
-			this@ActivitySummary.mapHandler!!.addActivitySummaryLocationMarker(mapMarker, snippetText)
+			val foo = ActivitySummaryLocationMarkers(this@ActivitySummary.mapHandler!!.map!!,
+				mapMarker, snippetText)
+			this@ActivitySummary.mapHandler!!.locationMarkers.add(foo)
 		}
 	}
 
@@ -428,49 +431,5 @@ class ActivitySummary : FragmentActivity() {
 		const val GEOJSON_MIME_TYPE = "application/geojson"
 
 		private const val UNKNOWN_LOCATION = "Unknown Location"
-	}
-}
-
-class FileSelectionDialog(private val activity: ActivitySummary) : AlertDialog(activity) {
-
-	fun showDialog() {
-
-		val binding: FileSelectionBinding = FileSelectionBinding.inflate(this.layoutInflater)
-
-		val alertDialogBuilder = Builder(this.context)
-		alertDialogBuilder.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
-		alertDialogBuilder.setView(binding.root)
-
-		val dialog: AlertDialog = alertDialogBuilder.create()
-
-		val db = ActivityDatabase(this.activity)
-		val dates: Array<String> = ActivityDatabase.getTables(db.readableDatabase)
-		db.close()
-
-		dates.forEach { date: String ->
-
-			val textView = TextView(this.context)
-			textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT)
-			textView.text = date
-			textView.textSize = 25.0F
-			textView.setOnClickListener {
-
-				val database = ActivityDatabase(this.activity)
-				SkiingActivityManager.FinishedAndLoadedActivities = ActivityDatabase
-					.readSkiingActivesFromDatabase(date, database.readableDatabase)
-				database.close()
-
-				if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
-					this.activity.loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
-				}
-
-				dialog.dismiss()
-			}
-
-			binding.files.addView(textView)
-		}
-
-		dialog.show()
 	}
 }

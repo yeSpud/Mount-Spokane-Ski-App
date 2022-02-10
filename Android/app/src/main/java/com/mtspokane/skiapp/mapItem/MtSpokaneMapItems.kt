@@ -17,6 +17,9 @@ object MtSpokaneMapItems {
 
 	private val classesUsingObject: MutableList<KClass<out ContextWrapper>> = mutableListOf()
 
+	var checkedOutCount = 0
+	private set
+
 	var skiAreaBounds: PolygonMapItem? = null
 	private set
 
@@ -41,6 +44,7 @@ object MtSpokaneMapItems {
 	fun checkoutObject(classUsingObject: KClass<out ContextWrapper>) {
 		if (!this.classesUsingObject.contains(classUsingObject)) {
 			this.classesUsingObject.add(classUsingObject)
+			this.checkedOutCount++
 		}
 	}
 
@@ -394,6 +398,7 @@ object MtSpokaneMapItems {
 	fun destroyUIItems(classUsingObject: KClass<out ContextWrapper>) {
 
 		this.classesUsingObject.remove(classUsingObject)
+		this.checkedOutCount--
 
 		if (this.classesUsingObject.isNotEmpty()) {
 			return

@@ -1,17 +1,11 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Color
 import android.util.Log
-import androidx.annotation.DrawableRes
-import androidx.core.content.ContextCompat
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.skierlocation.Locations
+import com.mtspokane.skiapp.activities.Locations
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapMarker
 

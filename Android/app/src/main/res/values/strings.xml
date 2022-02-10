@@ -9,6 +9,8 @@
     <!-- Marker text -->
     <string name="your_location">You are here</string>
     <string name="more_info">Tap for additional stats</string>
+    <string name="marker_altitude">Altitude: %d ft</string>
+    <string name="marker_speed">Speed: %d mph</string>
 
     <!-- Run headers -->
     <string name="current_run">Currently on run: %s</string>
@@ -71,5 +73,10 @@
     <string name="most_likely_chairlift">Most likely chairlift: %s</string>
     <string name="altitude_confidence">Altitude confidence: %s</string>
     <string name="speed_confidence">Speed confidence: %s</string>
+
+    <!-- Toast text -->
+    <string name="bounds_missing">Stopping location tracking due to missing bounds</string>
+    <string name="out_of_bounds">Stopping location tracking as user is outside ski area bounds</string>
+    <string name="starting_tracking">Starting location tracking</string>
 
 </resources>

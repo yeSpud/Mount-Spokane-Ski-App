@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.skierlocation
+package com.mtspokane.skiapp.activities
 
 import com.mtspokane.skiapp.mapItem.MapMarker
 
