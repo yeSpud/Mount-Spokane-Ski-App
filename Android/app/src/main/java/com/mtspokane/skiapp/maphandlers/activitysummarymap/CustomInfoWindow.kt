@@ -25,16 +25,28 @@ class CustomInfoWindow(private val activity: ActivitySummary) : GoogleMap.InfoWi
 			name.text = markerInfo.first.name
 
 			val altitude: TextView = markerView.findViewById(R.id.marker_altitude)
-			altitude.text = this.activity.getString(R.string.marker_altitude, markerInfo.first
-				.skiingActivity.altitude.roundToInt()) // TODO Convert to feet & catch round NaN
+
+			// Convert from meters to feet.
+			val altitudeConversion = 3.280839895f
+
+			try {
+				altitude.text = this.activity.getString(R.string.marker_altitude,
+					(markerInfo.first.skiingActivity.altitude * altitudeConversion).roundToInt())
+			} catch (e: IllegalArgumentException) {
+				altitude.text = this.activity.getString(R.string.marker_altitude, 0)
+			}
 
 			val speed: TextView = markerView.findViewById(R.id.marker_speed)
 
 			// Convert from meters per second to miles per hour.
 			val speedConversion = 0.44704f
 
-			speed.text = this.activity.getString(R.string.marker_speed, (markerInfo.first
-				.skiingActivity.speed / speedConversion).roundToInt()) // TODO Catch round NaN
+			try {
+				speed.text = this.activity.getString(R.string.marker_speed,
+					(markerInfo.first.skiingActivity.speed / speedConversion).roundToInt())
+			} catch (e: IllegalArgumentException) {
+				speed.text = this.activity.getString(R.string.marker_speed, 0)
+			}
 
 			if (markerInfo.second != null) {
 
