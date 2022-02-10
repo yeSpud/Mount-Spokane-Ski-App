@@ -113,7 +113,9 @@ class MapsActivity : FragmentActivity() {
 		super.onPause()
 
 		if (!this.launchingFromWithin) {
-			this.finish()
+			if (MtSpokaneMapItems.checkedOutCount <= 1) {
+				this.finish()
+			}
 		}
 	}
 
