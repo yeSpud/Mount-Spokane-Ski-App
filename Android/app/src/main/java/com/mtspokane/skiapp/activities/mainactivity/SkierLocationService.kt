@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.skierlocation
+package com.mtspokane.skiapp.activities.mainactivity
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -26,10 +26,8 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.InAppLocations
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.activities.MapsActivity
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivityManager
@@ -84,10 +82,12 @@ class SkierLocationService : Service(), LocationListener {
 	@RequiresApi(Build.VERSION_CODES.O)
 	private fun createNotificationChannels() {
 
-		val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
+		val trackingNotificationChannel = NotificationChannel(
+			TRACKING_SERVICE_CHANNEL_ID,
 			this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
 
-		val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
+		val progressNotificationChannel = NotificationChannel(
+			ACTIVITY_SUMMARY_CHANNEL_ID,
 			this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
 		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -116,7 +116,8 @@ class SkierLocationService : Service(), LocationListener {
 			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class,
 				TimeManager.getTodaysDate())
 
-			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
+			val builder: NotificationCompat.Builder = this.getNotificationBuilder(
+				ACTIVITY_SUMMARY_CHANNEL_ID,
 				true, R.string.activity_notification_text, pendingIntent)
 
 			val notification: Notification = builder.build()
@@ -217,7 +218,8 @@ class SkierLocationService : Service(), LocationListener {
 
 		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class, null)
 
-		val builder: NotificationCompat.Builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
+		val builder: NotificationCompat.Builder = this.getNotificationBuilder(
+			TRACKING_SERVICE_CHANNEL_ID,
 			false, R.string.tracking_notice, pendingIntent)
 		builder.setContentText(title)
 

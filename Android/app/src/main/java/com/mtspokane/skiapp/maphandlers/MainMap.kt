@@ -12,7 +12,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.activities.MapsActivity
+import com.mtspokane.skiapp.activities.mainactivity.MapsActivity
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

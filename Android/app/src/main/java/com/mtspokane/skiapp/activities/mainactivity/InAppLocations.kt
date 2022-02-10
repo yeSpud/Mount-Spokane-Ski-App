@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.activities
+package com.mtspokane.skiapp.activities.mainactivity
 
 import android.graphics.Color
 import android.location.Location
@@ -9,7 +9,7 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
-import com.mtspokane.skiapp.skierlocation.Locations
+import com.mtspokane.skiapp.activities.Locations
 
 object InAppLocations: Locations<Location>() {
 
@@ -93,7 +93,7 @@ object InAppLocations: Locations<Location>() {
 			return null
 		}
 
-		val vDirection: VerticalDirection = this.getVerticalDirection()
+		val vDirection: VerticalDirection = getVerticalDirection()
 		if (vDirection == VerticalDirection.DOWN || vDirection == VerticalDirection.DOWN_CERTAIN) {
 
 			return null
