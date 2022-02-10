@@ -14,11 +14,6 @@ class CustomInfoWindow(private val activity: ActivitySummary) : GoogleMap.InfoWi
 
 	override fun getInfoContents(marker: Marker): View? {
 		Log.v("CustomInfoWindow", "getInfoContents called")
-		return null
-	}
-
-	override fun getInfoWindow(marker: Marker): View? {
-		Log.v("CustomInfoWindow", "getInfoWindow called")
 
 		if (marker.tag is Pair<*, *>) {
 
@@ -53,5 +48,11 @@ class CustomInfoWindow(private val activity: ActivitySummary) : GoogleMap.InfoWi
 
 			return null
 		}
+	}
+
+	override fun getInfoWindow(marker: Marker): View? {
+		Log.v("CustomInfoWindow", "getInfoWindow called")
+
+		return null
 	}
 }
