@@ -93,7 +93,7 @@ object InAppLocations: Locations<Location>() {
 			return null
 		}
 
-		val vDirection: VerticalDirection = getVerticalDirection()
+		val vDirection: VerticalDirection = this.getVerticalDirection()
 		if (vDirection == VerticalDirection.DOWN || vDirection == VerticalDirection.DOWN_CERTAIN) {
 
 			return null
