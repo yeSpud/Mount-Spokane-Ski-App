@@ -19,6 +19,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
@@ -77,6 +78,8 @@ class SkierLocationService : Service(), LocationListener {
 			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000,
 				1F, this)
 		}
+
+		Toast.makeText(this, R.string.starting_tracking, Toast.LENGTH_SHORT).show()
 	}
 
 	@RequiresApi(Build.VERSION_CODES.O)
@@ -137,32 +140,36 @@ class SkierLocationService : Service(), LocationListener {
 
 		// If we are not on the mountain stop the tracking.
 		if (MtSpokaneMapItems.skiAreaBounds!!.points.isEmpty()) {
+			Toast.makeText(this, R.string.bounds_missing,
+				Toast.LENGTH_LONG).show()
 			this.stopSelf()
 		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
+			Toast.makeText(this, R.string.out_of_bounds,
+				Toast.LENGTH_LONG).show()
 			this.stopSelf()
 		}
 
-		val chairliftTerminal = InAppLocations.checkIfAtChairliftTerminals()
-		if (chairliftTerminal != null) {
-			this.appendSkiingActivity(R.string.current_chairlift, chairliftTerminal, location)
+		var mapMarker: MapMarker? = InAppLocations.checkIfAtChairliftTerminals()
+		if (mapMarker != null) {
+			this.appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
 			return
 		}
 
-		val chairlift: MapMarker? = InAppLocations.checkIfIOnChairlift()
-		if (chairlift != null) {
-			this.appendSkiingActivity(R.string.current_chairlift, chairlift, location)
+		mapMarker = InAppLocations.checkIfIOnChairlift()
+		if (mapMarker != null) {
+			this.appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
 			return
 		}
 
-		val other = InAppLocations.checkIfOnOther()
-		if (other != null) {
-			this.appendSkiingActivity(R.string.current_other, other, location)
+		mapMarker = InAppLocations.checkIfOnOther()
+		if (mapMarker != null) {
+			this.appendSkiingActivity(R.string.current_other, mapMarker, location)
 			return
 		}
 
-		val run = InAppLocations.checkIfOnRun()
-		if (run != null) {
-			this.appendSkiingActivity(R.string.current_run, run, location)
+		mapMarker = InAppLocations.checkIfOnRun()
+		if (mapMarker != null) {
+			this.appendSkiingActivity(R.string.current_run, mapMarker, location)
 			return
 		}
 
@@ -210,8 +217,7 @@ class SkierLocationService : Service(), LocationListener {
 
 		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class, null)
 
-		val builder: NotificationCompat.Builder = this.getNotificationBuilder(
-			TRACKING_SERVICE_CHANNEL_ID,
+		val builder: NotificationCompat.Builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
 			false, R.string.tracking_notice, pendingIntent)
 		builder.setContentText(title)
 

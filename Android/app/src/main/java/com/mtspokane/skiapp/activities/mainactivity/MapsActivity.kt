@@ -21,6 +21,7 @@ import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.MainMap
+import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -38,6 +39,8 @@ class MapsActivity : FragmentActivity() {
 	// Boolean used to determine if the user's precise location is enabled (and therefore accessible).
 	var locationEnabled = false
 		private set
+
+	private var launchingFromWithin = false
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -98,6 +101,20 @@ class MapsActivity : FragmentActivity() {
 		
 		// Remove UI items from MtSpokaneMapItems.
 		MtSpokaneMapItems.destroyUIItems(this::class)
+	}
+
+	override fun onResume() {
+		super.onResume()
+
+		this.launchingFromWithin = false
+	}
+
+	override fun onPause() {
+		super.onPause()
+
+		if (!this.launchingFromWithin) {
+			this.finish()
+		}
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -163,6 +180,7 @@ class MapsActivity : FragmentActivity() {
 					this.nightRunsOnly = checked
 				}
 				R.id.activity_summary -> {
+					this.launchingFromWithin = true
 					val intent = Intent(this, ActivitySummary::class.java)
 					this.startActivity(intent)
 				}
