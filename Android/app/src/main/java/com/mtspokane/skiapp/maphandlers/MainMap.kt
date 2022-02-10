@@ -2,7 +2,6 @@ package com.mtspokane.skiapp.maphandlers
 
 import android.Manifest
 import android.app.AlertDialog
-import android.content.Intent
 import android.location.Location
 import android.util.Log
 import androidx.core.app.ActivityCompat
@@ -12,7 +11,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.DebugActivity
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.MapsActivity
 import kotlinx.coroutines.CoroutineStart
@@ -94,14 +92,6 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 
 			val tag = "MainMap"
 
-			if ((this@MainMap.activity as MapsActivity).locationEnabled) {
-				it.setOnMapLongClickListener {
-					Log.d(tag, "Launching debug view")
-					val intent = Intent(this.activity, DebugActivity::class.java)
-					this.activity.startActivity(intent)
-				}
-			}
-
 			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
 				val polylineLoads = listOf(
@@ -128,7 +118,7 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 				// If this permission isn't granted then that's fine too.
 				withContext(Dispatchers.Main) {
 					Log.v("onMapReady", "Checking location permissions...")
-					if (this@MainMap.activity.locationEnabled) {
+					if ((this@MainMap.activity as MapsActivity).locationEnabled) {
 						Log.v("onMapReady", "Location tracking enabled")
 						this@MainMap.setupLocation()
 					} else {
