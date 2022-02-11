@@ -2,6 +2,7 @@ package com.mtspokane.skiapp.mapItem
 
 import android.content.ContextWrapper
 import android.util.Log
+import androidx.annotation.AnyThread
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polygon
 import com.mtspokane.skiapp.R
@@ -17,7 +18,7 @@ object MtSpokaneMapItems {
 
 	private val classesUsingObject: MutableList<KClass<out ContextWrapper>> = mutableListOf()
 
-	var checkedOutCount = 0
+	var checkedOutCount = this.classesUsingObject.size
 	private set
 
 	var skiAreaBounds: PolygonMapItem? = null
@@ -51,8 +52,9 @@ object MtSpokaneMapItems {
 	/**
 	 * lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...
 	 */
-	suspend fun initializeOtherAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
-			Deferred<Int> = coroutineScope {
+	@AnyThread
+	suspend fun initializeOtherPolygonsAsync(classUsingObject: KClass<out ContextWrapper>,
+	                                         mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
 		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
 		val tag = "initializeOtherAsync"
@@ -127,8 +129,8 @@ object MtSpokaneMapItems {
 		}
 	}
 
-	suspend fun initializeChairliftTerminalsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
-			Deferred<Int> = coroutineScope {
+	suspend fun addChairliftTerminalPolygonsAsync(classUsingObject: KClass<out ContextWrapper>,
+	                                              mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
 		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
 		val tag = "ChairliftTerminalsAsync"
@@ -172,8 +174,9 @@ object MtSpokaneMapItems {
 		}
 	}
 
-	suspend fun initializeChairliftsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
-			Deferred<Int> = coroutineScope {
+	@AnyThread
+	suspend fun initializeChairliftsAsync(classUsingObject: KClass<out ContextWrapper>,
+	                                      mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
 		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
 		val tag = "initializeChairlifts"
@@ -181,15 +184,18 @@ object MtSpokaneMapItems {
 		return@coroutineScope async(Dispatchers.IO) {
 			Log.v(tag, "Started loading chairlift polylines")
 
-			this@MtSpokaneMapItems.chairlifts = mapHandler.loadPolylines(R.raw.lifts, R.color.chairlift,
-				4f, R.drawable.ic_chairlift)
-
-			Log.v(tag, "Finished loading chairlift polylines")
+			try {
+				this@MtSpokaneMapItems.chairlifts = mapHandler.loadPolylines(R.raw.lifts, R.color.chairlift,
+					4f, R.drawable.ic_chairlift)
+				Log.v(tag, "Finished loading chairlift polylines")
+			} catch (npe: NullPointerException) {
+				Log.e(tag, "Unable to add chairlift polylines to map: map not setup", npe)
+			}
 		}
 	}
 
-	suspend fun addChairliftPolygonsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
-			Deferred<Int> = coroutineScope {
+	suspend fun addChairliftPolygonsAsync(classUsingObject: KClass<out ContextWrapper>,
+	                                      mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
 		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
 		val tag = "addChairliftPolygons"
@@ -228,6 +234,7 @@ object MtSpokaneMapItems {
 		}
 	}
 
+	@AnyThread
 	suspend fun initializeEasyRunsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
 			Deferred<Int> = coroutineScope {
 
@@ -237,10 +244,13 @@ object MtSpokaneMapItems {
 		return@coroutineScope async(Dispatchers.IO) {
 			Log.v(tag, "Started loading easy polylines")
 
-			this@MtSpokaneMapItems.easyRuns = mapHandler.loadPolylines(R.raw.easy, R.color.easy,
-				3f, R.drawable.ic_easy)
-
-			Log.v(tag, "Finished loading easy run polylines")
+			try {
+				this@MtSpokaneMapItems.easyRuns = mapHandler.loadPolylines(R.raw.easy, R.color.easy,
+					3f, R.drawable.ic_easy)
+				Log.v(tag, "Finished loading easy run polylines")
+			} catch (npe: NullPointerException) {
+				Log.e(tag, "Unable to add easy polylines to map: map not setup", npe)
+			}
 		}
 	}
 
@@ -284,8 +294,9 @@ object MtSpokaneMapItems {
 		}
 	}
 
-	suspend fun initializeModerateRunsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
-			Deferred<Int> = coroutineScope {
+	@AnyThread
+	suspend fun initializeModerateRunsAsync(classUsingObject: KClass<out ContextWrapper>,
+	                                        mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
 		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
 		val tag = "initializeModerateRuns"
@@ -293,10 +304,13 @@ object MtSpokaneMapItems {
 		return@coroutineScope async(Dispatchers.IO) {
 			Log.v(tag, "Started loading moderate polylines")
 
-			this@MtSpokaneMapItems.moderateRuns = mapHandler.loadPolylines(R.raw.moderate, R.color.moderate,
-				2f, R.drawable.ic_moderate)
-
-			Log.v(tag, "Finished loading moderate run polylines")
+			try {
+				this@MtSpokaneMapItems.moderateRuns = mapHandler.loadPolylines(R.raw.moderate, R.color.moderate,
+					2f, R.drawable.ic_moderate)
+				Log.v(tag, "Finished loading moderate run polylines")
+			} catch (npe: NullPointerException) {
+				Log.e(tag, "Unable to add moderate runs to map: map not setup", npe)
+			}
 		}
 	}
 
@@ -340,8 +354,9 @@ object MtSpokaneMapItems {
 		}
 	}
 
-	suspend fun initializeDifficultRunsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
-			Deferred<Int> = coroutineScope {
+	@AnyThread
+	suspend fun initializeDifficultRunsAsync(classUsingObject: KClass<out ContextWrapper>,
+	                                         mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
 		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
 		val tag = "initializeDifficultRuns"
@@ -349,10 +364,13 @@ object MtSpokaneMapItems {
 		return@coroutineScope async(Dispatchers.IO) {
 			Log.v(tag, "Started loading difficult polylines")
 
-			this@MtSpokaneMapItems.difficultRuns = mapHandler.loadPolylines(R.raw.difficult, R.color.difficult,
-				1f, R.drawable.ic_difficult)
-
-			Log.v(tag, "Finished loading difficult polylines")
+			try {
+				this@MtSpokaneMapItems.difficultRuns = mapHandler.loadPolylines(R.raw.difficult,
+					R.color.difficult, 1f, R.drawable.ic_difficult)
+				Log.v(tag, "Finished loading difficult polylines")
+			} catch (npe: NullPointerException) {
+				Log.e(tag, "Unable to add advanced runs to map: map not setup", npe)
+			}
 		}
 	}
 
@@ -397,9 +415,11 @@ object MtSpokaneMapItems {
 
 	fun destroyUIItems(classUsingObject: KClass<out ContextWrapper>) {
 
-		this.classesUsingObject.remove(classUsingObject)
-		this.checkedOutCount--
+		if (this.classesUsingObject.remove(classUsingObject)) {
+			this.checkedOutCount--
+		}
 
+		Log.i("destroyUIItems", "Number of remaining classes: ${this.checkedOutCount}")
 		if (this.classesUsingObject.isNotEmpty()) {
 			return
 		}

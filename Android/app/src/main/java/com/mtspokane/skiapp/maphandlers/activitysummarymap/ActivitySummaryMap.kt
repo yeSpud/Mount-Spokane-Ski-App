@@ -101,61 +101,36 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 
 				if (MtSpokaneMapItems.skiAreaBounds == null || MtSpokaneMapItems.other == null) {
-					MtSpokaneMapItems.initializeOtherAsync(this@ActivitySummaryMap.activity::class,
+					MtSpokaneMapItems.initializeOtherPolygonsAsync(this@ActivitySummaryMap.activity::class,
 						this@ActivitySummaryMap).await()
 				}
 
 				if (MtSpokaneMapItems.chairliftTerminals == null) {
-					MtSpokaneMapItems.initializeChairliftTerminalsAsync(this@ActivitySummaryMap.activity::class,
+					MtSpokaneMapItems.addChairliftTerminalPolygonsAsync(this@ActivitySummaryMap.activity::class,
 					this@ActivitySummaryMap).await()
 				}
 
 				if (MtSpokaneMapItems.chairlifts == null) {
-					MtSpokaneMapItems.initializeChairliftsAsync(this@ActivitySummaryMap.activity::class,
-					this@ActivitySummaryMap).await()
 					MtSpokaneMapItems.addChairliftPolygonsAsync(this@ActivitySummaryMap.activity::class,
 						this@ActivitySummaryMap).await()
 				}
 
 				if (MtSpokaneMapItems.easyRuns == null) {
-					MtSpokaneMapItems.initializeEasyRunsAsync(this@ActivitySummaryMap.activity::class,
-						this@ActivitySummaryMap).await()
 					MtSpokaneMapItems.addEasyPolygonsAsync(this@ActivitySummaryMap.activity::class,
 						this@ActivitySummaryMap).await()
 				}
 
 				if (MtSpokaneMapItems.moderateRuns == null) {
-					MtSpokaneMapItems.initializeModerateRunsAsync(this@ActivitySummaryMap.activity::class,
-						this@ActivitySummaryMap).await()
 					MtSpokaneMapItems.addModeratePolygonsAsync(this@ActivitySummaryMap.activity::class,
 						this@ActivitySummaryMap).await()
 				}
 
 				if (MtSpokaneMapItems.difficultRuns == null) {
-					MtSpokaneMapItems.initializeDifficultRunsAsync(this@ActivitySummaryMap.activity::class,
-						this@ActivitySummaryMap).await()
 					MtSpokaneMapItems.addDifficultPolygonsAsync(this@ActivitySummaryMap.activity::class,
 						this@ActivitySummaryMap).await()
 				}
 
 				val loads = listOf(
-
-					// Add the chairlifts to the map.
-					// Load in the chairlift kml file, and iterate though each placemark.
-					this@ActivitySummaryMap.loadPolylinesHeadlessAsync("Loading chairlift polylines",
-						R.raw.lifts, R.color.chairlift, 4.0F, R.drawable.ic_chairlift),
-
-					// Load in the easy runs kml file, and iterate though each placemark.
-					this@ActivitySummaryMap.loadPolylinesHeadlessAsync("Loading easy polylines",
-						R.raw.easy, R.color.easy, 3.0F, R.drawable.ic_easy),
-
-					// Load in the moderate runs kml file, and iterate though each placemark.
-					this@ActivitySummaryMap.loadPolylinesHeadlessAsync("Loading moderate polylines",
-						R.raw.moderate, R.color.moderate, 2.0F, R.drawable.ic_moderate),
-
-					// Load in the difficult runs kml file, and iterate though each placemark.
-					this@ActivitySummaryMap.loadPolylinesHeadlessAsync("Loading difficult polylines",
-						R.raw.difficult, R.color.difficult, 1.0F, R.drawable.ic_difficult),
 
 					// Other polygons
 					// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)

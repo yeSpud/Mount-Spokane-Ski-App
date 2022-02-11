@@ -15,10 +15,8 @@ import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.mainactivity.MapsActivity
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 
 class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Builder()
 	.target(LatLng(47.92517834073426, -117.10480503737926)).tilt(45F)
@@ -55,32 +53,42 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 		}
 	}
 
-	suspend fun setupLocation() = coroutineScope {
+	fun setupLocation() {
 
 		val tag = "setupLocation"
 
-		val polygonLoads = listOf(
+		this.activity.lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
 
-			// Other polygons
-			MtSpokaneMapItems.initializeOtherAsync(this@MainMap.activity::class, this@MainMap),
+			val polygonLoads = listOf(
 
-			// Load the chairlift terminals.
-			MtSpokaneMapItems.initializeChairliftTerminalsAsync(this@MainMap.activity::class, this@MainMap),
+				// Other polygons
+				MtSpokaneMapItems.initializeOtherPolygonsAsync(this@MainMap.activity::class,
+					this@MainMap),
 
-			// Load the chairlift polygons file.
-			MtSpokaneMapItems.addChairliftPolygonsAsync(this@MainMap.activity::class, this@MainMap),
+				// Load the chairlift terminals.
+				MtSpokaneMapItems.addChairliftTerminalPolygonsAsync(this@MainMap.activity::class,
+					this@MainMap),
 
-			// Load the easy polygons file.
-			MtSpokaneMapItems.addEasyPolygonsAsync(this@MainMap.activity::class, this@MainMap),
+				// Load the chairlift polygons file.
+				MtSpokaneMapItems.addChairliftPolygonsAsync(this@MainMap.activity::class,
+					this@MainMap),
 
-			// Load the moderate polygons file.
-			MtSpokaneMapItems.addModeratePolygonsAsync(this@MainMap.activity::class, this@MainMap),
+				// Load the easy polygons file.
+				MtSpokaneMapItems.addEasyPolygonsAsync(this@MainMap.activity::class,
+					this@MainMap),
 
-			// Load the difficult polygons file.
-			MtSpokaneMapItems.addDifficultPolygonsAsync(this@MainMap.activity::class, this@MainMap)
-		)
+				// Load the moderate polygons file.
+				MtSpokaneMapItems.addModeratePolygonsAsync(this@MainMap.activity::class,
+					this@MainMap),
 
-		polygonLoads.awaitAll() // Wait for all loads to have finished...
+				// Load the difficult polygons file.
+				MtSpokaneMapItems.addDifficultPolygonsAsync(this@MainMap.activity::class,
+					this@MainMap)
+			)
+
+			polygonLoads.awaitAll() // Wait for all loads to have finished...
+
+		}.start()
 
 		Log.v(tag, "Setting up location service...")
 		(this@MainMap.activity as MapsActivity).setupLocationService()
@@ -90,54 +98,28 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 
 		this.setAdditionalCallback {
 
-			val tag = "MainMap"
+			// Request location permission, so that we can get the location of the device.
+			// The result of the permission request is handled by a callback, onRequestPermissionsResult.
+			// If this permission isn't granted then that's fine too.
+			Log.v("onMapReady", "Checking location permissions...")
+			if ((this@MainMap.activity as MapsActivity).locationEnabled) {
+				Log.v("onMapReady", "Location tracking enabled")
+				this.setupLocation()
+			} else {
 
-			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-
-				val polylineLoads = listOf(
-
-					// Load in the chairlift kml file, and iterate though each placemark.
-					MtSpokaneMapItems.initializeChairliftsAsync(this@MainMap.activity::class, this@MainMap),
-
-					// Load in the easy runs kml file, and iterate though each placemark.
-					MtSpokaneMapItems.initializeEasyRunsAsync(this@MainMap.activity::class, this@MainMap),
-
-					// Load in the moderate runs kml file, and iterate though each placemark.
-					MtSpokaneMapItems.initializeModerateRunsAsync(this@MainMap.activity::class, this@MainMap),
-
-					// Load in the difficult runs kml file, and iterate though each placemark.
-					MtSpokaneMapItems.initializeDifficultRunsAsync(this@MainMap.activity::class, this@MainMap)
-				)
-
-				// Wait for all the polylines to load before checking permissions.
-				polylineLoads.awaitAll()
-				Log.i(tag, "Finished setting up map items")
-
-				// Request location permission, so that we can get the location of the device.
-				// The result of the permission request is handled by a callback, onRequestPermissionsResult.
-				// If this permission isn't granted then that's fine too.
-				withContext(Dispatchers.Main) {
-					Log.v("onMapReady", "Checking location permissions...")
-					if ((this@MainMap.activity as MapsActivity).locationEnabled) {
-						Log.v("onMapReady", "Location tracking enabled")
-						this@MainMap.setupLocation()
-					} else {
-
-						// Setup the location popup dialog.
-						val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this@MainMap.activity)
-						alertDialogBuilder.setTitle(R.string.alert_title)
-						alertDialogBuilder.setMessage(R.string.alert_message)
-						alertDialogBuilder.setPositiveButton(R.string.alert_ok) { _, _ ->
-							ActivityCompat.requestPermissions(this@MainMap.activity,
-								arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), MapsActivity.permissionValue)
-						}
-
-						// Show the info popup about location.
-						val locationDialog = alertDialogBuilder.create()
-						locationDialog.show()
-					}
+				// Setup the location popup dialog.
+				val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this@MainMap.activity)
+				alertDialogBuilder.setTitle(R.string.alert_title)
+				alertDialogBuilder.setMessage(R.string.alert_message)
+				alertDialogBuilder.setPositiveButton(R.string.alert_ok) { _, _ ->
+					ActivityCompat.requestPermissions(this@MainMap.activity,
+						arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), MapsActivity.permissionValue)
 				}
-			}.start()
+
+				// Show the info popup about location.
+				val locationDialog = alertDialogBuilder.create()
+				locationDialog.show()
+			}
 		}
 	}
 }

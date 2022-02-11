@@ -27,6 +27,8 @@ import com.google.maps.android.ktx.addPolygon
 import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
 import com.mtspokane.skiapp.BuildConfig
+import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import java.util.Locale
 import kotlin.Throws
@@ -35,6 +37,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 open class MapHandler(internal val activity: FragmentActivity, private val initialCameraPosition: CameraPosition) : OnMapReadyCallback {
@@ -56,6 +59,8 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 			Log.v("MapHandler", "Clearing additional callback.")
 			this.additionalCallback = null
 		}
+
+		MtSpokaneMapItems.destroyUIItems(this.activity::class)
 	}
 
 	internal fun setAdditionalCallback(additionalCallback: OnMapReadyCallback) {
@@ -73,7 +78,9 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 	 */
 	override fun onMapReady(googleMap: GoogleMap) {
 
-		Log.v("onMapReady", "Setting up map for the first time...")
+		val tag = "onMapReady"
+
+		Log.v(tag, "Setting up map for the first time...")
 
 		// Setup camera view logging.
 		if (BuildConfig.DEBUG) {
@@ -97,7 +104,53 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 		// Set the map view type to satellite.
 		googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
-		// TODO Check if MtSpokaneMapItems have been setup.
+		// Checkout MtSpokaneMapItems.
+		MtSpokaneMapItems.checkoutObject(this.activity::class)
+
+		// Load the various polylines onto the map.
+		this.activity.lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
+
+			Log.d(tag, "Setting up map polylines...")
+
+			// Start with the chairlift polylines.
+			if (MtSpokaneMapItems.chairlifts == null) {
+				MtSpokaneMapItems.initializeChairliftsAsync(this@MapHandler.activity::class,
+					this@MapHandler).await()
+			} else {
+				this@MapHandler.loadPolylinesHeadlessAsync("Loading headless chairlift polylines",
+					R.raw.lifts, R.color.chairlift, 4.0F, R.drawable.ic_chairlift).await()
+			}
+
+			// Move onto the easy runs.
+			if (MtSpokaneMapItems.easyRuns == null) {
+				MtSpokaneMapItems.initializeEasyRunsAsync(this@MapHandler.activity::class,
+					this@MapHandler).await()
+			} else {
+				this@MapHandler.loadPolylinesHeadlessAsync("Loading headless easy polylines",
+					R.raw.easy, R.color.easy, 3.0F, R.drawable.ic_easy).await()
+			}
+
+			// Then go to moderate runs.
+			if (MtSpokaneMapItems.moderateRuns == null) {
+				MtSpokaneMapItems.initializeModerateRunsAsync(this@MapHandler.activity::class,
+				this@MapHandler).await()
+			} else {
+				this@MapHandler.loadPolylinesHeadlessAsync("Loading headless moderate polylines",
+					R.raw.moderate, R.color.moderate, 2.0F, R.drawable.ic_moderate).await()
+			}
+
+			// Finish with advanced runs.
+			if (MtSpokaneMapItems.difficultRuns == null) {
+				MtSpokaneMapItems.initializeDifficultRunsAsync(this@MapHandler.activity::class,
+				this@MapHandler).await()
+			} else {
+				this@MapHandler.loadPolylinesHeadlessAsync("Loading headless difficult polylines",
+					R.raw.difficult, R.color.difficult, 1.0F, R.drawable.ic_difficult).await()
+			}
+
+			Log.d(tag, "Finished setting up map polylines")
+
+		}.start()
 
 		this.map = googleMap
 
@@ -243,13 +296,17 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 		return@coroutineScope hashMap
 	}
 
-	fun loadPolylinesHeadlessAsync(jobDescription: String, @RawRes polylineResource: Int,
+	private fun loadPolylinesHeadlessAsync(jobDescription: String, @RawRes polylineResource: Int,
 	                               @ColorRes color: Int, zIndex: Float, @DrawableRes icon: Int): Deferred<Int> {
 		return this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
 			val tag = "loadPolylinesHeadless"
 			Log.v(tag, "Starting ${jobDescription.lowercase(Locale.getDefault())}")
-			this@MapHandler.loadPolylines(polylineResource, color, zIndex, icon)
-			Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
+			try {
+				this@MapHandler.loadPolylines(polylineResource, color, zIndex, icon)
+				Log.v(tag, "Finished ${jobDescription.lowercase(Locale.getDefault())}")
+			} catch (npe: NullPointerException) {
+				Log.e(tag, "Cannot add polyline to map: Map not yet ready", npe)
+			}
 		}
 	}
 
