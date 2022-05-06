@@ -2,6 +2,7 @@ package com.mtspokane.skiapp.maphandlers
 
 import android.os.Build
 import android.util.Log
+import android.widget.BaseAdapter
 import androidx.annotation.AnyThread
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -30,6 +31,8 @@ import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
+import com.orhanobut.dialogplus.DialogPlus
+import com.orhanobut.dialogplus.OnItemClickListener
 import java.util.Locale
 import kotlin.Throws
 import kotlinx.coroutines.CoroutineStart
@@ -40,11 +43,18 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-open class MapHandler(internal val activity: FragmentActivity, private val initialCameraPosition: CameraPosition) : OnMapReadyCallback {
+abstract class MapHandler(internal val activity: FragmentActivity,
+                          private val initialCameraPosition: CameraPosition,
+                          private val mapOptionDialogAdapter: BaseAdapter,
+                          private val mapOptionItemClickListener: OnItemClickListener) : OnMapReadyCallback {
 
 	internal var map: GoogleMap? = null
 
-	private var additionalCallback: OnMapReadyCallback? = null
+	abstract val additionalCallback: OnMapReadyCallback
+
+	val mapOptionsDialog: DialogPlus = DialogPlus.newDialog(this.activity)
+		.setAdapter(this.mapOptionDialogAdapter).setOnItemClickListener(this.mapOptionItemClickListener)
+		.setExpanded(true).create()
 
 	open fun destroy() {
 
@@ -55,16 +65,7 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 			this.map = null
 		}
 
-		if (this.additionalCallback != null) {
-			Log.v("MapHandler", "Clearing additional callback.")
-			this.additionalCallback = null
-		}
-
 		MtSpokaneMapItems.destroyUIItems(this.activity::class)
-	}
-
-	internal fun setAdditionalCallback(additionalCallback: OnMapReadyCallback) {
-		this.additionalCallback = additionalCallback
 	}
 
 	/**
@@ -154,10 +155,8 @@ open class MapHandler(internal val activity: FragmentActivity, private val initi
 
 		this.map = googleMap
 
-		if (this.additionalCallback != null) {
-			Log.v("onMapReady", "Running additional setup steps...")
-			this.additionalCallback!!.onMapReady(this.map!!)
-		}
+		Log.v("onMapReady", "Running additional setup steps...")
+		this.additionalCallback.onMapReady(this.map!!)
 
 		Log.v("onMapReady", "Finished setting up map.")
 	}
