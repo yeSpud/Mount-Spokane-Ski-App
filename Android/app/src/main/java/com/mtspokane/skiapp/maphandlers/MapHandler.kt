@@ -44,16 +44,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 abstract class MapHandler(internal val activity: FragmentActivity,
-                          private val initialCameraPosition: CameraPosition,
-                          private val mapOptionDialogAdapter: BaseAdapter,
-                          private val mapOptionItemClickListener: OnItemClickListener) : OnMapReadyCallback {
+                          private val initialCameraPosition: CameraPosition/*,
+                          private val mapOptionDialogAdapter: BaseAdapter*/) : OnMapReadyCallback {
 
 	internal var map: GoogleMap? = null
 
 	abstract val additionalCallback: OnMapReadyCallback
 
+	abstract val mapOptionItemClickListener: OnItemClickListener
+
 	val mapOptionsDialog: DialogPlus = DialogPlus.newDialog(this.activity)
-		.setAdapter(this.mapOptionDialogAdapter).setOnItemClickListener(this.mapOptionItemClickListener)
+		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this.activity, 5)).setOnItemClickListener(this.mapOptionItemClickListener)
 		.setExpanded(true).create()
 
 	open fun destroy() {

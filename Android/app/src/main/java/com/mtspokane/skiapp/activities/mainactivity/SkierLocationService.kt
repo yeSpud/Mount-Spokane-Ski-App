@@ -1,11 +1,7 @@
 package com.mtspokane.skiapp.activities.mainactivity
 
 import android.annotation.SuppressLint
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -17,6 +13,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
@@ -27,14 +24,15 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.databases.SkiingActivity
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databases.ActivityDatabase
+import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
 import com.mtspokane.skiapp.mapItem.MapMarker
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import kotlin.reflect.KClass
+
 
 class SkierLocationService : Service(), LocationListener {
 
@@ -245,6 +243,13 @@ class SkierLocationService : Service(), LocationListener {
 		// We don't provide binding, so return null
 		return null
 	}
+
+	override fun onProviderEnabled(provider: String) {}
+
+	override fun onProviderDisabled(provider: String) {}
+
+	@Deprecated("This callback will never be invoked on Android Q and above.")
+	override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
 
 	companion object {
 

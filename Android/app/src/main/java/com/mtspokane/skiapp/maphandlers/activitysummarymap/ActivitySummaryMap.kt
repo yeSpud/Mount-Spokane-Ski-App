@@ -6,6 +6,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.MainThread
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
@@ -18,6 +19,7 @@ import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.activities.mainactivity.SkierLocationService
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.maphandlers.MapHandler
+import com.orhanobut.dialogplus.OnItemClickListener
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -32,6 +34,112 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 	var locationMarkers: MutableList<ActivitySummaryLocationMarkers> = mutableListOf()
 
 	var polyline: Polyline? = null
+
+	override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
+		this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
+
+			if (MtSpokaneMapItems.skiAreaBounds == null || MtSpokaneMapItems.other == null) {
+				MtSpokaneMapItems.initializeOtherPolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+			}
+
+			if (MtSpokaneMapItems.chairliftTerminals == null) {
+				MtSpokaneMapItems.addChairliftTerminalPolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+			}
+
+			if (MtSpokaneMapItems.chairlifts == null) {
+				MtSpokaneMapItems.addChairliftPolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+			}
+
+			if (MtSpokaneMapItems.easyRuns == null) {
+				MtSpokaneMapItems.addEasyPolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+			}
+
+			if (MtSpokaneMapItems.moderateRuns == null) {
+				MtSpokaneMapItems.addModeratePolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+			}
+
+			if (MtSpokaneMapItems.difficultRuns == null) {
+				MtSpokaneMapItems.addDifficultPolygonsAsync(this@ActivitySummaryMap.activity::class,
+						this@ActivitySummaryMap).await()
+			}
+
+			val loads = listOf(
+
+					// Other polygons
+					// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading other polygons",
+							R.raw.other, R.color.other_polygon_fill, false),
+
+					// Load the chairlift terminal polygons file.
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading chairlift terminal polygons",
+							R.raw.lift_terminal_polygons, R.color.chairlift_polygon),
+
+					// Load the chairlift polygons file.
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading chairlift polygons",
+							R.raw.lift_polygons, R.color.chairlift_polygon),
+
+					// Load the easy polygons file.
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading easy polygons",
+							R.raw.easy_polygons, R.color.easy_polygon),
+
+					// Load the moderate polygons file.
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading moderate polygons",
+							R.raw.moderate_polygons, R.color.moderate_polygon),
+
+					// Load the difficult polygons file.
+					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading difficult polygons",
+							R.raw.difficult_polygons, R.color.difficult_polygon)
+			)
+
+			loads.awaitAll()
+			withContext(Dispatchers.Main) {
+
+				if (this@ActivitySummaryMap.activity.intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
+					this@ActivitySummaryMap.loadFromIntent(this@ActivitySummaryMap.activity.intent
+							.getStringExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE))
+				}
+
+				if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
+					(this@ActivitySummaryMap.activity as ActivitySummary)
+							.loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
+				} else {
+					(this@ActivitySummaryMap.activity as ActivitySummary)
+							.loadActivities(SkiingActivityManager.InProgressActivities.toTypedArray())
+				}
+
+				with(this@ActivitySummaryMap.map!!) {
+
+					this.setInfoWindowAdapter(CustomInfoWindow(this@ActivitySummaryMap.activity))
+
+					this.setOnCircleClickListener {
+
+						if (it.tag is ActivitySummaryLocationMarkers) {
+
+							val activitySummaryLocationMarker: ActivitySummaryLocationMarkers = it.tag as ActivitySummaryLocationMarkers
+
+							if (activitySummaryLocationMarker.marker != null) {
+								activitySummaryLocationMarker.marker!!.isVisible = true
+								activitySummaryLocationMarker.marker!!.showInfoWindow()
+							}
+						}
+					}
+
+					this.setOnInfoWindowCloseListener { it.isVisible = false }
+
+				}
+			}
+
+		}.start()
+	}
+
+	override val mapOptionItemClickListener: OnItemClickListener = OnItemClickListener { dialog, item, view, position -> {
+		// TODO
+	} }
 
 	override fun destroy() {
 
@@ -92,111 +200,5 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		val notificationManager: NotificationManager = this.activity.getSystemService(Context.NOTIFICATION_SERVICE)
 				as NotificationManager
 		notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
-	}
-
-	init {
-
-		this.setAdditionalCallback { _ ->
-
-			this.activity.lifecycleScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
-
-				if (MtSpokaneMapItems.skiAreaBounds == null || MtSpokaneMapItems.other == null) {
-					MtSpokaneMapItems.initializeOtherPolygonsAsync(this@ActivitySummaryMap.activity::class,
-						this@ActivitySummaryMap).await()
-				}
-
-				if (MtSpokaneMapItems.chairliftTerminals == null) {
-					MtSpokaneMapItems.addChairliftTerminalPolygonsAsync(this@ActivitySummaryMap.activity::class,
-					this@ActivitySummaryMap).await()
-				}
-
-				if (MtSpokaneMapItems.chairlifts == null) {
-					MtSpokaneMapItems.addChairliftPolygonsAsync(this@ActivitySummaryMap.activity::class,
-						this@ActivitySummaryMap).await()
-				}
-
-				if (MtSpokaneMapItems.easyRuns == null) {
-					MtSpokaneMapItems.addEasyPolygonsAsync(this@ActivitySummaryMap.activity::class,
-						this@ActivitySummaryMap).await()
-				}
-
-				if (MtSpokaneMapItems.moderateRuns == null) {
-					MtSpokaneMapItems.addModeratePolygonsAsync(this@ActivitySummaryMap.activity::class,
-						this@ActivitySummaryMap).await()
-				}
-
-				if (MtSpokaneMapItems.difficultRuns == null) {
-					MtSpokaneMapItems.addDifficultPolygonsAsync(this@ActivitySummaryMap.activity::class,
-						this@ActivitySummaryMap).await()
-				}
-
-				val loads = listOf(
-
-					// Other polygons
-					// (lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...)
-					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading other polygons",
-						R.raw.other, R.color.other_polygon_fill, false),
-
-					// Load the chairlift terminal polygons file.
-					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading chairlift terminal polygons",
-						R.raw.lift_terminal_polygons, R.color.chairlift_polygon),
-
-					// Load the chairlift polygons file.
-					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading chairlift polygons",
-						R.raw.lift_polygons, R.color.chairlift_polygon),
-
-					// Load the easy polygons file.
-					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading easy polygons",
-						R.raw.easy_polygons, R.color.easy_polygon),
-
-					// Load the moderate polygons file.
-					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading moderate polygons",
-						R.raw.moderate_polygons, R.color.moderate_polygon),
-
-					// Load the difficult polygons file.
-					this@ActivitySummaryMap.loadPolygonsHeadlessAsync("Loading difficult polygons",
-						R.raw.difficult_polygons, R.color.difficult_polygon)
-				)
-
-				loads.awaitAll()
-				withContext(Dispatchers.Main) {
-
-					if (this@ActivitySummaryMap.activity.intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
-						this@ActivitySummaryMap.loadFromIntent(this@ActivitySummaryMap.activity.intent
-							.getStringExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE))
-					}
-
-					if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
-						(this@ActivitySummaryMap.activity as ActivitySummary)
-							.loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
-					} else {
-						(this@ActivitySummaryMap.activity as ActivitySummary)
-							.loadActivities(SkiingActivityManager.InProgressActivities.toTypedArray())
-					}
-
-					with(this@ActivitySummaryMap.map!!) {
-
-						this.setInfoWindowAdapter(CustomInfoWindow(this@ActivitySummaryMap.activity))
-
-						this.setOnCircleClickListener {
-
-							if (it.tag is ActivitySummaryLocationMarkers) {
-
-								val activitySummaryLocationMarker: ActivitySummaryLocationMarkers = it.tag as ActivitySummaryLocationMarkers
-
-								if (activitySummaryLocationMarker.marker != null) {
-									activitySummaryLocationMarker.marker!!.isVisible = true
-									activitySummaryLocationMarker.marker!!.showInfoWindow()
-								}
-							}
-						}
-
-						this.setOnInfoWindowCloseListener { it.isVisible = false }
-
-					}
-				}
-
-			}.start()
-		}
 	}
 }

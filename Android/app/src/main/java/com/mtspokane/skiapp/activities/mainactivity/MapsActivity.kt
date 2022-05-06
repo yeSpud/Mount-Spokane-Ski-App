@@ -189,6 +189,10 @@ class MapsActivity : FragmentActivity() {
 			}
 		}
 
+		if (map != null) {
+			this.map!!.mapOptionsDialog.show()
+		}
+
 		return super.onOptionsItemSelected(item)
 	}
 

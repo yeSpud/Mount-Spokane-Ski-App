@@ -22,8 +22,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
 class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Builder()
-	.target(LatLng(47.92517834073426, -117.10480503737926)).tilt(45F)
-	.bearing(317.50552F).zoom(14.414046F).build(), ) {
+		.target(LatLng(47.92517834073426, -117.10480503737926)).tilt(45F)
+		.bearing(317.50552F).zoom(14.414046F).build()) {
 
 	private var locationMarker: Marker? = null
 
@@ -44,7 +44,7 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 			alertDialogBuilder.setMessage(R.string.alert_message)
 			alertDialogBuilder.setPositiveButton(R.string.alert_ok) { _, _ ->
 				ActivityCompat.requestPermissions(this@MainMap.activity,
-					arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), MapsActivity.permissionValue)
+						arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), MapsActivity.permissionValue)
 			}
 
 			// Show the info popup about location.
@@ -53,7 +53,10 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 		}
 	}
 
-	override val itemClickListener: OnItemClickListener = OnItemClickListener { dialog, item, view, position ->  }
+	override val mapOptionItemClickListener: OnItemClickListener = OnItemClickListener { dialog, item, view, position -> {
+			// TODO
+		}
+	}
 
 	override fun destroy() {
 
@@ -92,29 +95,29 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 
 			val polygonLoads = listOf(
 
-				// Other polygons
-				MtSpokaneMapItems.initializeOtherPolygonsAsync(this@MainMap.activity::class,
-					this@MainMap),
+					// Other polygons
+					MtSpokaneMapItems.initializeOtherPolygonsAsync(this@MainMap.activity::class,
+							this@MainMap),
 
-				// Load the chairlift terminals.
-				MtSpokaneMapItems.addChairliftTerminalPolygonsAsync(this@MainMap.activity::class,
-					this@MainMap),
+					// Load the chairlift terminals.
+					MtSpokaneMapItems.addChairliftTerminalPolygonsAsync(this@MainMap.activity::class,
+							this@MainMap),
 
-				// Load the chairlift polygons file.
-				MtSpokaneMapItems.addChairliftPolygonsAsync(this@MainMap.activity::class,
-					this@MainMap),
+					// Load the chairlift polygons file.
+					MtSpokaneMapItems.addChairliftPolygonsAsync(this@MainMap.activity::class,
+							this@MainMap),
 
-				// Load the easy polygons file.
-				MtSpokaneMapItems.addEasyPolygonsAsync(this@MainMap.activity::class,
-					this@MainMap),
+					// Load the easy polygons file.
+					MtSpokaneMapItems.addEasyPolygonsAsync(this@MainMap.activity::class,
+							this@MainMap),
 
-				// Load the moderate polygons file.
-				MtSpokaneMapItems.addModeratePolygonsAsync(this@MainMap.activity::class,
-					this@MainMap),
+					// Load the moderate polygons file.
+					MtSpokaneMapItems.addModeratePolygonsAsync(this@MainMap.activity::class,
+							this@MainMap),
 
-				// Load the difficult polygons file.
-				MtSpokaneMapItems.addDifficultPolygonsAsync(this@MainMap.activity::class,
-					this@MainMap)
+					// Load the difficult polygons file.
+					MtSpokaneMapItems.addDifficultPolygonsAsync(this@MainMap.activity::class,
+							this@MainMap)
 			)
 
 			polygonLoads.awaitAll() // Wait for all loads to have finished...
