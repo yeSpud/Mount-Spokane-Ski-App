@@ -54,7 +54,7 @@ abstract class MapHandler(internal val activity: FragmentActivity,
 	abstract val mapOptionItemClickListener: OnItemClickListener
 
 	val mapOptionsDialog: DialogPlus = DialogPlus.newDialog(this.activity)
-		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this.activity, 5)).setOnItemClickListener(this.mapOptionItemClickListener)
+		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this.activity, 1)).setOnItemClickListener(this.mapOptionItemClickListener)
 		.setExpanded(true).create()
 
 	open fun destroy() {

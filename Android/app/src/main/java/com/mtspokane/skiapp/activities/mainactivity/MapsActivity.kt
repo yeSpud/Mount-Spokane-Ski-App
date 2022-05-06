@@ -65,6 +65,12 @@ class MapsActivity : FragmentActivity() {
 
 		MtSpokaneMapItems.checkoutObject(this::class)
 
+		binding.optionsButton.setOnClickListener {
+			if (map != null) {
+				this.map!!.mapOptionsDialog.show()
+			}
+		}
+
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
 		mapFragment.getMapAsync(this.map!!)
@@ -187,10 +193,6 @@ class MapsActivity : FragmentActivity() {
 					this.startActivity(intent)
 				}
 			}
-		}
-
-		if (map != null) {
-			this.map!!.mapOptionsDialog.show()
 		}
 
 		return super.onOptionsItemSelected(item)
