@@ -25,6 +25,6 @@ class DialogAdapter(context: Context, private val count: Int): BaseAdapter() {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 
-        return convertView ?: layoutInflater.inflate(R.layout.custom_menu, parent, false)
+        return convertView ?: layoutInflater.inflate(R.layout.custom_menu_v2, parent, false)
     }
 }
