@@ -40,7 +40,7 @@ class MapsActivity : FragmentActivity() {
 	var locationEnabled = false
 		private set
 
-	private var launchingFromWithin = false
+	var launchingFromWithin = false
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
