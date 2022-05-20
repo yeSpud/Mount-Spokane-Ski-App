@@ -30,11 +30,11 @@ class ActivityView : ConstraintLayout {
 
 		inflate(context, R.layout.activity_view, this)
 
-		this.icon = findViewById(R.id.icon)
-		this.title = findViewById(R.id.title_view)
-		this.maxSpeed = findViewById(R.id.max_speed)
-		this.averageSpeed = findViewById(R.id.average_speed)
-		this.startTime = findViewById(R.id.start_time)
-		this.endTime = findViewById(R.id.end_time)
+		this.icon = this.findViewById(R.id.icon)
+		this.title = this.findViewById(R.id.title_view)
+		this.maxSpeed = this.findViewById(R.id.max_speed)
+		this.averageSpeed = this.findViewById(R.id.average_speed)
+		this.startTime = this.findViewById(R.id.start_time)
+		this.endTime = this.findViewById(R.id.end_time)
 	}
 }

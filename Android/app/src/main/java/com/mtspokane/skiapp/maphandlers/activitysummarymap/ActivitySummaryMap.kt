@@ -137,9 +137,9 @@ class ActivitySummaryMap(activity: ActivitySummary) : MapHandler(activity, Camer
 		}.start()
 	}
 
-	override val mapOptionItemClickListener: OnItemClickListener = OnItemClickListener { dialog, item, view, position -> {
+	/* override val mapOptionItemClickListener: OnItemClickListener = OnItemClickListener { dialog, item, view, position -> {
 		// TODO
-	} }
+	} }*/
 
 	override fun destroy() {
 

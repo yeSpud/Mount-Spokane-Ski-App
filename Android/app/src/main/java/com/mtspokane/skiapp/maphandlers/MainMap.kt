@@ -53,10 +53,12 @@ class MainMap(activity: MapsActivity) : MapHandler(activity, CameraPosition.Buil
 		}
 	}
 
-	override val mapOptionItemClickListener: OnItemClickListener = OnItemClickListener { dialog, item, view, position -> {
-			// TODO
+	/* override val mapOptionItemClickListener: OnItemClickListener = OnItemClickListener { dialog, item, view, position -> {
+		item
+		dialog
+	// TODO
 		}
-	}
+	} */
 
 	override fun destroy() {
 

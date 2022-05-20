@@ -2,7 +2,6 @@ package com.mtspokane.skiapp.maphandlers
 
 import android.os.Build
 import android.util.Log
-import android.widget.BaseAdapter
 import androidx.annotation.AnyThread
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -31,8 +30,8 @@ import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
+import com.mtspokane.skiapp.maphandlers.customdialog.DialogAdapter
 import com.orhanobut.dialogplus.DialogPlus
-import com.orhanobut.dialogplus.OnItemClickListener
 import java.util.Locale
 import kotlin.Throws
 import kotlinx.coroutines.CoroutineStart
@@ -51,11 +50,11 @@ abstract class MapHandler(internal val activity: FragmentActivity,
 
 	abstract val additionalCallback: OnMapReadyCallback
 
-	abstract val mapOptionItemClickListener: OnItemClickListener
+	//abstract val mapOptionItemClickListener: OnItemClickListener
 
 	val mapOptionsDialog: DialogPlus = DialogPlus.newDialog(this.activity)
 		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this, 1))
-		.setOnItemClickListener(this.mapOptionItemClickListener)
+		//.setOnItemClickListener(this.mapOptionItemClickListener)
 		.setExpanded(true).create()
 
 	open fun destroy() {
