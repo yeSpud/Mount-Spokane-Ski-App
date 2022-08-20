@@ -6,7 +6,6 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdk 31
 
     dataBinding {
         enabled=true
@@ -15,14 +14,14 @@ android {
     defaultConfig {
         applicationId "com.mtspokane.skiapp"
         minSdk 21
-        targetSdk 31
+        targetSdk 33
 
         def versionNameDate = new Date().format('yyyy.MM.dd:HH.mm')
         versionCode 18
         versionName "$versionNameDate"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        targetSdkVersion 31
+        targetSdk 33
         minSdkVersion 21
     }
 
@@ -54,10 +53,11 @@ android {
     buildFeatures {
         viewBinding true
     }
-    compileSdkVersion 31
-    buildToolsVersion '32.0.0'
+    compileSdk 33
+    buildToolsVersion '33.0.0'
     dependenciesInfo {
         includeInBundle true
+        includeInApk true
     }
     namespace 'com.mtspokane.skiapp'
 }
@@ -65,20 +65,20 @@ android {
 dependencies {
 
     // App layout stuff
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     // Theming
-    implementation 'com.google.android.material:material:1.6.0'
+    implementation 'com.google.android.material:material:1.6.1'
 
     // Google Maps stuff
-    implementation 'com.google.android.gms:play-services-maps:18.0.2'
-    implementation 'com.google.maps.android:android-maps-utils:2.3.0'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
+    implementation 'com.google.maps.android:android-maps-utils:2.4.0'
     implementation 'com.google.maps.android:maps-ktx:3.4.0'
     implementation 'com.google.maps.android:maps-utils-ktx:3.4.0'
 
     // Kotlin activity
-    implementation 'androidx.activity:activity-ktx:1.4.0'
+    implementation 'androidx.activity:activity-ktx:1.5.1'
 
     // Unit testing
     testImplementation 'junit:junit:4.13.2'
@@ -86,12 +86,12 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     // Kotlin
-    implementation "androidx.core:core-ktx:1.7.0"
+    implementation 'androidx.core:core-ktx:1.8.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // Kotlin coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1-native-mt'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1-native-mt'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
     // Room (elevation database)
     //implementation "androidx.room:room-runtime:2.4.1"

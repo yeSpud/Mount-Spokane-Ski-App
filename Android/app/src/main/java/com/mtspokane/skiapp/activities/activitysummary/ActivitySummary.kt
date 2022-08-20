@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
 import android.content.Context
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -17,7 +16,6 @@ import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databases.ActivityDatabase
@@ -48,9 +46,6 @@ class ActivitySummary : FragmentActivity() {
 	private lateinit var container: LinearLayout
 
 	private lateinit var fileSelectionDialog: FileSelectionDialog
-
-	@Deprecated("Fix this")
-	private var mostRecentlyAddedActivityView: ActivityView? = null
 
 	private val exportJsonCallback: ActivityResultLauncher<String> = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
 
@@ -225,10 +220,22 @@ class ActivitySummary : FragmentActivity() {
 					return@async
 				}
 
-				val activityQueue: LinkedList<SkiingActivity> = LinkedList()
-				activityQueue.addAll(activities)
-				this@ActivitySummary.addToViewRecursively(activityQueue)
-				this@ActivitySummary.mostRecentlyAddedActivityView = null
+				val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(activities)
+
+				val mapMarkerList: LinkedList<MapMarker> = LinkedList()
+
+				for (mapMarker in mapMarkers) {
+					this@ActivitySummary.addMapMarkerToMap(mapMarker)
+					mapMarkerList.add(mapMarker)
+				}
+
+				val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkerList)
+
+				withContext(Dispatchers.Main) {
+					for (entry in activitySummaryEntries) {
+						this@ActivitySummary.createActivityView(entry)
+					}
+				}
 			}.await()
 
 			if (this@ActivitySummary.mapHandler != null) {
@@ -259,166 +266,42 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		withContext(Dispatchers.Main) {
-			val foo = ActivitySummaryLocationMarkers(this@ActivitySummary.mapHandler!!.map!!,
-				mapMarker, snippetText)
-			this@ActivitySummary.mapHandler!!.locationMarkers.add(foo)
+			val activitySummaryLocation = ActivitySummaryLocationMarkers(this@ActivitySummary.mapHandler!!.map!!,
+					mapMarker, snippetText)
+			this@ActivitySummary.mapHandler!!.locationMarkers.add(activitySummaryLocation)
 		}
-	}
-
-	private suspend fun addToViewRecursively(linkedList: LinkedList<SkiingActivity>): Unit = coroutineScope { // FIXME (still duplicated locations and misses others)
-
-		val tag = "addToViewRecursively"
-
-		// If the list is empty then return now.
-		if (linkedList.isEmpty()) {
-			return@coroutineScope
-		}
-
-		// Get the starting activity from the list. Be sure it is removed.
-		val startingActivity: SkiingActivity = linkedList.removeFirst()
-
-		// Update the locations.
-		ActivitySummaryLocations.updateLocations(startingActivity)
-
-		// Get the starting activity item.
-		val startingMapMarker: MapMarker = this@ActivitySummary.getMapMarker()
-		Log.v(tag, "Starting with ${startingMapMarker.name} (${linkedList.size} items left)")
-
-		// Add the starting circle to the map.
-		this@ActivitySummary.addMapMarkerToMap(startingMapMarker)
-
-		// If the starting location is unknown skip it.
-		if (startingMapMarker.name == UNKNOWN_LOCATION) {
-			this@ActivitySummary.addToViewRecursively(linkedList)
-			return@coroutineScope
-		}
-
-		// Get the ending activity, and continue to update it until the list is empty (or other... see below).
-		var endingActivity: SkiingActivity? = null
-		var maxSpeed = 0.0F
-		var speedSum = 0.0F
-		var sum = 0
-		while(linkedList.isNotEmpty()) {
-
-			// Remove the now first item in the list as a potential ending activity.
-			val potentialEndingActivity: SkiingActivity = linkedList.first
-
-			// Update the locations.
-			ActivitySummaryLocations.updateLocations(potentialEndingActivity)
-
-			// Get the ending activity item.
-			val potentialEndingMapMarker: MapMarker = this@ActivitySummary.getMapMarker()
-
-			// Add the circle to the map.
-			this@ActivitySummary.addMapMarkerToMap(potentialEndingMapMarker)
-
-			// If the ending activity isn't unknown then check if it has matching names.
-			if (potentialEndingMapMarker.name != UNKNOWN_LOCATION) {
-
-				// If the names don't match exit the while loop.
-				if (startingMapMarker.name != potentialEndingMapMarker.name) {
-
-					Log.v(tag, "Next item should be ${potentialEndingMapMarker.name} (${linkedList.size} items left)")
-					break
-				}
-			}
-
-			if (potentialEndingActivity.speed > maxSpeed) {
-				maxSpeed = potentialEndingActivity.speed
-			}
-
-			speedSum += potentialEndingActivity.speed
-			sum++
-
-			// Otherwise continue looping and officially remove that first item from the list.
-			endingActivity = linkedList.removeFirst()
-		}
-
-		withContext(Dispatchers.Main) {
-
-			val view: ActivityView = if (endingActivity == null) {
-				this@ActivitySummary.createActivityView(startingMapMarker, maxSpeed,
-						speedSum / sum, null)
-			} else {
-				this@ActivitySummary.createActivityView(startingMapMarker, maxSpeed,
-						speedSum / sum, endingActivity.time)
-			}
-
-			if (this@ActivitySummary.mostRecentlyAddedActivityView != null) {
-				if (this@ActivitySummary.mostRecentlyAddedActivityView!!.title.text == view.title.text) {
-					Log.w(tag, "Found view with same title!")
-				} else {
-					this@ActivitySummary.mostRecentlyAddedActivityView = view
-					this@ActivitySummary.container.addView(view)
-				}
-			} else {
-				this@ActivitySummary.mostRecentlyAddedActivityView = view
-				this@ActivitySummary.container.addView(view)
-			}
-		}
-
-		this@ActivitySummary.addToViewRecursively(linkedList)
-	}
-
-	private fun getMapMarker(): MapMarker {
-
-		var marker: MapMarker? = ActivitySummaryLocations.checkIfIOnChairlift()
-		if (marker != null) {
-			return marker
-		}
-
-		marker = ActivitySummaryLocations.checkIfAtChairliftTerminals()
-		if (marker != null) {
-			return marker
-		}
-
-		marker = ActivitySummaryLocations.checkIfOnOther()
-		if (marker != null) {
-			return marker
-		}
-
-		marker = ActivitySummaryLocations.checkIfOnRun()
-		if (marker != null) {
-			return marker
-		}
-
-		Log.w("getMapMarker", "Unable to determine location")
-		return  MapMarker(UNKNOWN_LOCATION, ActivitySummaryLocations.currentLocation!!,
-			R.drawable.ic_missing, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-			Color.MAGENTA)
 	}
 
 	@MainThread
-	private fun createActivityView(mapMarker: MapMarker, maxSpeed: Float, averageSpeed: Float,
-								   endTime: Long?): ActivityView {
+	private fun createActivityView(activitySummaryEntry: ActivitySummaryEntry): ActivityView {
 
 		val activityView = ActivityView(this)
 
-		activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, mapMarker.icon))
+		activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, activitySummaryEntry.mapMarker.icon))
 
-		activityView.title.text = mapMarker.name
+		activityView.title.text = activitySummaryEntry.mapMarker.name
 
 		// Convert from meters per second to miles per hour.
 		val conversion = 0.44704f
 
 		try {
-			activityView.maxSpeed.text = this.getString(R.string.max_speed, (maxSpeed / conversion)
-				.roundToInt())
+			activityView.maxSpeed.text = this.getString(R.string.max_speed,
+					(activitySummaryEntry.maxSpeed / conversion).roundToInt())
 		} catch (e: IllegalArgumentException) {
 			activityView.maxSpeed.text = this.getString(R.string.max_speed, 0)
 		}
 
 		try {
 			activityView.averageSpeed.text = this.getString(R.string.average_speed,
-				(averageSpeed / conversion).roundToInt())
+					(activitySummaryEntry.averageSpeed / conversion).roundToInt())
 		} catch (e: IllegalArgumentException) {
 			activityView.averageSpeed.text = this.getString(R.string.average_speed, 0)
 		}
 
-		activityView.startTime.text = TimeManager.getTimeFromLong(mapMarker.skiingActivity.time)
+		activityView.startTime.text = TimeManager.getTimeFromLong(activitySummaryEntry.mapMarker.skiingActivity.time)
 
-		if (endTime != null) {
-			activityView.endTime.text = TimeManager.getTimeFromLong(endTime)
+		if (activitySummaryEntry.endTime != null) {
+			activityView.endTime.text = TimeManager.getTimeFromLong(activitySummaryEntry.endTime)
 		}
 
 		return activityView
@@ -430,6 +313,48 @@ class ActivitySummary : FragmentActivity() {
 
 		const val GEOJSON_MIME_TYPE = "application/geojson"
 
-		private const val UNKNOWN_LOCATION = "Unknown Location"
+		fun parseMapMarkersForMap(linkedList: LinkedList<MapMarker>): Array<ActivitySummaryEntry> {
+
+			val collectorArrayList: ArrayList<ActivitySummaryEntry> = ArrayList()
+
+			val initial: MapMarker = linkedList.removeFirst()
+			var final: MapMarker? = null
+
+			// Skip unknown locations.
+			if (initial.name == MapMarker.UNKNOWN_LOCATION) {
+				collectorArrayList.addAll(parseMapMarkersForMap(linkedList))
+				return collectorArrayList.toTypedArray()
+			}
+
+			var maxSpeed = 0.0F
+			var speedSum = 0.0F
+			var sum = 0
+			while (linkedList.isNotEmpty()) {
+
+				if (initial.name != linkedList[0].name) { // TODO Convert to overload operator when implemented
+					break
+				}
+
+				final = linkedList.removeFirst()
+				if (final.skiingActivity.speed > maxSpeed) {
+					maxSpeed = final.skiingActivity.speed
+				}
+
+				speedSum += final.skiingActivity.speed
+				sum++
+			}
+
+			val entry = ActivitySummaryEntry(initial, maxSpeed, speedSum/sum, final?.skiingActivity?.time)
+			collectorArrayList.add(entry)
+
+			return if (linkedList.isEmpty()) {
+				collectorArrayList.toTypedArray()
+			} else {
+				collectorArrayList.addAll(this.parseMapMarkersForMap(linkedList))
+				collectorArrayList.toTypedArray()
+			}
+		}
 	}
+
+	data class ActivitySummaryEntry(val mapMarker: MapMarker, val maxSpeed: Float, val averageSpeed: Float, val endTime: Long?)
 }

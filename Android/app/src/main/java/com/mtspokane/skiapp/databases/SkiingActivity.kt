@@ -64,6 +64,8 @@ class SkiingActivity : Parcelable {
 		this.time = time
 	}
 
+	// TODO Make custom equals operator to tell if the location is the same. Its fine if all else are different.
+
 	override fun writeToParcel(parcel: Parcel, flags: Int) {
 		parcel.writeFloat(this.accuracy)
 		parcel.writeDouble(this.altitude)
