@@ -53,7 +53,7 @@ abstract class MapHandler(internal val activity: FragmentActivity,
 	//abstract val mapOptionItemClickListener: OnItemClickListener
 
 	val mapOptionsDialog: DialogPlus = DialogPlus.newDialog(this.activity)
-		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this, 1))
+		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this, 1)) // TODO Leaking map handler
 		//.setOnItemClickListener(this.mapOptionItemClickListener)
 		.setExpanded(true).create()
 

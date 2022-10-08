@@ -57,8 +57,9 @@ class MapsActivity : FragmentActivity() {
 		this.locationEnabled = this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
 			Process.myUid()) == PackageManager.PERMISSION_GRANTED
 
-		// Be sure to show the action bar.
-		this.actionBar!!.setDisplayShowTitleEnabled(true)
+		// Be sure to hide the action bar.
+		this.actionBar!!.setDisplayShowTitleEnabled(false)
+		this.actionBar!!.hide()
 
 		// Setup the map handler.
 		this.map = MainMap(this)
@@ -86,7 +87,7 @@ class MapsActivity : FragmentActivity() {
 					this@MapsActivity.map!!.updateMarkerLocation(InAppLocations.currentLocation!!)
 				}
 
-				this@MapsActivity.actionBar!!.title = locationString
+				//this@MapsActivity.actionBar!!.title = locationString
 			}
 		}
 	}
@@ -125,6 +126,7 @@ class MapsActivity : FragmentActivity() {
 		}
 	}
 
+	/*
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
 		this.menuInflater.inflate(R.menu.maps_menu, menu)
 		return super.onCreateOptionsMenu(menu)
@@ -197,6 +199,7 @@ class MapsActivity : FragmentActivity() {
 
 		return super.onOptionsItemSelected(item)
 	}
+	 */
 
 	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
 	                                        grantResults: IntArray) {

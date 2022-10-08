@@ -65,7 +65,7 @@ android {
 dependencies {
 
     // App layout stuff
-    implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     // Theming
@@ -78,7 +78,7 @@ dependencies {
     implementation 'com.google.maps.android:maps-utils-ktx:3.4.0'
 
     // Kotlin activity
-    implementation 'androidx.activity:activity-ktx:1.5.1'
+    implementation 'androidx.activity:activity-ktx:1.6.0'
 
     // Unit testing
     testImplementation 'junit:junit:4.13.2'
@@ -87,7 +87,7 @@ dependencies {
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 
     // Kotlin
-    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.core:core-ktx:1.9.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // Kotlin coroutines

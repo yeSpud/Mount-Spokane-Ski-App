@@ -13,8 +13,7 @@ class CustomDialogEntry: LinearLayout {
 
 	val menuEntryText: TextView
 
-	var itemEnabled: Boolean
-	private set
+	private var itemEnabled: Boolean
 
 	constructor(context: Context): this(context, null)
 
