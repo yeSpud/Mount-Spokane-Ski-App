@@ -53,8 +53,8 @@ abstract class MapHandler(internal val activity: FragmentActivity,
 	//abstract val mapOptionItemClickListener: OnItemClickListener
 
 	val mapOptionsDialog: DialogPlus = DialogPlus.newDialog(this.activity)
-		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this, 1)) // TODO Leaking map handler
-		//.setOnItemClickListener(this.mapOptionItemClickListener)
+		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this, 1)) // FIXME Leaking map handler
+		//.setOnItemClickListener(this.mapOptionItemClickListener) // TODO Height clipping when shown
 		.setExpanded(true).create()
 
 	open fun destroy() {
