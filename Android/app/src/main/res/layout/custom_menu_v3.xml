@@ -57,7 +57,7 @@
         app:layout_constraintLeft_toRightOf="@id/show_difficult_runs"
         app:layout_constraintRight_toLeftOf="@id/launch_activity_summary"
         app:layout_constraintTop_toBottomOf="@id/show_easy_runs"
-        app:menu_icon="@drawable/ic_missing"
+        app:menu_icon="@drawable/night"
         app:menu_title="@string/night_runs" />
 
     <com.mtspokane.skiapp.maphandlers.customdialog.CustomDialogEntry

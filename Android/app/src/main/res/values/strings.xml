@@ -24,7 +24,7 @@
     <string name="activity_notification_text">Tap here to view your activity summary</string>
 
     <!-- Menu text -->
-    <string name="options_menu">Options</string>
+    <string name="options_menu">☰</string>
     <string name="show_chairlifts">Show Chairlifts</string>
     <string name="show_beginner">Show Beginner Runs</string>
     <string name="show_intermediate">Show Intermediate Runs</string>

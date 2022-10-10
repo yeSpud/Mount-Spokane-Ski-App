@@ -125,10 +125,20 @@ class DialogAdapter(private val mapHandler: MapHandler, private val count: Int) 
 
 		override fun onClick(v: View?) {
 
+			if (v == null) {
+				return
+			}
+
+			if (v !is CustomDialogEntry) {
+				return
+			}
+
 			Log.v("CustomOnClickListener", "Custom button has been clicked!")
 			for (run in this.runs) {
 				run.togglePolyLineVisibility(!run.defaultVisibility, isNightOnly)
 			}
+
+			v.setGlowing(this.runs[0].defaultVisibility)
 		}
 	}
 
@@ -164,6 +174,8 @@ class DialogAdapter(private val mapHandler: MapHandler, private val count: Int) 
 			MtSpokaneMapItems.difficultRuns!!.forEach {
 				it.togglePolyLineVisibility(it.defaultVisibility, nightOnly)
 			}
+
+			view.setGlowing(nightOnly)
 		}
 	}
 }
