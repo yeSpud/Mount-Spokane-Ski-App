@@ -1,6 +1,7 @@
 package com.mtspokane.skiapp.maphandlers.customdialog
 
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +11,7 @@ import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.activities.mainactivity.MapsActivity
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
 import kotlinx.coroutines.launch
 
@@ -29,8 +31,6 @@ class DialogAdapter(private val mapHandler: MapHandler, private val count: Int) 
 
 	private var launchActivitySummaryButton: CustomDialogEntry? = null
 
-	private var isNightOnly: Boolean = false
-
 	override fun getCount(): Int {
 		return this.count
 	}
@@ -45,126 +45,60 @@ class DialogAdapter(private val mapHandler: MapHandler, private val count: Int) 
 
 	override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 
-		val view: View =
-			convertView ?: layoutInflater.inflate(R.layout.custom_menu_v3, parent, false)
+		val view: View = convertView ?: layoutInflater.inflate(R.layout.custom_menu_v3, parent, false)
 
 		if (MtSpokaneMapItems.chairlifts == null) {
 			this.mapHandler.activity.lifecycleScope.launch {
-				MtSpokaneMapItems.initializeChairliftsAsync(
-					this@DialogAdapter.mapHandler.activity::class,
-					this@DialogAdapter.mapHandler
-				).start()
+				MtSpokaneMapItems.initializeChairliftsAsync(this@DialogAdapter.mapHandler.activity::class,
+					this@DialogAdapter.mapHandler).start()
 			}
 		}
 
 		if (MtSpokaneMapItems.easyRuns == null) {
 			this.mapHandler.activity.lifecycleScope.launch {
-				MtSpokaneMapItems.initializeEasyRunsAsync(
-					this@DialogAdapter.mapHandler.activity::class,
-					this@DialogAdapter.mapHandler
-				).start()
+				MtSpokaneMapItems.initializeEasyRunsAsync(this@DialogAdapter.mapHandler.activity::class,
+					this@DialogAdapter.mapHandler).start()
 			}
 		}
 
 		if (MtSpokaneMapItems.moderateRuns == null) {
 			this.mapHandler.activity.lifecycleScope.launch {
-				MtSpokaneMapItems.initializeModerateRunsAsync(
-					this@DialogAdapter.mapHandler.activity::class,
-					this@DialogAdapter.mapHandler
-				).start()
+				MtSpokaneMapItems.initializeModerateRunsAsync(this@DialogAdapter.mapHandler.activity::class,
+					this@DialogAdapter.mapHandler).start()
 			}
 		}
 
 		if (MtSpokaneMapItems.difficultRuns == null) {
 			this.mapHandler.activity.lifecycleScope.launch {
-				MtSpokaneMapItems.initializeDifficultRunsAsync(
-					this@DialogAdapter.mapHandler.activity::class,
-					this@DialogAdapter.mapHandler
-				).start()
+				MtSpokaneMapItems.initializeDifficultRunsAsync(this@DialogAdapter.mapHandler.activity::class,
+					this@DialogAdapter.mapHandler).start()
 			}
 		}
 
 		if (this.showChairliftImage == null) {
 			this.showChairliftImage = view.findViewById(R.id.show_chairlift)
-			this.showChairliftImage!!.setOnClickListener {
-				MtSpokaneMapItems.chairlifts!!.forEach {
-					it.togglePolyLineVisibility(
-						!this.showChairliftImage!!.itemEnabled,
-						this.isNightOnly
-					)
-				}
-			}
+			this.showChairliftImage!!.setOnClickListener(CustomOnClickListener(MtSpokaneMapItems.chairlifts!!))
 		}
 
 		if (this.showEasyRunsImage == null) {
 			this.showEasyRunsImage = view.findViewById(R.id.show_easy_runs)
-			this.showEasyRunsImage!!.setOnClickListener {
-				MtSpokaneMapItems.easyRuns!!.forEach {
-					it.togglePolyLineVisibility(
-						!this.showEasyRunsImage!!.itemEnabled,
-						this.isNightOnly
-					)
-				}
-			}
+			this.showEasyRunsImage!!.setOnClickListener(CustomOnClickListener(MtSpokaneMapItems.easyRuns!!))
 		}
 
 		if (this.showModerateRunsImage == null) {
 			this.showModerateRunsImage = view.findViewById(R.id.show_moderate_runs)
-			this.showModerateRunsImage!!.setOnClickListener {
-				MtSpokaneMapItems.moderateRuns!!.forEach {
-					it.togglePolyLineVisibility(
-						!this.showModerateRunsImage!!.itemEnabled,
-						this.isNightOnly
-					)
-				}
-			}
+			this.showModerateRunsImage!!.setOnClickListener(CustomOnClickListener(MtSpokaneMapItems.moderateRuns!!))
 		}
 
 
 		if (this.showDifficultRunsImage == null) {
 			this.showDifficultRunsImage = view.findViewById(R.id.show_difficult_runs)
-			this.showDifficultRunsImage!!.setOnClickListener {
-				MtSpokaneMapItems.difficultRuns!!.forEach {
-					it.togglePolyLineVisibility(
-						!this.showDifficultRunsImage!!.itemEnabled,
-						this.isNightOnly
-					)
-				}
-			}
+			this.showDifficultRunsImage!!.setOnClickListener(CustomOnClickListener(MtSpokaneMapItems.difficultRuns!!))
 		}
 
 		if (this.showNightRunsButton == null) {
 			this.showNightRunsButton = view.findViewById(R.id.show_night_runs)
-			this.showNightRunsButton!!.setOnClickListener {
-
-				MtSpokaneMapItems.chairlifts!!.forEach {
-					it.togglePolyLineVisibility(
-						it.defaultVisibility,
-						!this.showNightRunsButton!!.itemEnabled
-					)
-				}
-
-				MtSpokaneMapItems.easyRuns!!.forEach {
-					it.togglePolyLineVisibility(
-						it.defaultVisibility,
-						!this.showNightRunsButton!!.itemEnabled
-					)
-				}
-
-				MtSpokaneMapItems.moderateRuns!!.forEach {
-					it.togglePolyLineVisibility(
-						it.defaultVisibility,
-						!this.showNightRunsButton!!.itemEnabled
-					)
-				}
-
-				MtSpokaneMapItems.difficultRuns!!.forEach {
-					it.togglePolyLineVisibility(
-						it.defaultVisibility,
-						!this.showNightRunsButton!!.itemEnabled
-					)
-				}
-			}
+			this.showNightRunsButton!!.setOnClickListener(NightRunOnClickListener())
 		}
 
 
@@ -181,5 +115,67 @@ class DialogAdapter(private val mapHandler: MapHandler, private val count: Int) 
 		}
 
 		return view
+	}
+
+	companion object {
+		private var isNightOnly: Boolean = false
+	}
+
+	private class CustomOnClickListener(val runs: List<PolylineMapItem>): View.OnClickListener {
+
+		override fun onClick(v: View?) {
+
+			if (v == null) {
+				return
+			}
+
+			if (v !is CustomDialogEntry) {
+				return
+			}
+
+			Log.v("CustomOnClickListener", "Custom button has been clicked!")
+			for (run in this.runs) {
+				run.togglePolyLineVisibility(!run.defaultVisibility, isNightOnly)
+			}
+
+			v.setGlowing(this.runs[0].defaultVisibility)
+		}
+	}
+
+	private class NightRunOnClickListener: View.OnClickListener {
+
+		private var nightOnly = false
+		override fun onClick(view: View?) {
+
+			if (view == null) {
+				return
+			}
+
+			if (view !is CustomDialogEntry) {
+				return
+			}
+
+			Log.v("onClickListener", "Show night runs has been clicked!")
+
+			nightOnly = !nightOnly
+
+			MtSpokaneMapItems.chairlifts!!.forEach {
+				it.togglePolyLineVisibility(it.defaultVisibility, nightOnly)
+			}
+
+			MtSpokaneMapItems.easyRuns!!.forEach {
+				it.togglePolyLineVisibility(it.defaultVisibility, nightOnly)
+			}
+
+			MtSpokaneMapItems.moderateRuns!!.forEach {
+				it.togglePolyLineVisibility(it.defaultVisibility, nightOnly)
+			}
+
+			MtSpokaneMapItems.difficultRuns!!.forEach {
+				it.togglePolyLineVisibility(it.defaultVisibility, nightOnly)
+			}
+
+			view.setGlowing(nightOnly)
+		}
 	}
 }

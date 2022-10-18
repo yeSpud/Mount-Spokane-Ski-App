@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
@@ -47,7 +48,7 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var fileSelectionDialog: FileSelectionDialog
 
-	private val exportJsonCallback: ActivityResultLauncher<String> = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
+	private val exportJsonCallback: ActivityResultLauncher<String> = this.registerForActivityResult(ActivityResultContracts.CreateDocument(JSON_MIME_TYPE)) {
 
 		if (it != null) {
 
@@ -57,7 +58,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private val exportGeoJsonCallback: ActivityResultLauncher<String> = this.registerForActivityResult(ActivityResultContracts.CreateDocument()) {
+	private val exportGeoJsonCallback: ActivityResultLauncher<String> = this.registerForActivityResult(ActivityResultContracts.CreateDocument(GEOJSON_MIME_TYPE)) {
 
 		if (it != null) {
 
@@ -212,6 +213,8 @@ class ActivitySummary : FragmentActivity() {
 			}
 		}
 
+		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
+
 		lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
 
 			async(Dispatchers.IO, CoroutineStart.LAZY) {
@@ -222,19 +225,19 @@ class ActivitySummary : FragmentActivity() {
 
 				val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(activities)
 
-				val mapMarkerList: LinkedList<MapMarker> = LinkedList()
-
 				for (mapMarker in mapMarkers) {
-					this@ActivitySummary.addMapMarkerToMap(mapMarker)
-					mapMarkerList.add(mapMarker)
+					addMapMarkerToMap(mapMarker)
 				}
 
-				val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkerList)
+				val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkers)
 
 				withContext(Dispatchers.Main) {
 					for (entry in activitySummaryEntries) {
-						this@ActivitySummary.createActivityView(entry)
+						val view = this@ActivitySummary.createActivityView(entry)
+						container.addView(view)
 					}
+					loadingToast.cancel()
+					Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
 				}
 			}.await()
 
@@ -245,6 +248,8 @@ class ActivitySummary : FragmentActivity() {
 			}
 
 		}.start()
+
+		loadingToast.show()
 	}
 
 	@AnyThread
@@ -313,46 +318,52 @@ class ActivitySummary : FragmentActivity() {
 
 		const val GEOJSON_MIME_TYPE = "application/geojson"
 
-		fun parseMapMarkersForMap(linkedList: LinkedList<MapMarker>): Array<ActivitySummaryEntry> {
+		fun parseMapMarkersForMap(mapMarkers: Array<MapMarker>): Array<ActivitySummaryEntry> {
 
-			val collectorArrayList: ArrayList<ActivitySummaryEntry> = ArrayList()
+			// Create a place to store all the ActivitySummaryEntries.
+			val arraySummaryEntries = mutableListOf<ActivitySummaryEntry>()
 
-			val initial: MapMarker = linkedList.removeFirst()
-			var final: MapMarker? = null
-
-			// Skip unknown locations.
-			if (initial.name == MapMarker.UNKNOWN_LOCATION) {
-				collectorArrayList.addAll(parseMapMarkersForMap(linkedList))
-				return collectorArrayList.toTypedArray()
+			var startingIndexOffset = 0
+			for (i in 0..mapMarkers.size) {
+				if (mapMarkers[i].name != MapMarker.UNKNOWN_LOCATION) {
+					startingIndexOffset = i
+					break
+				}
 			}
 
+			var startingMapMarker = mapMarkers[startingIndexOffset]
 			var maxSpeed = 0.0F
 			var speedSum = 0.0F
 			var sum = 0
-			while (linkedList.isNotEmpty()) {
 
-				if (initial.name != linkedList[0].name) { // TODO Convert to overload operator when implemented
-					break
+			for (i in startingIndexOffset until mapMarkers.size) {
+				val entry:MapMarker = mapMarkers[i]
+
+				if (entry.name != MapMarker.UNKNOWN_LOCATION) {
+
+					if (entry.name != startingMapMarker.name) {
+
+						val newActivitySummaryEntry = ActivitySummaryEntry(startingMapMarker, maxSpeed, speedSum/sum, entry.skiingActivity.time)
+						arraySummaryEntries.add(newActivitySummaryEntry)
+
+						maxSpeed = 0.0F
+						speedSum = 0.0F
+						sum = 0
+						startingMapMarker = entry
+					}
 				}
 
-				final = linkedList.removeFirst()
-				if (final.skiingActivity.speed > maxSpeed) {
-					maxSpeed = final.skiingActivity.speed
+				if (entry.skiingActivity.speed > maxSpeed) {
+					maxSpeed = entry.skiingActivity.speed;
 				}
-
-				speedSum += final.skiingActivity.speed
-				sum++
+				speedSum += entry.skiingActivity.speed
+				++sum
 			}
 
-			val entry = ActivitySummaryEntry(initial, maxSpeed, speedSum/sum, final?.skiingActivity?.time)
-			collectorArrayList.add(entry)
+			val finalActivitySummary = ActivitySummaryEntry(startingMapMarker, maxSpeed, speedSum/sum, mapMarkers.last().skiingActivity.time)
+			arraySummaryEntries.add(finalActivitySummary)
 
-			return if (linkedList.isEmpty()) {
-				collectorArrayList.toTypedArray()
-			} else {
-				collectorArrayList.addAll(this.parseMapMarkersForMap(linkedList))
-				collectorArrayList.toTypedArray()
-			}
+			return arraySummaryEntries.toTypedArray()
 		}
 	}
 

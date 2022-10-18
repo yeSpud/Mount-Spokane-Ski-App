@@ -11,30 +11,22 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Process
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.SupportMapFragment
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import com.mtspokane.skiapp.maphandlers.MainMap
-import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 class MapsActivity : FragmentActivity() {
 
 	private var map: MainMap? = null
 
 	private var locationChangeCallback: InAppLocations.VisibleLocationUpdate? = null
-
-	// Boolean used to determine if only night runs are to be shown.
-	private var nightRunsOnly = false
 
 	// Boolean used to determine if the user's precise location is enabled (and therefore accessible).
 	var locationEnabled = false
@@ -57,8 +49,9 @@ class MapsActivity : FragmentActivity() {
 		this.locationEnabled = this.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, Process.myPid(),
 			Process.myUid()) == PackageManager.PERMISSION_GRANTED
 
-		// Be sure to show the action bar.
-		this.actionBar!!.setDisplayShowTitleEnabled(true)
+		// Be sure to hide the action bar.
+		this.actionBar!!.setDisplayShowTitleEnabled(false)
+		this.actionBar!!.hide()
 
 		// Setup the map handler.
 		this.map = MainMap(this)
@@ -85,8 +78,6 @@ class MapsActivity : FragmentActivity() {
 				if (this@MapsActivity.map != null) {
 					this@MapsActivity.map!!.updateMarkerLocation(InAppLocations.currentLocation!!)
 				}
-
-				this@MapsActivity.actionBar!!.title = locationString
 			}
 		}
 	}
@@ -123,79 +114,6 @@ class MapsActivity : FragmentActivity() {
 				this.finish()
 			}
 		}
-	}
-
-	override fun onCreateOptionsMenu(menu: Menu): Boolean {
-		this.menuInflater.inflate(R.menu.maps_menu, menu)
-		return super.onCreateOptionsMenu(menu)
-	}
-
-	override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
-		// Only execute the following checks if the map handler is not null.
-		if (this.map != null) {
-
-			if (MtSpokaneMapItems.chairlifts == null) {
-				lifecycleScope.launch { MtSpokaneMapItems.initializeChairliftsAsync(this@MapsActivity::class,
-					this@MapsActivity.map!!).start() }
-			}
-
-			if (MtSpokaneMapItems.easyRuns == null) {
-				lifecycleScope.launch { MtSpokaneMapItems.initializeEasyRunsAsync(this@MapsActivity::class,
-					this@MapsActivity.map!!).start() }
-			}
-
-			if (MtSpokaneMapItems.moderateRuns == null) {
-				lifecycleScope.launch { MtSpokaneMapItems.initializeModerateRunsAsync(this@MapsActivity::class,
-					this@MapsActivity.map!!).start() }
-			}
-
-			if (MtSpokaneMapItems.difficultRuns == null) {
-				lifecycleScope.launch { MtSpokaneMapItems.initializeDifficultRunsAsync(this@MapsActivity::class,
-					this@MapsActivity.map!!).start() }
-			}
-
-			val checked = !item.isChecked
-			item.isChecked = checked
-			Log.d("onOptionsItemSelected", "Option selected: $checked")
-
-			when (item.itemId) {
-				R.id.chairlift -> MtSpokaneMapItems.chairlifts!!.forEach {
-					it.togglePolyLineVisibility(checked, this.nightRunsOnly)
-				}
-				R.id.easy -> MtSpokaneMapItems.easyRuns!!.forEach {
-					it.togglePolyLineVisibility(checked, this.nightRunsOnly)
-				}
-				R.id.moderate -> MtSpokaneMapItems.moderateRuns!!.forEach {
-					it.togglePolyLineVisibility(checked, this.nightRunsOnly)
-				}
-				R.id.difficult -> MtSpokaneMapItems.difficultRuns!!.forEach {
-					it.togglePolyLineVisibility(checked, this.nightRunsOnly)
-				}
-				R.id.night -> {
-					MtSpokaneMapItems.chairlifts!!.forEach {
-						it.togglePolyLineVisibility(it.defaultVisibility, checked)
-					}
-					MtSpokaneMapItems.easyRuns!!.forEach {
-						it.togglePolyLineVisibility(it.defaultVisibility, checked)
-					}
-					MtSpokaneMapItems.moderateRuns!!.forEach {
-						it.togglePolyLineVisibility(it.defaultVisibility, checked)
-					}
-					MtSpokaneMapItems.difficultRuns!!.forEach {
-						it.togglePolyLineVisibility(it.defaultVisibility, checked)
-					}
-					this.nightRunsOnly = checked
-				}
-				R.id.activity_summary -> {
-					this.launchingFromWithin = true
-					val intent = Intent(this, ActivitySummary::class.java)
-					this.startActivity(intent)
-				}
-			}
-		}
-
-		return super.onOptionsItemSelected(item)
 	}
 
 	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,

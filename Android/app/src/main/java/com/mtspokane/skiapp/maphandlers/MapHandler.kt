@@ -53,9 +53,9 @@ abstract class MapHandler(internal val activity: FragmentActivity,
 	//abstract val mapOptionItemClickListener: OnItemClickListener
 
 	val mapOptionsDialog: DialogPlus = DialogPlus.newDialog(this.activity)
-		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this, 1))
+		.setAdapter(/*this.mapOptionDialogAdapter*/DialogAdapter(this, 1)) // FIXME Leaking map handler
 		//.setOnItemClickListener(this.mapOptionItemClickListener)
-		.setExpanded(true).create()
+		.setExpanded(false).create()
 
 	open fun destroy() {
 

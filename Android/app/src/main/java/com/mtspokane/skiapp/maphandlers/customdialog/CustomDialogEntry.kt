@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import com.mtspokane.skiapp.R
 
 class CustomDialogEntry: LinearLayout {
@@ -13,8 +14,7 @@ class CustomDialogEntry: LinearLayout {
 
 	val menuEntryText: TextView
 
-	var itemEnabled: Boolean
-	private set
+	private var itemEnabled: Boolean
 
 	constructor(context: Context): this(context, null)
 
@@ -38,6 +38,14 @@ class CustomDialogEntry: LinearLayout {
 			}
 		}
 
+	}
+
+	fun setGlowing(glow: Boolean) {
+		if (glow) {
+			this.menuEntryIcon.background = AppCompatResources.getDrawable(context, R.drawable.glowing)
+		} else {
+			this.menuEntryIcon.background = null
+		}
 	}
 
 	override fun setOnClickListener(l: OnClickListener?) {

@@ -12,6 +12,8 @@
 
         <TextView
             android:id="@+id/menu_entry_text"
+            android:textColor="@color/white"
+            android:textAlignment="center"
             android:layout_width="@dimen/menu_image_size"
             android:layout_height="wrap_content" />
 

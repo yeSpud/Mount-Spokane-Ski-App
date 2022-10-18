@@ -24,7 +24,7 @@
     <string name="activity_notification_text">Tap here to view your activity summary</string>
 
     <!-- Menu text -->
-    <string name="options_menu">Options</string>
+    <string name="options_menu">☰</string>
     <string name="show_chairlifts">Show Chairlifts</string>
     <string name="show_beginner">Show Beginner Runs</string>
     <string name="show_intermediate">Show Intermediate Runs</string>
@@ -79,5 +79,7 @@
     <string name="bounds_missing">Stopping location tracking due to missing bounds</string>
     <string name="out_of_bounds">Stopping location tracking as user is outside ski area bounds</string>
     <string name="starting_tracking">Starting location tracking</string>
+    <string name="computing_location">Adding locations to map…</string>
+    <string name="done">Done!</string>
 
 </resources>
