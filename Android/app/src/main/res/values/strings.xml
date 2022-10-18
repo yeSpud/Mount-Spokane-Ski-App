@@ -79,5 +79,7 @@
     <string name="bounds_missing">Stopping location tracking due to missing bounds</string>
     <string name="out_of_bounds">Stopping location tracking as user is outside ski area bounds</string>
     <string name="starting_tracking">Starting location tracking</string>
+    <string name="computing_location">Adding locations to map…</string>
+    <string name="done">Done!</string>
 
 </resources>
