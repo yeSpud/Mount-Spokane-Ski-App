@@ -354,7 +354,7 @@ class ActivitySummary : FragmentActivity() {
 				}
 
 				if (entry.skiingActivity.speed > maxSpeed) {
-					maxSpeed = entry.skiingActivity.speed;
+					maxSpeed = entry.skiingActivity.speed
 				}
 				speedSum += entry.skiingActivity.speed
 				++sum
