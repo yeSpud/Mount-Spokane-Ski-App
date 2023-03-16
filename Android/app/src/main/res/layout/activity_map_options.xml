@@ -2,72 +2,63 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/dark_blue">
 
-    <ImageView
+    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
         android:id="@+id/show_chairlift"
         android:layout_width="@dimen/menu_image_size"
-        android:layout_height="@dimen/menu_image_size"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/menu_edge_margin"
         android:layout_marginTop="@dimen/menu_image_top_margin"
-        android:contentDescription="@string/show_chairlifts"
-        android:src="@drawable/ic_chairlift"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:menu_icon="@drawable/ic_chairlift"
+        app:menu_title="@string/show_chairlifts" />
 
-    <ImageView
+    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
         android:id="@+id/show_easy_runs"
         android:layout_width="@dimen/menu_image_size"
-        android:layout_height="@dimen/menu_image_size"
+        android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/menu_image_top_margin"
-        android:contentDescription="@string/show_beginner"
-        android:src="@drawable/ic_easy"
         app:layout_constraintLeft_toRightOf="@id/show_chairlift"
         app:layout_constraintRight_toLeftOf="@id/show_moderate_runs"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:menu_icon="@drawable/ic_easy"
+        app:menu_title="@string/show_beginner" />
 
-    <ImageView
+    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
         android:id="@+id/show_moderate_runs"
         android:layout_width="@dimen/menu_image_size"
-        android:layout_height="@dimen/menu_image_size"
+        android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/menu_image_top_margin"
         android:layout_marginEnd="@dimen/menu_edge_margin"
-        android:contentDescription="@string/show_intermediate"
-        android:src="@drawable/ic_moderate"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:menu_icon="@drawable/ic_moderate"
+        app:menu_title="@string/show_intermediate" />
 
-    <ImageView
+    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
         android:id="@+id/show_difficult_runs"
         android:layout_width="@dimen/menu_image_size"
-        android:layout_height="@dimen/menu_image_size"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/menu_edge_margin"
         android:layout_marginTop="@dimen/menu_image_top_margin"
-        android:contentDescription="@string/show_advanced"
-        android:src="@drawable/ic_difficult"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/show_chairlift" />
+        app:layout_constraintTop_toBottomOf="@id/show_chairlift"
+        app:menu_icon="@drawable/ic_difficult"
+        app:menu_title="@string/show_advanced" />
 
-    <Button
+    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
         android:id="@+id/show_night_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginTop="@dimen/menu_image_top_margin"
-        android:text="@string/night_runs"
-        app:layout_constraintLeft_toRightOf="@id/show_difficult_runs"
-        app:layout_constraintRight_toLeftOf="@id/launch_activity_summary"
-        app:layout_constraintTop_toBottomOf="@id/show_easy_runs" />
-
-    <Button
-        android:id="@+id/launch_activity_summary"
-        android:layout_width="@dimen/menu_image_size"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
         android:layout_marginTop="@dimen/menu_image_top_margin"
         android:layout_marginEnd="@dimen/menu_edge_margin"
-        android:text="@string/activity_summary"
+        app:layout_constraintLeft_toRightOf="@id/show_difficult_runs"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/show_moderate_runs" />
+        app:layout_constraintTop_toBottomOf="@id/show_easy_runs"
+        app:menu_icon="@drawable/night"
+        app:menu_title="@string/night_runs" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

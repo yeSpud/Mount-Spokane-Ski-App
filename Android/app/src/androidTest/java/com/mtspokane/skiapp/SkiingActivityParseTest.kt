@@ -8,13 +8,9 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
-import com.google.android.gms.maps.MapsInitializer
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary.ActivitySummaryEntry
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
 import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Before
@@ -104,6 +100,6 @@ class SkiingActivityParseTest {
 
 	companion object {
 		private const val TIMEOUT = 5000L
-		private const val SAMPLE_PACKAGE: String = "com.mtspokane.skiapp.activities.activitysummary.ActivitySummary"  // FIXME Find correct package name
+		private const val SAMPLE_PACKAGE: String = "com.mtspokane.skiapp.activities.ActivitySummary"  // FIXME Find correct package name
 	}
 }

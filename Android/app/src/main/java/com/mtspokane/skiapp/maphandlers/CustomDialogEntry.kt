@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.maphandlers.customdialog
+package com.mtspokane.skiapp.maphandlers
 
 import android.content.Context
 import android.util.AttributeSet

@@ -1,62 +1,31 @@
 package com.mtspokane.skiapp.mapItem
 
-import android.content.ContextWrapper
-import android.util.Log
-import androidx.annotation.AnyThread
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Polygon
-import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.maphandlers.MapHandler
-import kotlin.reflect.KClass
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withContext
+object MtSpokaneMapBounds {
 
-object MtSpokaneMapItems {
+	var skiAreaBounds: MapItem? = null
 
-	private val classesUsingObject: MutableList<KClass<out ContextWrapper>> = mutableListOf()
+	val other: MutableList<MapItem> = mutableListOf() // Should be 9
 
-	var checkedOutCount = this.classesUsingObject.size
-	private set
+	val chairliftTerminals: MutableList<MapItem> = mutableListOf() // Should be size 6
 
-	var skiAreaBounds: PolygonMapItem? = null
-	private set
+	val chairliftsBounds: MutableList<MapItem> = mutableListOf() // Should be size 6
 
-	var other: List<PolygonMapItem>? = null // Should be 9
-	private set
+	val easyRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 22
 
-	var chairliftTerminals: List<PolygonMapItem>? = null // Should be size 6
-	private set
+	val moderateRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 19
 
-	var chairlifts: List<PolylineMapItem>? = null // Should be size 6
-	private set
-
-	var easyRuns: List<PolylineMapItem>? = null // Should be size 22
-	private set
-
-	var moderateRuns: List<PolylineMapItem>? = null // Should be size 19
-	private set
-
-	var difficultRuns: List<PolylineMapItem>? = null // Should be size 25
-	private set
-
-	fun checkoutObject(classUsingObject: KClass<out ContextWrapper>) {
-		if (!this.classesUsingObject.contains(classUsingObject)) {
-			this.classesUsingObject.add(classUsingObject)
-			this.checkedOutCount++
-		}
-	}
+	val difficultRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 25
 
 	/**
 	 * lodges, parking lots, vista house, tubing area, yurt, ski patrol building, and ski area bounds...
 	 */
+	/*
 	@AnyThread
+	@Deprecated("To be removed")
 	suspend fun initializeOtherPolygonsAsync(classUsingObject: KClass<out ContextWrapper>,
 	                                         mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "initializeOtherAsync"
 
 		return@coroutineScope async(Dispatchers.IO) {
@@ -77,13 +46,13 @@ object MtSpokaneMapItems {
 						boundsPoints.add(it.points)
 					}
 
-					this@MtSpokaneMapItems.skiAreaBounds = PolygonMapItem(skiAreaBoundsKeyName,
+					this@MtSpokaneMapBounds.skiAreaBounds = MapItem(skiAreaBoundsKeyName,
 						bounds.toMutableList(), boundsPoints)
 					hashmap.remove(skiAreaBoundsKeyName)
 				}
 			}
 
-			val othersList: MutableList<PolygonMapItem> = mutableListOf()
+			val othersList: MutableList<MapItem> = mutableListOf()
 
 			hashmap.keys.forEach {
 
@@ -106,33 +75,34 @@ object MtSpokaneMapItems {
 				}
 
 				withContext(Dispatchers.Main) {
-					val polygonMapItem: PolygonMapItem = if (uiMapItemPolygons != null) {
+					val mapItem: MapItem = if (uiMapItemPolygons != null) {
 
 						val uiMapItemPoints: MutableList<List<LatLng>> = mutableListOf()
 						uiMapItemPolygons.forEach { p ->
 							uiMapItemPoints.add(p.points)
 						}
 
-						PolygonMapItem(it, uiMapItemPolygons.toMutableList(), uiMapItemPoints, icon)
+						MapItem(it, uiMapItemPolygons.toMutableList(), uiMapItemPoints, icon)
 					} else {
 						Log.w(tag, "No polygon for $it")
-						PolygonMapItem(it, mutableListOf(), mutableListOf(), icon)
+						MapItem(it, mutableListOf(), mutableListOf(), icon)
 					}
 
-					othersList.add(polygonMapItem)
+					othersList.add(mapItem)
 				}
 			}
 
-			this@MtSpokaneMapItems.other = othersList
+			this@MtSpokaneMapBounds.other = othersList
 
 			Log.v(tag, "Finished loading other polygons")
 		}
 	}
 
+	@Deprecated("To be removed")
 	suspend fun addChairliftTerminalPolygonsAsync(classUsingObject: KClass<out ContextWrapper>,
 	                                              mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "ChairliftTerminalsAsync"
 
 		return@coroutineScope async(Dispatchers.IO) {
@@ -142,7 +112,7 @@ object MtSpokaneMapItems {
 			val hashmap: HashMap<String, List<Polygon>> = mapHandler.loadPolygons(R.raw.lift_terminal_polygons,
 				R.color.chairlift_polygon)
 
-			val chairliftTerminalList: MutableList<PolygonMapItem> = mutableListOf()
+			val chairliftTerminalList: MutableList<MapItem> = mutableListOf()
 
 			hashmap.keys.forEach {
 
@@ -150,54 +120,58 @@ object MtSpokaneMapItems {
 
 				withContext(Dispatchers.Main) {
 
-					val polygonMapItem: PolygonMapItem = if (polygonList != null) {
+					val mapItem: MapItem = if (polygonList != null) {
 
 						val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
 						polygonList.forEach { p ->
 							polygonPoints.add(p.points)
 						}
 
-						PolygonMapItem(it, polygonList.toMutableList(), polygonPoints, R.drawable.ic_chairlift)
+						MapItem(it, polygonList.toMutableList(), polygonPoints, R.drawable.ic_chairlift)
 					} else {
 
 						Log.w(tag, "No polygon for $it")
-						PolygonMapItem(it, mutableListOf(), mutableListOf(), R.drawable.ic_chairlift)
+						MapItem(it, mutableListOf(), mutableListOf(), R.drawable.ic_chairlift)
 					}
 
-					chairliftTerminalList.add(polygonMapItem)
+					chairliftTerminalList.add(mapItem)
 				}
 			}
 
-			this@MtSpokaneMapItems.chairliftTerminals = chairliftTerminalList
+			this@MtSpokaneMapBounds.chairliftTerminals = chairliftTerminalList
 
 			Log.v(tag, "Finished loading chairlift terminal polygons")
 		}
-	}
+	}*/
 
+	/*
 	@AnyThread
+	@Deprecated("To be removed")
 	suspend fun initializeChairliftsAsync(classUsingObject: KClass<out ContextWrapper>,
 	                                      mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "initializeChairlifts"
 
 		return@coroutineScope async(Dispatchers.IO) {
 			Log.v(tag, "Started loading chairlift polylines")
 
 			try {
-				this@MtSpokaneMapItems.chairlifts = mapHandler.loadPolylines(R.raw.lifts, R.color.chairlift,
+				this@MtSpokaneMapBounds.chairliftsBounds = mapHandler.loadPolylines(R.raw.lifts, R.color.chairlift,
 					4f, R.drawable.ic_chairlift)
 				Log.v(tag, "Finished loading chairlift polylines")
 			} catch (npe: NullPointerException) {
 				Log.e(tag, "Unable to add chairlift polylines to map: map not setup", npe)
 			}
 		}
-	}
+	}*/
 
+	/*
+	@Deprecated("To be removed")
 	suspend fun addChairliftPolygonsAsync(classUsingObject: KClass<out ContextWrapper>,
 	                                      mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "addChairliftPolygons"
 
 		return@coroutineScope async(Dispatchers.IO) {
@@ -206,9 +180,9 @@ object MtSpokaneMapItems {
 			val hashmap: HashMap<String, List<Polygon>> = mapHandler.loadPolygons(R.raw.lift_polygons,
 				R.color.chairlift_polygon)
 
-			if (this@MtSpokaneMapItems.chairlifts != null) {
+			if (this@MtSpokaneMapBounds.chairliftsBounds != null) {
 
-				this@MtSpokaneMapItems.chairlifts!!.forEach { visibleMapItem: PolylineMapItem ->
+				this@MtSpokaneMapBounds.chairliftsBounds!!.forEach { visibleMapItem: PolylineMapItem ->
 
 					val polygons: List<Polygon>? = hashmap[visibleMapItem.name]
 					if (polygons != null) {
@@ -232,32 +206,36 @@ object MtSpokaneMapItems {
 				Log.w(tag, "Unable to load chairlift polygons due to missing polylines")
 			}
 		}
-	}
+	}*/
 
+	/*
 	@AnyThread
+	@Deprecated("To be removed")
 	suspend fun initializeEasyRunsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
 			Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "initializeEasyRunsAsync"
 
 		return@coroutineScope async(Dispatchers.IO) {
 			Log.v(tag, "Started loading easy polylines")
 
 			try {
-				this@MtSpokaneMapItems.easyRuns = mapHandler.loadPolylines(R.raw.easy, R.color.easy,
+				this@MtSpokaneMapBounds.easyRunsBounds = mapHandler.loadPolylines(R.raw.easy, R.color.easy,
 					3f, R.drawable.ic_easy)
 				Log.v(tag, "Finished loading easy run polylines")
 			} catch (npe: NullPointerException) {
 				Log.e(tag, "Unable to add easy polylines to map: map not setup", npe)
 			}
 		}
-	}
+	}*/
 
+	/*
+	@Deprecated("To be removed")
 	suspend fun addEasyPolygonsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
 			Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "addEasyPolygonsAsync"
 
 		return@coroutineScope async(Dispatchers.IO) {
@@ -266,9 +244,9 @@ object MtSpokaneMapItems {
 			val hashmap: HashMap<String, List<Polygon>> = mapHandler.loadPolygons(R.raw.easy_polygons,
 				R.color.easy_polygon)
 
-			if (this@MtSpokaneMapItems.easyRuns != null) {
+			if (this@MtSpokaneMapBounds.easyRunsBounds != null) {
 
-				this@MtSpokaneMapItems.easyRuns!!.forEach { polylineMapItem: PolylineMapItem ->
+				this@MtSpokaneMapBounds.easyRunsBounds!!.forEach { polylineMapItem: PolylineMapItem ->
 
 					val polygons: List<Polygon>? = hashmap[polylineMapItem.name]
 					if (polygons != null) {
@@ -294,30 +272,33 @@ object MtSpokaneMapItems {
 		}
 	}
 
+	/*
 	@AnyThread
+	@Deprecated("To be removed")
 	suspend fun initializeModerateRunsAsync(classUsingObject: KClass<out ContextWrapper>,
 	                                        mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "initializeModerateRuns"
 
 		return@coroutineScope async(Dispatchers.IO) {
 			Log.v(tag, "Started loading moderate polylines")
 
 			try {
-				this@MtSpokaneMapItems.moderateRuns = mapHandler.loadPolylines(R.raw.moderate, R.color.moderate,
+				this@MtSpokaneMapBounds.moderateRunsBounds = mapHandler.loadPolylines(R.raw.moderate, R.color.moderate,
 					2f, R.drawable.ic_moderate)
 				Log.v(tag, "Finished loading moderate run polylines")
 			} catch (npe: NullPointerException) {
 				Log.e(tag, "Unable to add moderate runs to map: map not setup", npe)
 			}
 		}
-	}
+	}*/
 
+	@Deprecated("To be removed")
 	suspend fun addModeratePolygonsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
 			Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "addModeratePolygons"
 
 		return@coroutineScope async(Dispatchers.IO) {
@@ -326,9 +307,9 @@ object MtSpokaneMapItems {
 			val hashmap: HashMap<String, List<Polygon>> = mapHandler.loadPolygons(R.raw.moderate_polygons,
 				R.color.moderate_polygon)
 
-			if (this@MtSpokaneMapItems.moderateRuns != null) {
+			if (this@MtSpokaneMapBounds.moderateRunsBounds != null) {
 
-				this@MtSpokaneMapItems.moderateRuns!!.forEach { polylineMapItem: PolylineMapItem ->
+				this@MtSpokaneMapBounds.moderateRunsBounds!!.forEach { polylineMapItem: PolylineMapItem ->
 
 					val polygons: List<Polygon>? = hashmap[polylineMapItem.name]
 					if (polygons != null) {
@@ -354,30 +335,33 @@ object MtSpokaneMapItems {
 		}
 	}
 
+	/*
 	@AnyThread
+	@Deprecated("To be removed")
 	suspend fun initializeDifficultRunsAsync(classUsingObject: KClass<out ContextWrapper>,
 	                                         mapHandler: MapHandler): Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "initializeDifficultRuns"
 
 		return@coroutineScope async(Dispatchers.IO) {
 			Log.v(tag, "Started loading difficult polylines")
 
 			try {
-				this@MtSpokaneMapItems.difficultRuns = mapHandler.loadPolylines(R.raw.difficult,
+				this@MtSpokaneMapBounds.difficultRunsBounds = mapHandler.loadPolylines(R.raw.difficult,
 					R.color.difficult, 1f, R.drawable.ic_difficult)
 				Log.v(tag, "Finished loading difficult polylines")
 			} catch (npe: NullPointerException) {
 				Log.e(tag, "Unable to add advanced runs to map: map not setup", npe)
 			}
 		}
-	}
+	}*/
 
+	@Deprecated("To be removed")
 	suspend fun addDifficultPolygonsAsync(classUsingObject: KClass<out ContextWrapper>, mapHandler: MapHandler):
 			Deferred<Int> = coroutineScope {
 
-		this@MtSpokaneMapItems.checkoutObject(classUsingObject)
+		this@MtSpokaneMapBounds.checkoutObject(classUsingObject)
 		val tag = "addDifficultPolygons"
 
 		return@coroutineScope async(Dispatchers.IO) {
@@ -385,9 +369,9 @@ object MtSpokaneMapItems {
 			val hashmap: HashMap<String, List<Polygon>> = mapHandler.loadPolygons(R.raw.difficult_polygons,
 				R.color.difficult_polygon)
 
-			if (this@MtSpokaneMapItems.difficultRuns != null) {
+			if (this@MtSpokaneMapBounds.difficultRunsBounds != null) {
 
-				this@MtSpokaneMapItems.difficultRuns!!.forEach { polylineMapItem: PolylineMapItem ->
+				this@MtSpokaneMapBounds.difficultRunsBounds!!.forEach { polylineMapItem: PolylineMapItem ->
 
 					val polygons: List<Polygon>? = hashmap[polylineMapItem.name]
 					if (polygons != null) {
@@ -411,36 +395,5 @@ object MtSpokaneMapItems {
 				Log.w(tag, "Unable to load difficult polygons due to missing polylines")
 			}
 		}
-	}
-
-	fun destroyUIItems(classUsingObject: KClass<out ContextWrapper>) {
-
-		if (this.classesUsingObject.remove(classUsingObject)) {
-			this.checkedOutCount--
-		}
-
-		Log.i("destroyUIItems", "Number of remaining classes: ${this.checkedOutCount}")
-		if (this.classesUsingObject.isNotEmpty()) {
-			return
-		}
-
-		this.skiAreaBounds?.destroyUIItems()
-
-		val mapItems: Array<List<PolygonMapItem>?> = arrayOf(this.other, this.chairliftTerminals,
-			this.chairlifts, this.easyRuns, this.moderateRuns, this.difficultRuns)
-		mapItems.forEach { array ->
-			array?.forEach {
-				it.destroyUIItems()
-			}
-		}
-
-		this.other = null
-		this.chairliftTerminals = null
-		this.chairlifts = null
-		this.easyRuns = null
-		this.moderateRuns = null
-		this.difficultRuns = null
-
-		Log.d("destroyUIItems", "Finished clearing UI Items")
-	}
+	}*/
 }

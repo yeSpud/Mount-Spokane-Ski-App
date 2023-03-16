@@ -18,9 +18,6 @@ data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @Draw
 
 		const val UNKNOWN_LOCATION = "Unknown Location"
 
-		/**
-		 * TODO Documentation
-		 */
 		fun loadFromSkiingActivityArray(array: Array<SkiingActivity>): Array<MapMarker> {
 
 			return Array(array.size) {
@@ -28,9 +25,6 @@ data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @Draw
 			}
 		}
 
-		/**
-		 * TODO Documentation
-		 */
 		private fun getMapMarker(skiingActivity: SkiingActivity): MapMarker {
 
 			ActivitySummaryLocations.updateLocations(skiingActivity)

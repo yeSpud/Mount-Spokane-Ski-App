@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.view.ViewGroup
 import android.widget.TextView
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activities.ActivitySummary
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databinding.FileSelectionBinding

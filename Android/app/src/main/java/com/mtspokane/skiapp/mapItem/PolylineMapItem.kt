@@ -1,19 +1,22 @@
 package com.mtspokane.skiapp.mapItem
 
 import androidx.annotation.DrawableRes
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
 
 class PolylineMapItem(name: String, val polylines: MutableList<Polyline>, @DrawableRes icon: Int? = null,
-					  private val isNightRun: Boolean = false) : PolygonMapItem(name, mutableListOf(), mutableListOf(), icon = icon) {
+                      private val isNightRun: Boolean = false) : MapItem(name, mutableListOf(), icon) {
 
 	var defaultVisibility = true
 		private set
 
 	private var nightOnlyVisibility = false
 
-	override fun destroyUIItems() {
-		super.destroyUIItems()
-		this.polylines.clear()
+	fun destroyUIItems() {
+		for (polyline in polylines) {
+			polyline.remove()
+		}
+		polylines.clear()
 	}
 
 	/**
@@ -31,12 +34,8 @@ class PolylineMapItem(name: String, val polylines: MutableList<Polyline>, @Drawa
 		this.defaultVisibility = visible
 		this.nightOnlyVisibility = nightRunsOnly
 
-		this.updateVisibility()
-	}
-
-	private fun updateVisibility() {
-		this.polylines.forEach {
-			it.isVisible = this.defaultVisibility && (this.isNightRun >= this.nightOnlyVisibility)
+		for (polyline in polylines) {
+			polyline.isVisible = this.defaultVisibility && (this.isNightRun >= this.nightOnlyVisibility)
 		}
 	}
 }

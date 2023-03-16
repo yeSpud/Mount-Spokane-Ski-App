@@ -8,7 +8,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.mapItem.MtSpokaneMapBounds
 import com.mtspokane.skiapp.activities.Locations
 
 object InAppLocations: Locations<Location>() {
@@ -61,12 +61,12 @@ object InAppLocations: Locations<Location>() {
 
 	override fun checkIfOnOther(): MapMarker? {
 
-		if (MtSpokaneMapItems.other == null || this.currentLocation == null) {
+		if (this.currentLocation == null) {
 			Log.w("checkIfOnOther", "Other map item has not been set up")
 			return null
 		}
 
-		MtSpokaneMapItems.other!!.forEach {
+		MtSpokaneMapBounds.other.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
 
 				return when (it.icon) {
@@ -88,7 +88,7 @@ object InAppLocations: Locations<Location>() {
 
 	override fun checkIfIOnChairlift(): MapMarker? {
 
-		if (MtSpokaneMapItems.chairlifts == null || this.currentLocation == null) {
+		if (this.currentLocation == null) {
 			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
 			return null
 		}
@@ -104,7 +104,7 @@ object InAppLocations: Locations<Location>() {
 			return null
 		}
 
-		MtSpokaneMapItems.chairlifts!!.forEach {
+		MtSpokaneMapBounds.chairliftsBounds.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_chairlift,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
@@ -117,12 +117,12 @@ object InAppLocations: Locations<Location>() {
 
 	override fun checkIfAtChairliftTerminals(): MapMarker? {
 
-		if (MtSpokaneMapItems.chairliftTerminals == null || this.currentLocation == null) {
+		if (this.currentLocation == null) {
 			Log.w("checkChairliftTerminals", "Chairlift terminals have not been set up")
 			return null
 		}
 
-		MtSpokaneMapItems.chairliftTerminals!!.forEach {
+		MtSpokaneMapBounds.chairliftTerminals.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
 
 				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_chairlift,
@@ -135,13 +135,12 @@ object InAppLocations: Locations<Location>() {
 
 	override fun checkIfOnRun(): MapMarker? {
 
-		if (MtSpokaneMapItems.easyRuns == null || MtSpokaneMapItems.moderateRuns == null ||
-			MtSpokaneMapItems.difficultRuns == null || this.currentLocation == null) {
+		if (this.currentLocation == null) {
 			Log.w("checkIfOnRun", "Ski runs have not been set up")
 			return null
 		}
 
-		MtSpokaneMapItems.easyRuns!!.forEach {
+		MtSpokaneMapBounds.easyRunsBounds.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_easy,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
@@ -149,14 +148,14 @@ object InAppLocations: Locations<Location>() {
 			}
 		}
 
-		MtSpokaneMapItems.moderateRuns!!.forEach {
+		MtSpokaneMapBounds.moderateRunsBounds.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_moderate,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE), Color.BLUE)
 			}
 		}
 
-		MtSpokaneMapItems.difficultRuns!!.forEach {
+		MtSpokaneMapBounds.difficultRunsBounds.forEach {
 			if (it.locationInsidePoints(this.currentLocation!!)) {
 				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_difficult,
 						/*this.bitmapDescriptorFromVector(context, R.drawable.ic_black_marker)*/
