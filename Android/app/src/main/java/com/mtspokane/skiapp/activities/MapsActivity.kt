@@ -2,6 +2,7 @@ package com.mtspokane.skiapp.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
@@ -36,6 +37,8 @@ import kotlinx.coroutines.*
 class MapsActivity : FragmentActivity() {
 
 	private lateinit var map: Map
+
+	private var isMapSetup = false
 
 	private var locationChangeCallback: InAppLocations.VisibleLocationUpdate? = null
 
@@ -102,6 +105,14 @@ class MapsActivity : FragmentActivity() {
 		map.destroy()
 	}
 
+	override fun onResume() {
+		super.onResume()
+
+		if (isMapSetup) {
+			launchLocationService()
+		}
+	}
+
 	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
 	                                        grantResults: IntArray) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -114,20 +125,30 @@ class MapsActivity : FragmentActivity() {
 					lifecycleScope.async(Dispatchers.Main, CoroutineStart.LAZY) {
 						//map.setupLocation()
 					}.start()
-					setupLocationService()
+					launchLocationService()
 				}
 			}
 		}
 	}
 
 	@SuppressLint("MissingPermission")
-	fun setupLocationService() {
+	fun launchLocationService() {
 
 		val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
 			val serviceIntent = Intent(this, SkierLocationService::class.java)
+
+			// Check if the service has already been started and is running...
+			val activityManager: ActivityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+			for (runningServices in activityManager.getRunningServices(Int.MAX_VALUE)) {
+				if (SkierLocationService::class.java.name == runningServices.service.className) {
+					if (runningServices.foreground) {
+						return
+					}
+				}
+			}
 
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 				startForegroundService(serviceIntent)
@@ -160,7 +181,7 @@ class MapsActivity : FragmentActivity() {
 			Log.v("onMapReady", "Checking location permissions...")
 			if (locationEnabled) {
 				Log.v("onMapReady", "Location tracking enabled")
-				setupLocationService()
+				launchLocationService()
 				//setupLocation()
 			} else {
 
@@ -175,6 +196,8 @@ class MapsActivity : FragmentActivity() {
 				// Show the info popup about location.
 				alertDialogBuilder.create().show()
 			}
+
+			isMapSetup = true
 		}
 
 		override fun destroy() {
