@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.activities.mainactivity
+package com.mtspokane.skiapp.activities
 
 import android.annotation.SuppressLint
 import android.app.*
@@ -24,13 +24,12 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
 import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapItems
+import com.mtspokane.skiapp.maphandlers.MtSpokaneMapBounds
 import kotlin.reflect.KClass
 
 
@@ -63,8 +62,6 @@ class SkierLocationService : Service(), LocationListener {
 
 		this.locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		this.notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-		MtSpokaneMapItems.checkoutObject(this::class)
 
 		SkiingActivityManager.resumeActivityTracking(this)
 
@@ -123,13 +120,11 @@ class SkierLocationService : Service(), LocationListener {
 
 			this.notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 		}
-
-		MtSpokaneMapItems.destroyUIItems(this::class)
 	}
 
 	override fun onLocationChanged(location: Location) {
 
-		if (MtSpokaneMapItems.skiAreaBounds == null) {
+		if (MtSpokaneMapBounds.skiAreaBounds == null) {
 			Log.w("SkierLocationService", "Ski bounds have not been set up!")
 			return
 		}
@@ -137,12 +132,12 @@ class SkierLocationService : Service(), LocationListener {
 		InAppLocations.updateLocations(location)
 
 		// If we are not on the mountain stop the tracking.
-		if (MtSpokaneMapItems.skiAreaBounds!!.points.isEmpty()) {
+		if (MtSpokaneMapBounds.skiAreaBounds!!.points.isEmpty()) {
 			Toast.makeText(this, R.string.bounds_missing,
 				Toast.LENGTH_LONG).show()
 			this.stopSelf()
 			return
-		} else if (!MtSpokaneMapItems.skiAreaBounds!!.locationInsidePoints(location)) {
+		} else if (!MtSpokaneMapBounds.skiAreaBounds!!.locationInsidePoints(location)) {
 			Toast.makeText(this, R.string.out_of_bounds,
 				Toast.LENGTH_LONG).show()
 			this.stopSelf()
@@ -239,7 +234,6 @@ class SkierLocationService : Service(), LocationListener {
 	}
 
 	override fun onBind(intent: Intent?): IBinder? {
-
 		// We don't provide binding, so return null
 		return null
 	}

@@ -6,7 +6,7 @@ import androidx.annotation.DrawableRes
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummaryLocations
+import com.mtspokane.skiapp.activities.ActivitySummaryLocations
 import com.mtspokane.skiapp.databases.SkiingActivity
 
 data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @DrawableRes val icon: Int,
@@ -18,9 +18,6 @@ data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @Draw
 
 		const val UNKNOWN_LOCATION = "Unknown Location"
 
-		/**
-		 * TODO Documentation
-		 */
 		fun loadFromSkiingActivityArray(array: Array<SkiingActivity>): Array<MapMarker> {
 
 			return Array(array.size) {
@@ -28,9 +25,6 @@ data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @Draw
 			}
 		}
 
-		/**
-		 * TODO Documentation
-		 */
 		private fun getMapMarker(skiingActivity: SkiingActivity): MapMarker {
 
 			ActivitySummaryLocations.updateLocations(skiingActivity)

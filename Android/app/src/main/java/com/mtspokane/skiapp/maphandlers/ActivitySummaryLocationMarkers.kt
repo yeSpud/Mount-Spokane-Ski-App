@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.maphandlers.activitysummarymap
+package com.mtspokane.skiapp.maphandlers
 
 import androidx.annotation.UiThread
 import com.google.android.gms.maps.GoogleMap
