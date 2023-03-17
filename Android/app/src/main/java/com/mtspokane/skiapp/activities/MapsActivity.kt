@@ -19,14 +19,12 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.mainactivity.InAppLocations
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
@@ -122,9 +120,6 @@ class MapsActivity : FragmentActivity() {
 			// If request is cancelled, the result arrays are empty.
 			permissionValue -> {
 				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					lifecycleScope.async(Dispatchers.Main, CoroutineStart.LAZY) {
-						//map.setupLocation()
-					}.start()
 					launchLocationService()
 				}
 			}
@@ -135,7 +130,6 @@ class MapsActivity : FragmentActivity() {
 	fun launchLocationService() {
 
 		val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
 			val serviceIntent = Intent(this, SkierLocationService::class.java)

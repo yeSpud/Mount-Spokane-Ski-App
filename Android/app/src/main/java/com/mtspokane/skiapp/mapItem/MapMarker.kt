@@ -6,7 +6,7 @@ import androidx.annotation.DrawableRes
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummaryLocations
+import com.mtspokane.skiapp.activities.ActivitySummaryLocations
 import com.mtspokane.skiapp.databases.SkiingActivity
 
 data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @DrawableRes val icon: Int,

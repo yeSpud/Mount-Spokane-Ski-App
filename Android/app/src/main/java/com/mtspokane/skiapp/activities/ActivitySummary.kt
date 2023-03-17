@@ -1,23 +1,23 @@
 package com.mtspokane.skiapp.activities
 
+import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.MainThread
 import androidx.annotation.UiThread
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -30,14 +30,12 @@ import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummaryLocations
-import com.mtspokane.skiapp.activities.activitysummary.ActivityView
-import com.mtspokane.skiapp.activities.activitysummary.FileSelectionDialog
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
+import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
@@ -109,7 +107,7 @@ class ActivitySummary : FragmentActivity() {
 
 		container = binding.container
 
-		fileSelectionDialog = FileSelectionDialog(this)
+		fileSelectionDialog = FileSelectionDialog()
 
 		// Be sure to show the action bar.
 		if (actionBar != null) {
@@ -363,6 +361,50 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
+	private inner class FileSelectionDialog: AlertDialog(this) {
+
+		fun showDialog() {
+
+			val binding: FileSelectionBinding = FileSelectionBinding.inflate(this.layoutInflater)
+
+			val alertDialogBuilder = Builder(this.context)
+			alertDialogBuilder.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
+			alertDialogBuilder.setView(binding.root)
+
+			val dialog: AlertDialog = alertDialogBuilder.create()
+
+			val db = ActivityDatabase(this@ActivitySummary)
+			val dates: Array<String> = ActivityDatabase.getTables(db.readableDatabase)
+			db.close()
+
+			for (date in dates) {
+
+				val textView = TextView(this.context)
+				textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+						ViewGroup.LayoutParams.WRAP_CONTENT)
+				textView.text = date
+				textView.textSize = 25.0F
+				textView.setOnClickListener {
+
+					val database = ActivityDatabase(this@ActivitySummary)
+					SkiingActivityManager.FinishedAndLoadedActivities = ActivityDatabase
+							.readSkiingActivesFromDatabase(date, database.readableDatabase)
+					database.close()
+
+					if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
+						loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
+					}
+
+					dialog.dismiss()
+				}
+
+				binding.files.addView(textView)
+			}
+
+			dialog.show()
+		}
+	}
+
 	private inner class Map : MapHandler(this@ActivitySummary), GoogleMap.InfoWindowAdapter {
 
 		var locationMarkers: MutableList<ActivitySummaryLocationMarkers> = mutableListOf()
@@ -577,19 +619,23 @@ class ActivitySummary : FragmentActivity() {
 						isNightOnly = !isNightOnly
 
 						for (chairliftPolyline in chairliftPolylines) {
-							chairliftPolyline.togglePolyLineVisibility(chairliftPolyline.defaultVisibility, isNightOnly)
+							chairliftPolyline.togglePolyLineVisibility(chairliftPolyline.defaultVisibility,
+									isNightOnly)
 						}
 
 						for (easyRunPolyline in easyRunsPolylines) {
-							easyRunPolyline.togglePolyLineVisibility(easyRunPolyline.defaultVisibility, isNightOnly)
+							easyRunPolyline.togglePolyLineVisibility(easyRunPolyline.defaultVisibility,
+									isNightOnly)
 						}
 
 						for (moderateRunPolyline in moderateRunsPolylines) {
-							moderateRunPolyline.togglePolyLineVisibility(moderateRunPolyline.defaultVisibility, isNightOnly)
+							moderateRunPolyline.togglePolyLineVisibility(moderateRunPolyline.defaultVisibility,
+									isNightOnly)
 						}
 
 						for (difficultRunPolyline in difficultRunsPolylines) {
-							difficultRunPolyline.togglePolyLineVisibility(difficultRunPolyline.defaultVisibility, isNightOnly)
+							difficultRunPolyline.togglePolyLineVisibility(difficultRunPolyline.defaultVisibility,
+									isNightOnly)
 						}
 
 						it.setGlowing(isNightOnly)
@@ -618,6 +664,38 @@ class ActivitySummary : FragmentActivity() {
 			v.setGlowing(polylineMapItems[0].polylines[0].isVisible)
 		}
 	}
-
-	data class ActivitySummaryEntry(val mapMarker: MapMarker, val maxSpeed: Float, val averageSpeed: Float, val endTime: Long?)
 }
+
+class ActivityView : ConstraintLayout {
+
+	val icon: ImageView
+
+	val title: TextView
+
+	val maxSpeed: TextView
+
+	val averageSpeed: TextView
+
+	val startTime: TextView
+
+	val endTime: TextView
+
+	constructor(context: Context): this(context, null)
+
+	constructor(context: Context, attributeSet: AttributeSet?): this(context, attributeSet, 0)
+
+	constructor(context: Context, attributeSet: AttributeSet?, defStyleAttr: Int) : super(context,
+			attributeSet, defStyleAttr) {
+
+		inflate(context, R.layout.activity_view, this)
+
+		this.icon = this.findViewById(R.id.icon)
+		this.title = this.findViewById(R.id.title_view)
+		this.maxSpeed = this.findViewById(R.id.max_speed)
+		this.averageSpeed = this.findViewById(R.id.average_speed)
+		this.startTime = this.findViewById(R.id.start_time)
+		this.endTime = this.findViewById(R.id.end_time)
+	}
+}
+
+data class ActivitySummaryEntry(val mapMarker: MapMarker, val maxSpeed: Float, val averageSpeed: Float, val endTime: Long?)

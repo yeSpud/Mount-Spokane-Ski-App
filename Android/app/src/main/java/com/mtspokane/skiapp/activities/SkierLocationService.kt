@@ -24,13 +24,12 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.mainactivity.InAppLocations
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
 import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapBounds
+import com.mtspokane.skiapp.maphandlers.MtSpokaneMapBounds
 import kotlin.reflect.KClass
 
 

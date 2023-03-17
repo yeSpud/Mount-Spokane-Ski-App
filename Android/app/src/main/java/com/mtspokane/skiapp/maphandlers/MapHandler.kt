@@ -27,7 +27,6 @@ import com.google.maps.android.ktx.utils.kml.kmlLayer
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MapItem
-import com.mtspokane.skiapp.mapItem.MtSpokaneMapBounds
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 
 abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyCallback {
@@ -399,4 +398,21 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 			return false
 		}
 	}
+}
+
+object MtSpokaneMapBounds {
+
+	var skiAreaBounds: MapItem? = null
+
+	val other: MutableList<MapItem> = mutableListOf() // Should be 9
+
+	val chairliftTerminals: MutableList<MapItem> = mutableListOf() // Should be size 6
+
+	val chairliftsBounds: MutableList<MapItem> = mutableListOf() // Should be size 6
+
+	val easyRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 22
+
+	val moderateRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 19
+
+	val difficultRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 25
 }
