@@ -128,9 +128,10 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 				if (name == "Ski Area Bounds") {
 					values[0].remove()
 					MtSpokaneMapBounds.skiAreaBounds = MapItem(name, polygonPoints)
-					break
+					continue
 				}
 
+				Log.d(tag, "Getting icon for $name")
 				val icon: Int? = when (name) {
 					"Lodge 1" -> R.drawable.ic_lodge
 					"Lodge 2" -> R.drawable.ic_lodge
@@ -234,14 +235,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 	}
 
 	@AnyThread
-	//@Throws(NullPointerException::class)
 	private fun loadPolylines(@RawRes fileRes: Int, @ColorRes color: Int, zIndex: Float,
 	                          @DrawableRes icon: Int? = null): List<PolylineMapItem> {
-
-		/*
-		if (map == null) {
-			throw NullPointerException("Map has not been setup yet!")
-		}*/
 
 		val hashMap: HashMap<String, PolylineMapItem> = HashMap()
 
@@ -307,14 +302,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 	}
 
 	@AnyThread
-	//@Throws(NullPointerException::class)
 	fun loadPolygons(@RawRes fileRes: Int, @ColorRes color: Int, visible: Boolean = BuildConfig.DEBUG):
 			HashMap<String, List<Polygon>> {
-
-		/*
-		if (this@MapHandler.map == null) {
-			throw NullPointerException("Map has not been setup yet!")
-		}*/
 
 		val hashMap: HashMap<String, List<Polygon>> = HashMap() // TODO Consider making this a set or regular map..
 

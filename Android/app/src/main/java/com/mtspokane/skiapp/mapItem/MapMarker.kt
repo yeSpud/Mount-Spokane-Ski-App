@@ -7,10 +7,12 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.ActivitySummaryLocations
+import com.mtspokane.skiapp.activities.Locations
 import com.mtspokane.skiapp.databases.SkiingActivity
 
 data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @DrawableRes val icon: Int,
-                     val markerColor: BitmapDescriptor, val circleColor: Int) {
+                     val markerColor: BitmapDescriptor, val circleColor: Int, val debugAltitude: UShort,
+                     val debugSpeed: UShort, val debugVertical: Locations.VerticalDirection) {
 
 	// TODO Add equals operator
 
@@ -52,7 +54,7 @@ data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @Draw
 			Log.w("getMapMarker", "Unable to determine location")
 			return MapMarker(UNKNOWN_LOCATION, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_missing,
 					BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-					Color.MAGENTA)
+					Color.MAGENTA, 0u, 0u, Locations.VerticalDirection.UNKNOWN)
 		}
 	}
 }

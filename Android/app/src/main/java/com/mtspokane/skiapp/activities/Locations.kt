@@ -30,7 +30,62 @@ abstract class Locations<T> {
 
 	abstract fun checkIfOnOther(): MapMarker?
 
-	abstract fun checkIfIOnChairlift(): MapMarker?
+	fun checkIfIOnChairlift(): MapMarker? {
+		if (ActivitySummaryLocations.currentLocation == null) {
+			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
+			return null
+		}
+
+		val vDirection: VerticalDirection = ActivitySummaryLocations.getVerticalDirection()
+		if (vDirection == VerticalDirection.UP || vDirection == VerticalDirection.UP_CERTAIN) {
+
+			if (ActivitySummaryLocations.altitudeConfidence >= 1u && ActivitySummaryLocations.speedConfidence >= 0u) {
+				for (it in MtSpokaneMapBounds.chairliftsBounds) {
+					if (it.locationInsidePoints(ActivitySummaryLocations.currentLocation!!)) {
+						return MapMarker(it.name, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_chairlift,
+								BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
+								ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence, ActivitySummaryLocations.getVerticalDirection())
+					}
+				}
+			}
+
+			if (ActivitySummaryLocations.speedConfidence >= 1u && ActivitySummaryLocations.altitudeConfidence >= 0u) {
+				for (it in MtSpokaneMapBounds.chairliftsBounds) {
+					if (it.locationInsidePoints(ActivitySummaryLocations.currentLocation!!)) {
+						return MapMarker(it.name, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_chairlift,
+								BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
+								ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence, ActivitySummaryLocations.getVerticalDirection())
+					}
+				}
+			}
+		}
+
+		/*
+		if (ActivitySummaryLocations.altitudeConfidence >= 2u && ActivitySummaryLocations.speedConfidence >= 1u) {
+			for (it in MtSpokaneMapBounds.chairliftsBounds) {
+				if (it.locationInsidePoints(ActivitySummaryLocations.currentLocation!!)) {
+					return MapMarker(it.name, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_chairlift,
+							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
+							ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+							getVerticalDirection())
+				}
+			}
+		}*/
+
+		/*
+		if (ActivitySummaryLocations.speedConfidence >= 2u && ActivitySummaryLocations.altitudeConfidence >= 1u) {
+			for (it in MtSpokaneMapBounds.chairliftsBounds) {
+				if (it.locationInsidePoints(ActivitySummaryLocations.currentLocation!!)) {
+					return MapMarker(it.name, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_chairlift,
+							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
+							ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+							ActivitySummaryLocations.getVerticalDirection())
+				}
+			}
+		}*/
+
+		return null
+	}
 
 	abstract fun checkIfAtChairliftTerminals(): MapMarker?
 
@@ -46,99 +101,71 @@ abstract class Locations<T> {
 object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 	override fun updateLocations(newVariable: SkiingActivity) {
-		this.previousLocation = this.currentLocation
+		previousLocation = currentLocation
 
-		this.altitudeConfidence = when (this.getVerticalDirection()) {
+		altitudeConfidence = when (getVerticalDirection()) {
 			VerticalDirection.UP_CERTAIN -> 3u
 			VerticalDirection.UP -> 2u
 			VerticalDirection.FLAT -> 1u
 			else -> 0u
 		}
 
-		this.speedConfidence = this.getSpeedConfidenceValue()
+		speedConfidence = getSpeedConfidenceValue()
 
-		this.currentLocation = newVariable
+		currentLocation = newVariable
 	}
 
 	override fun getVerticalDirection(): VerticalDirection {
 
-		if (this.previousLocation == null || this.currentLocation == null) {
+		if (previousLocation == null || currentLocation == null) {
 			return VerticalDirection.UNKNOWN
 		}
 
-		if (this.currentLocation!!.altitude == 0.0 || this.previousLocation!!.altitude == 0.0) {
+		if (currentLocation!!.altitude == 0.0 || previousLocation!!.altitude == 0.0) {
 			return VerticalDirection.UNKNOWN
 		}
 
 
-		if (this.currentLocation!!.altitudeAccuracy != null && this.previousLocation!!
+		if (currentLocation!!.altitudeAccuracy != null && previousLocation!!
 						.altitudeAccuracy != null) {
 
-			if ((this.currentLocation!!.altitude - this.currentLocation!!.altitudeAccuracy!!)
-					> (this.previousLocation!!.altitude + this.previousLocation!!.altitudeAccuracy!!)) {
+			if ((currentLocation!!.altitude - currentLocation!!.altitudeAccuracy!!)
+					> (previousLocation!!.altitude + previousLocation!!.altitudeAccuracy!!)) {
 				return VerticalDirection.UP_CERTAIN
-			} else if ((this.currentLocation!!.altitude + this.currentLocation!!.altitudeAccuracy!!)
-					< (this.previousLocation!!.altitude - this.previousLocation!!.altitudeAccuracy!!)) {
+			} else if ((currentLocation!!.altitude + currentLocation!!.altitudeAccuracy!!)
+					< (previousLocation!!.altitude - previousLocation!!.altitudeAccuracy!!)) {
 				return VerticalDirection.DOWN_CERTAIN
 			}
 		}
 
 		return when {
-			this.currentLocation!!.altitude > this.previousLocation!!.altitude -> VerticalDirection.UP
-			this.currentLocation!!.altitude < this.previousLocation!!.altitude -> VerticalDirection.DOWN
+			currentLocation!!.altitude > previousLocation!!.altitude -> VerticalDirection.UP
+			currentLocation!!.altitude < previousLocation!!.altitude -> VerticalDirection.DOWN
 			else -> VerticalDirection.FLAT
 		}
 	}
 
 	override fun checkIfOnOther(): MapMarker? {
 
-		if (this.currentLocation == null) {
+		if (currentLocation == null) {
 			Log.w("checkIfOnOther", "Other map items have not been set up")
 			return null
 		}
 
 		for (other in MtSpokaneMapBounds.other) {
-			if (other.locationInsidePoints(this.currentLocation!!)) {
+			if (other.locationInsidePoints(currentLocation!!)) {
 
 				return when (other.icon) {
-					R.drawable.ic_parking -> MapMarker(other.name, this.currentLocation!!, other.icon,
+					R.drawable.ic_parking -> MapMarker(other.name, currentLocation!!, other.icon,
 							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-							Color.GRAY)
-					R.drawable.ic_ski_patrol_icon -> MapMarker(other.name, this.currentLocation!!, other.icon,
+							Color.GRAY, altitudeConfidence, speedConfidence, getVerticalDirection())
+					R.drawable.ic_ski_patrol_icon -> MapMarker(other.name, currentLocation!!, other.icon,
 							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-							Color.WHITE)
-					else -> MapMarker(other.name, this.currentLocation!!, other.icon ?: R.drawable.ic_missing,
+							Color.WHITE, altitudeConfidence, speedConfidence, getVerticalDirection())
+					else -> MapMarker(other.name, currentLocation!!, other.icon ?: R.drawable.ic_missing,
 							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-							Color.MAGENTA)
+							Color.MAGENTA, altitudeConfidence, speedConfidence, getVerticalDirection())
 				}
-			}
-		}
-
-		return null
-	}
-
-	override fun checkIfIOnChairlift(): MapMarker? {
-
-		if (this.currentLocation == null) {
-			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
-			return null
-		}
-
-		val vDirection: VerticalDirection = this.getVerticalDirection()
-		if (vDirection == VerticalDirection.DOWN || vDirection == VerticalDirection.DOWN_CERTAIN) {
-
-			return null
-		}
-
-		if (this.altitudeConfidence < 1u || this.speedConfidence < 1u) {
-
-			return null
-		}
-
-		MtSpokaneMapBounds.chairliftsBounds.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_chairlift,
-						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 			}
 		}
 
@@ -147,15 +174,16 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 	override fun checkIfAtChairliftTerminals(): MapMarker? {
 
-		if (this.currentLocation == null) {
+		if (currentLocation == null) {
 			Log.w("checkChairliftTerminals", "Chairlift terminals have not been set up")
 			return null
 		}
 
-		MtSpokaneMapBounds.chairliftTerminals.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_chairlift,
-						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
+		for (it in MtSpokaneMapBounds.chairliftTerminals) {
+			if (it.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(it.name, currentLocation!!, R.drawable.ic_chairlift,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
+						altitudeConfidence, speedConfidence, getVerticalDirection())
 			}
 		}
 
@@ -164,32 +192,33 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 	override fun checkIfOnRun(): MapMarker? {
 
-		if (this.currentLocation == null) {
+		if (currentLocation == null) {
 			Log.w("checkIfOnRun", "Ski runs have not been set up")
 			return null
 		}
 
-		MtSpokaneMapBounds.easyRunsBounds.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_easy,
+		for (it in MtSpokaneMapBounds.easyRunsBounds) {
+			if (it.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(it.name, currentLocation!!, R.drawable.ic_easy,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
-						Color.GREEN)
+						Color.GREEN, altitudeConfidence, speedConfidence, getVerticalDirection())
 			}
 		}
 
-		MtSpokaneMapBounds.moderateRunsBounds.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_moderate,
-						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE), Color.BLUE)
+		for (it in MtSpokaneMapBounds.moderateRunsBounds) {
+			if (it.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(it.name, currentLocation!!, R.drawable.ic_moderate,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE), Color.BLUE,
+						altitudeConfidence, speedConfidence, getVerticalDirection())
 			}
 		}
 
-		MtSpokaneMapBounds.difficultRunsBounds.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, this.currentLocation!!, R.drawable.ic_difficult,
-						/*this.bitmapDescriptorFromVector(context, R.drawable.ic_black_marker)*/
+		for (it in MtSpokaneMapBounds.difficultRunsBounds) {
+			if (it.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(it.name, currentLocation!!, R.drawable.ic_difficult,
+						/*bitmapDescriptorFromVector(context, R.drawable.ic_black_marker)*/
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
-						Color.BLACK)
+						Color.BLACK, altitudeConfidence, speedConfidence, getVerticalDirection())
 			}
 		}
 
@@ -198,11 +227,11 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 	override fun getSpeedConfidenceValue(): UShort {
 
-		if (this.currentLocation == null || this.previousLocation == null) {
+		if (currentLocation == null || previousLocation == null) {
 			return 0u
 		}
 
-		if (this.currentLocation!!.speed == 0.0F || this.previousLocation!!.speed == 0.0F) {
+		if (currentLocation!!.speed == 0.0F || previousLocation!!.speed == 0.0F) {
 			return 0u
 		}
 
@@ -212,15 +241,16 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		// 150 feet per minute to meters per second.
 		//val minChairliftSpeed = 150.0F * 0.00508F
 
-		if (this.currentLocation!!.speedAccuracy != null && this.previousLocation!!.speedAccuracy != null) {
-			if (this.currentLocation!!.speedAccuracy!! > 0.0F && this.previousLocation!!.speedAccuracy!! > 0.0F) {
-				if (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracy!! <= maxChairliftSpeed) {
+		if (currentLocation!!.speedAccuracy != null && previousLocation!!.speedAccuracy != null) {
+			if (currentLocation!!.speedAccuracy!! > 0.0F && previousLocation!!.speedAccuracy!! > 0.0F) {
+				if (currentLocation!!.speed + currentLocation!!.speedAccuracy!! <= maxChairliftSpeed) {
+					Log.v("getSpeedConfidenceValue", "High confidence")
 					return 2u
 				}
 			}
 		}
 
-		return if (this.currentLocation!!.speed <= maxChairliftSpeed) {
+		return if (currentLocation!!.speed <= maxChairliftSpeed) {
 			1u
 		} else {
 			0u
@@ -233,99 +263,73 @@ object InAppLocations: Locations<Location>() {
 	var visibleLocationUpdates: MutableList<VisibleLocationUpdate> = mutableListOf()
 
 	override fun updateLocations(newVariable: Location) {
-		this.previousLocation = this.currentLocation
+		previousLocation = currentLocation
 
-		this.altitudeConfidence = when (this.getVerticalDirection()) {
+		altitudeConfidence = when (getVerticalDirection()) {
 			VerticalDirection.UP_CERTAIN -> 3u
 			VerticalDirection.UP -> 2u
 			VerticalDirection.FLAT -> 1u
 			else -> 0u
 		}
 
-		this.speedConfidence = getSpeedConfidenceValue()
+		speedConfidence = getSpeedConfidenceValue()
 
-		this.currentLocation = newVariable
+		currentLocation = newVariable
 	}
 
 	override fun getVerticalDirection(): VerticalDirection {
 
-		if (this.previousLocation == null || this.currentLocation == null) {
+		if (previousLocation == null || currentLocation == null) {
 			return VerticalDirection.UNKNOWN
 		}
 
-		if (this.currentLocation!!.altitude == 0.0 || this.previousLocation!!.altitude == 0.0) {
+		if (currentLocation!!.altitude == 0.0 || previousLocation!!.altitude == 0.0) {
 			return VerticalDirection.UNKNOWN
 		}
 
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-			if ((this.currentLocation!!.altitude - this.currentLocation!!.verticalAccuracyMeters) >
-					(this.previousLocation!!.altitude + this.previousLocation!!.verticalAccuracyMeters)) {
+			if ((currentLocation!!.altitude - currentLocation!!.verticalAccuracyMeters) >
+					(previousLocation!!.altitude + previousLocation!!.verticalAccuracyMeters)) {
 				return VerticalDirection.UP_CERTAIN
-			} else if ((this.currentLocation!!.altitude + this.currentLocation!!.verticalAccuracyMeters) <
-					(this.previousLocation!!.altitude - this.previousLocation!!.verticalAccuracyMeters)) {
+			} else if ((currentLocation!!.altitude + currentLocation!!.verticalAccuracyMeters) <
+					(previousLocation!!.altitude - previousLocation!!.verticalAccuracyMeters)) {
 				return VerticalDirection.DOWN_CERTAIN
 			}
 		}
 
 		return when {
-			this.currentLocation!!.altitude > previousLocation!!.altitude -> VerticalDirection.UP
-			this.currentLocation!!.altitude < previousLocation!!.altitude -> VerticalDirection.DOWN
+			currentLocation!!.altitude > previousLocation!!.altitude -> VerticalDirection.UP
+			currentLocation!!.altitude < previousLocation!!.altitude -> VerticalDirection.DOWN
 			else -> VerticalDirection.FLAT
 		}
 	}
 
 	override fun checkIfOnOther(): MapMarker? {
 
-		if (this.currentLocation == null) {
+		if (currentLocation == null) {
 			Log.w("checkIfOnOther", "Other map item has not been set up")
 			return null
 		}
 
-		MtSpokaneMapBounds.other.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-
+		for (it in MtSpokaneMapBounds.other) {
+			if (it.locationInsidePoints(currentLocation!!)) {
 				return when (it.icon) {
-					R.drawable.ic_parking -> MapMarker(it.name, SkiingActivity(this.currentLocation!!),
+					R.drawable.ic_parking -> MapMarker(it.name, SkiingActivity(currentLocation!!),
 							it.icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-							Color.GRAY)
-					R.drawable.ic_ski_patrol_icon -> MapMarker(it.name, SkiingActivity(this.currentLocation!!),
+							Color.GRAY, ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+							ActivitySummaryLocations.getVerticalDirection())
+					R.drawable.ic_ski_patrol_icon -> MapMarker(it.name, SkiingActivity(currentLocation!!),
 							it.icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-							Color.WHITE)
-					else -> MapMarker(it.name, SkiingActivity(this.currentLocation!!),
+							Color.WHITE, ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+							ActivitySummaryLocations.getVerticalDirection())
+					else -> MapMarker(it.name, SkiingActivity(currentLocation!!),
 							it.icon ?: R.drawable.ic_missing, BitmapDescriptorFactory
-							.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
+							.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA,
+							ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+							ActivitySummaryLocations.getVerticalDirection())
 				}
-			}
-		}
-
-		return null
-	}
-
-	override fun checkIfIOnChairlift(): MapMarker? {
-
-		if (this.currentLocation == null) {
-			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
-			return null
-		}
-
-		val vDirection: VerticalDirection = this.getVerticalDirection()
-		if (vDirection == VerticalDirection.DOWN || vDirection == VerticalDirection.DOWN_CERTAIN) {
-
-			return null
-		}
-
-		if (this.altitudeConfidence < 1u || this.speedConfidence < 1u) {
-
-			return null
-		}
-
-		MtSpokaneMapBounds.chairliftsBounds.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_chairlift,
-						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
-
 			}
 		}
 
@@ -334,16 +338,17 @@ object InAppLocations: Locations<Location>() {
 
 	override fun checkIfAtChairliftTerminals(): MapMarker? {
 
-		if (this.currentLocation == null) {
+		if (currentLocation == null) {
 			Log.w("checkChairliftTerminals", "Chairlift terminals have not been set up")
 			return null
 		}
 
-		MtSpokaneMapBounds.chairliftTerminals.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-
-				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_chairlift,
-						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
+		for (it in MtSpokaneMapBounds.chairliftTerminals) {
+			if (it.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_chairlift,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
+						ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+						ActivitySummaryLocations.getVerticalDirection())
 			}
 		}
 
@@ -352,32 +357,36 @@ object InAppLocations: Locations<Location>() {
 
 	override fun checkIfOnRun(): MapMarker? {
 
-		if (this.currentLocation == null) {
+		if (currentLocation == null) {
 			Log.w("checkIfOnRun", "Ski runs have not been set up")
 			return null
 		}
 
-		MtSpokaneMapBounds.easyRunsBounds.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_easy,
+		for (it in MtSpokaneMapBounds.easyRunsBounds) {
+			if (it.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_easy,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
-						Color.GREEN)
+						Color.GREEN, ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+						ActivitySummaryLocations.getVerticalDirection())
 			}
 		}
 
-		MtSpokaneMapBounds.moderateRunsBounds.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_moderate,
-						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE), Color.BLUE)
+		for (it in MtSpokaneMapBounds.moderateRunsBounds) {
+			if (it.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_moderate,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE), Color.BLUE,
+						ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+						ActivitySummaryLocations.getVerticalDirection())
 			}
 		}
 
-		MtSpokaneMapBounds.difficultRunsBounds.forEach {
-			if (it.locationInsidePoints(this.currentLocation!!)) {
-				return MapMarker(it.name, SkiingActivity(this.currentLocation!!), R.drawable.ic_difficult,
-						/*this.bitmapDescriptorFromVector(context, R.drawable.ic_black_marker)*/
+		for (it in MtSpokaneMapBounds.difficultRunsBounds) {
+			if (it.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_difficult,
+						/*bitmapDescriptorFromVector(context, R.drawable.ic_black_marker)*/
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
-						Color.BLACK)
+						Color.BLACK, ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+						ActivitySummaryLocations.getVerticalDirection())
 			}
 		}
 
@@ -386,11 +395,11 @@ object InAppLocations: Locations<Location>() {
 
 	override fun getSpeedConfidenceValue(): UShort {
 
-		if (this.currentLocation == null || this.previousLocation == null) {
+		if (currentLocation == null || previousLocation == null) {
 			return 0u
 		}
 
-		if (this.currentLocation!!.speed == 0.0F || this.previousLocation!!.speed == 0.0F) {
+		if (currentLocation!!.speed == 0.0F || previousLocation!!.speed == 0.0F) {
 			return 0u
 		}
 
@@ -401,15 +410,15 @@ object InAppLocations: Locations<Location>() {
 		//val minChairliftSpeed = 150.0F * 0.00508F
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			if (this.currentLocation!!.speedAccuracyMetersPerSecond > 0.0F &&
-					this.previousLocation!!.speedAccuracyMetersPerSecond > 0.0F) {
-				if (this.currentLocation!!.speed + this.currentLocation!!.speedAccuracyMetersPerSecond <= maxChairliftSpeed) {
+			if (currentLocation!!.speedAccuracyMetersPerSecond > 0.0F &&
+					previousLocation!!.speedAccuracyMetersPerSecond > 0.0F) {
+				if (currentLocation!!.speed + currentLocation!!.speedAccuracyMetersPerSecond <= maxChairliftSpeed) {
 					return 2u
 				}
 			}
 		}
 
-		return if (this.currentLocation!!.speed <= maxChairliftSpeed) {
+		return if (currentLocation!!.speed <= maxChairliftSpeed) {
 			1u
 		} else {
 			0u

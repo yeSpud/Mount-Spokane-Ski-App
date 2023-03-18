@@ -14,8 +14,8 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.AnyThread
 import androidx.annotation.MainThread
-import androidx.annotation.UiThread
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isNotEmpty
@@ -42,13 +42,10 @@ import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
 import com.mtspokane.skiapp.maphandlers.ActivitySummaryLocationMarkers
 import com.orhanobut.dialogplus.DialogPlus
+import kotlinx.coroutines.*
 import java.io.File
 import java.io.InputStream
 import kotlin.math.roundToInt
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 class ActivitySummary : FragmentActivity() {
@@ -240,23 +237,19 @@ class ActivitySummary : FragmentActivity() {
 			this.locationMarkers.clear()
 		}
 
+		if (activities.isEmpty()) {
+			return
+		}
+
 		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
 		lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
 
-			//async(Dispatchers.IO, CoroutineStart.UNDISPATCHED) {
-
-			if (activities.isEmpty()) {
-				return@launch
-			}
-
+			//async(Dispatchers.IO, CoroutineStart.LAZY) {
 			loadingToast.show()
 
 			val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(activities)
-
-			withContext(Dispatchers.Main) {
-				for (mapMarker in mapMarkers) {
-					addMapMarkerToMap(mapMarker)
-				}
+			for (mapMarker in mapMarkers) {
+				addMapMarkerToMap(mapMarker)
 			}
 
 			val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkers)
@@ -290,28 +283,30 @@ class ActivitySummary : FragmentActivity() {
 				Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
 				map.addPolylineFromMarker()
 			}
-					//}//.await()
+			//}.await()
 		}.start()
 
 		//loadingToast.show()
 	}
 
-	@UiThread
-	private fun addMapMarkerToMap(mapMarker: MapMarker) {
+	@AnyThread
+	private suspend fun addMapMarkerToMap(mapMarker: MapMarker) = coroutineScope {
 
 		val snippetText: String? = if (BuildConfig.DEBUG) {
 
-			val altitudeString = "Altitude: ${ActivitySummaryLocations.altitudeConfidence}"
-			val speedString = "Speed: ${ActivitySummaryLocations.speedConfidence}"
-			val verticalDirectionString = "Vertical: ${ActivitySummaryLocations.getVerticalDirection().name}"
+			val altitudeString = "Altitude: ${mapMarker.debugAltitude}"
+			val speedString = "Speed: ${mapMarker.debugSpeed}"
+			val verticalDirectionString = "Vertical: ${mapMarker.debugVertical.name}"
 
 			"$altitudeString | $speedString | $verticalDirectionString"
 		} else {
 			null
 		}
 
-		val activitySummaryLocation = ActivitySummaryLocationMarkers(map.map, mapMarker, snippetText)
-		map.locationMarkers.add(activitySummaryLocation)
+		withContext(Dispatchers.Main) {
+			val activitySummaryLocation = ActivitySummaryLocationMarkers(map.map, mapMarker, snippetText)
+			map.locationMarkers.add(activitySummaryLocation)
+		}
 	}
 
 	@MainThread
