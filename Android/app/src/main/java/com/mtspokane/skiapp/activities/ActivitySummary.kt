@@ -53,6 +53,15 @@ import org.json.JSONObject
 
 class ActivitySummary : FragmentActivity() {
 
+	private lateinit var totalRuns: TextView
+	private var totalRunsNumber = 0
+
+	private lateinit var maxSpeed: TextView
+	private var absoluteMaxSpeed = 0F
+
+	private lateinit var averageSpeed: TextView
+	private var averageSpeedSum = 0F
+
 	private lateinit var container: LinearLayout
 
 	private lateinit var fileSelectionDialog: FileSelectionDialog
@@ -88,11 +97,10 @@ class ActivitySummary : FragmentActivity() {
 			return@registerForActivityResult
 		}
 
-		val json: JSONObject = inputStream.bufferedReader().useLines {
-			val string = it.fold("") { _, inText -> inText }
-			JSONObject(string)
-		}
+		val string: String = inputStream.bufferedReader().use { it.readText() }
 		inputStream.close()
+
+		val json = JSONObject(string)
 
 		val database = ActivityDatabase(this)
 		ActivityDatabase.importJsonToDatabase(json, database.writableDatabase)
@@ -105,6 +113,9 @@ class ActivitySummary : FragmentActivity() {
 		val binding: ActivitySummaryBinding = ActivitySummaryBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
+		totalRuns = binding.toalRuns
+		maxSpeed = binding.maxSpeed
+		averageSpeed = binding.averageSpeed
 		container = binding.container
 
 		fileSelectionDialog = FileSelectionDialog()
@@ -198,9 +209,23 @@ class ActivitySummary : FragmentActivity() {
 		SkiingActivityManager.FinishedAndLoadedActivities = null
 	}
 
-	fun loadActivities(activities: Array<SkiingActivity>) {
+	private fun clearScreen() {
+
+		totalRunsNumber = 0
+		totalRuns.visibility = View.INVISIBLE
+
+		absoluteMaxSpeed = 0F
+		maxSpeed.visibility = View.INVISIBLE
+
+		averageSpeedSum = 0F
+		averageSpeed.visibility = View.INVISIBLE
 
 		container.removeAllViews()
+	}
+
+	fun loadActivities(activities: Array<SkiingActivity>) {
+
+		clearScreen()
 
 		with(map) {
 
@@ -237,10 +262,30 @@ class ActivitySummary : FragmentActivity() {
 			val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkers)
 
 			withContext(Dispatchers.Main) {
+
 				for (entry in activitySummaryEntries) {
-					val view = this@ActivitySummary.createActivityView(entry)
+					val view: ActivityView = this@ActivitySummary.createActivityView(entry)
 					container.addView(view)
 				}
+
+				totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
+				totalRuns.visibility = View.VISIBLE
+
+				try {
+					maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
+					maxSpeed.visibility = View.VISIBLE
+				} catch (e: IllegalArgumentException) {
+					maxSpeed.visibility = View.INVISIBLE
+				}
+
+				try {
+					averageSpeed.text = getString(R.string.average_speed,
+							(averageSpeedSum/totalRunsNumber).roundToInt())
+					averageSpeed.visibility = View.VISIBLE
+				} catch (e: IllegalArgumentException) {
+					averageSpeed.visibility = View.INVISIBLE
+				}
+
 				loadingToast.cancel()
 				Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
 				map.addPolylineFromMarker()
@@ -274,6 +319,11 @@ class ActivitySummary : FragmentActivity() {
 
 		val activityView = ActivityView(this)
 
+		val isNotRun = !(activitySummaryEntry.mapMarker.icon == R.drawable.ic_chairlift ||
+				activitySummaryEntry.mapMarker.icon == R.drawable.ic_easy ||
+				activitySummaryEntry.mapMarker.icon == R.drawable.ic_moderate ||
+				activitySummaryEntry.mapMarker.icon == R.drawable.ic_difficult)
+
 		activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, activitySummaryEntry.mapMarker.icon))
 
 		activityView.title.text = activitySummaryEntry.mapMarker.name
@@ -281,18 +331,32 @@ class ActivitySummary : FragmentActivity() {
 		// Convert from meters per second to miles per hour.
 		val conversion = 0.44704f
 
-		try {
-			activityView.maxSpeed.text = this.getString(R.string.max_speed,
-					(activitySummaryEntry.maxSpeed / conversion).roundToInt())
-		} catch (e: IllegalArgumentException) {
-			activityView.maxSpeed.text = this.getString(R.string.max_speed, 0)
-		}
+		if (!isNotRun) {
 
-		try {
-			activityView.averageSpeed.text = this.getString(R.string.average_speed,
-					(activitySummaryEntry.averageSpeed / conversion).roundToInt())
-		} catch (e: IllegalArgumentException) {
-			activityView.averageSpeed.text = this.getString(R.string.average_speed, 0)
+			totalRunsNumber++
+
+			try {
+				val maxSpeed = (activitySummaryEntry.maxSpeed / conversion)
+				if (maxSpeed > absoluteMaxSpeed) {
+					absoluteMaxSpeed = maxSpeed
+				}
+				activityView.maxSpeed.text = this.getString(R.string.max_speed, maxSpeed.roundToInt())
+			} catch (e: IllegalArgumentException) {
+				activityView.maxSpeed.text = this.getString(R.string.max_speed, 0)
+				activityView.maxSpeed.visibility = View.INVISIBLE
+			}
+
+			try {
+				val averageSpeed = (activitySummaryEntry.averageSpeed / conversion)
+				averageSpeedSum += averageSpeed
+				activityView.averageSpeed.text = this.getString(R.string.average_speed, averageSpeed.roundToInt())
+			} catch (e: IllegalArgumentException) {
+				activityView.averageSpeed.text = this.getString(R.string.average_speed, 0)
+				activityView.averageSpeed.visibility = View.INVISIBLE
+			}
+		} else {
+			activityView.maxSpeed.visibility = View.INVISIBLE
+			activityView.averageSpeed.visibility = View.INVISIBLE
 		}
 
 		activityView.startTime.text = TimeManager.getTimeFromLong(activitySummaryEntry.mapMarker.skiingActivity.time)
@@ -329,7 +393,7 @@ class ActivitySummary : FragmentActivity() {
 			var sum = 0
 
 			for (i in startingIndexOffset until mapMarkers.size) {
-				val entry:MapMarker = mapMarkers[i]
+				val entry: MapMarker = mapMarkers[i]
 
 				if (entry.name != MapMarker.UNKNOWN_LOCATION) {
 
@@ -689,12 +753,12 @@ class ActivityView : ConstraintLayout {
 
 		inflate(context, R.layout.activity_view, this)
 
-		this.icon = this.findViewById(R.id.icon)
-		this.title = this.findViewById(R.id.title_view)
-		this.maxSpeed = this.findViewById(R.id.max_speed)
-		this.averageSpeed = this.findViewById(R.id.average_speed)
-		this.startTime = this.findViewById(R.id.start_time)
-		this.endTime = this.findViewById(R.id.end_time)
+		icon = findViewById(R.id.icon)
+		title = findViewById(R.id.title_view)
+		maxSpeed = findViewById(R.id.max_speed)
+		averageSpeed = findViewById(R.id.average_speed)
+		startTime = findViewById(R.id.start_time)
+		endTime = findViewById(R.id.end_time)
 	}
 }
 

@@ -34,6 +34,7 @@
 
     <!-- Activity summary -->
     <string name="activity_summary_title">Activity Summary</string>
+    <string name="total_runs">Total runs: %d</string>
     <string name="max_speed">Max Speed: %d mph</string>
     <string name="average_speed">Average Speed: %d mph</string>
 
