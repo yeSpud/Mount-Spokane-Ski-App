@@ -65,7 +65,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 
 		// Clear the map if its not null.
 		Log.v("MapHandler", "Clearing map.")
-		this.map.clear()
+		map.clear()
 	}
 
 	/**
@@ -231,6 +231,9 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 
 	private fun parseKmlFile(@RawRes file: Int): Iterable<KmlPlacemark> {
 		val kml = kmlLayer(map, file, activity)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && kml.placemarks.spliterator().estimateSize() == 0L) {
+			Log.w("parseKmlFile", "No placemarks in kml file!")
+		}
 		return kml.placemarks
 	}
 
