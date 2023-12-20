@@ -1,66 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2">
-    <Placemark>
-        <name>Chair 1: Vista Cruiser</name>
-        <styleUrl>#msn_ylw-pushpin01</styleUrl>
-        <LineString>
-            <tessellate>1</tessellate>
-            <coordinates>
-                -117.099266845541,47.91606715553383,0 -117.1126129810919,47.92294353366535,0
-            </coordinates>
-        </LineString>
-    </Placemark>
-    <Placemark>
-        <name>Chair 2: Illuminator</name>
-        <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin300</styleUrl>
-        <LineString>
-            <tessellate>1</tessellate>
-            <coordinates>
-                -117.098637384573,47.92221929989261,0 -117.1119355485026,47.9250541084338,0
-            </coordinates>
-        </LineString>
-    </Placemark>
-    <Placemark>
-        <name>Chair 3: Parkway Express</name>
-        <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin300</styleUrl>
-        <LineString>
-            <tessellate>1</tessellate>
-            <coordinates>
-                -117.0966530617209,47.92301666633388,0 -117.1039234488206,47.93080242968863,0
-            </coordinates>
-        </LineString>
-    </Placemark>
-    <Placemark>
-        <name>Chair 4: Hidden Treasure</name>
-        <styleUrl>#msn_ylw-pushpin01</styleUrl>
-        <LineString>
-            <tessellate>1</tessellate>
-            <coordinates>
-                -117.1005550502552,47.94163035979481,0 -117.1067590655054,47.93233891555709,0
-            </coordinates>
-        </LineString>
-    </Placemark>
-    <Placemark>
-        <name>Chair 5: Beginner&apos;s Luck</name>
-        <description>night run</description>
-        <styleUrl>#msn_ylw-pushpin300</styleUrl>
-        <LineString>
-            <tessellate>1</tessellate>
-            <coordinates>
-                -117.0954266523773,47.92175256734555,0 -117.0989319661659,47.92292940522836,0
-            </coordinates>
-        </LineString>
-    </Placemark>
-    <Placemark>
-        <name>Chair 6: Northwood</name>
-        <styleUrl>#msn_ylw-pushpin01</styleUrl>
-        <LineString>
-            <tessellate>1</tessellate>
-            <coordinates>
-                -117.1299404320796,47.92891149682423,0 -117.112973282171,47.92339173840757,0
-            </coordinates>
-        </LineString>
-    </Placemark>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+	<name>Lifts</name>
+	<Placemark>
+		<name>Chair 1: Vista Cruiser</name>
+		<styleUrl>#failed335</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.0991608044635,47.91599220140442,0 -117.1126916762525,47.9229430818873,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Chair 2: Illuminator</name>
+		<description>night run</description>
+		<styleUrl>#failed537</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.0985671546197,47.92217163435538,0 -117.1123140398061,47.92513283757015,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Chair 3: Parkway Express</name>
+		<description>night run</description>
+		<styleUrl>#failed116</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.0964538705134,47.92277452090677,0 -117.1042038016809,47.9310408053557,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Chair 4: Hidden Treasure</name>
+		<styleUrl>#failed453</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.1005310487995,47.94171127596789,0 -117.1069560876408,47.93207024317771,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Chair 5: Beginner&apos;s Luck</name>
+		<description>night run</description>
+		<styleUrl>#failed441</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.0953297262665,47.92170799092754,0 -117.0989537774478,47.92293042773588,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Chair 6: Northwood</name>
+		<styleUrl>#failed32</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.1299695086659,47.92893685792158,0 -117.1129328481842,47.92338596568163,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
 </kml>

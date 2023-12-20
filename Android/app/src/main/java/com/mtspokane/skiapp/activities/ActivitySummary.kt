@@ -292,6 +292,7 @@ class ActivitySummary : FragmentActivity() {
 	@AnyThread
 	private suspend fun addMapMarkerToMap(mapMarker: MapMarker) = coroutineScope {
 
+		/*
 		val snippetText: String? = if (BuildConfig.DEBUG) {
 
 			val altitudeString = "Altitude: ${mapMarker.debugAltitude}"
@@ -301,8 +302,9 @@ class ActivitySummary : FragmentActivity() {
 			"$altitudeString | $speedString | $verticalDirectionString"
 		} else {
 			null
-		}
+		}*/
 
+		val snippetText = null
 		withContext(Dispatchers.Main) {
 			val activitySummaryLocation = ActivitySummaryLocationMarkers(map.map, mapMarker, snippetText)
 			map.locationMarkers.add(activitySummaryLocation)

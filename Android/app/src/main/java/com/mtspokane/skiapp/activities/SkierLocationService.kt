@@ -43,12 +43,12 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
 
-		val notification: Notification = this.createPersistentNotification("", null)
+		val notification: Notification = createPersistentNotification("", null)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-			this.startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+			startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
 		} else {
-			this.startForeground(TRACKING_SERVICE_ID, notification)
+			startForeground(TRACKING_SERVICE_ID, notification)
 		}
 
 		Log.d("SkierLocationService", "Started foreground service")
@@ -60,19 +60,20 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onCreate called!")
 		super.onCreate()
 
-		this.locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-		this.notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+		val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+		notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
 		SkiingActivityManager.resumeActivityTracking(this)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			this.createNotificationChannels()
+			createNotificationChannels()
 		}
 
-		if (this.locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000,
-				1F, this)
+		if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 1F, this)
 		}
+
+		locationManager = manager
 
 		Toast.makeText(this, R.string.starting_tracking, Toast.LENGTH_SHORT).show()
 	}
@@ -81,14 +82,13 @@ class SkierLocationService : Service(), LocationListener {
 	private fun createNotificationChannels() {
 
 		val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
-			this.getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
+			getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
 
 		val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
-			this.getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+			getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
 
-		val notificationManager: NotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		notificationManager.createNotificationChannels(listOf(trackingNotificationChannel,
-				progressNotificationChannel))
+		val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+		notificationManager.createNotificationChannels(listOf(trackingNotificationChannel, progressNotificationChannel))
 		Log.v("createNotificatnChnnls", "Created new notification channel")
 	}
 
@@ -99,8 +99,8 @@ class SkierLocationService : Service(), LocationListener {
 
 		InAppLocations.visibleLocationUpdates.clear()
 
-		this.locationManager.removeUpdates(this)
-		this.notificationManager.cancel(TRACKING_SERVICE_ID)
+		locationManager.removeUpdates(this)
+		notificationManager.cancel(TRACKING_SERVICE_ID)
 
 		if (SkiingActivityManager.InProgressActivities.isNotEmpty()) {
 
@@ -118,7 +118,7 @@ class SkierLocationService : Service(), LocationListener {
 
 			val notification: Notification = builder.build()
 
-			this.notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
+			notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 		}
 	}
 
@@ -135,47 +135,41 @@ class SkierLocationService : Service(), LocationListener {
 		if (MtSpokaneMapBounds.skiAreaBounds!!.points.isEmpty()) {
 			Toast.makeText(this, R.string.bounds_missing,
 				Toast.LENGTH_LONG).show()
-			this.stopSelf()
+			stopSelf()
 			return
 		} else if (!MtSpokaneMapBounds.skiAreaBounds!!.locationInsidePoints(location)) {
 			Toast.makeText(this, R.string.out_of_bounds,
 				Toast.LENGTH_LONG).show()
-			this.stopSelf()
+			stopSelf()
 			return
 		}
 
-		var mapMarker: MapMarker? = InAppLocations.checkIfAtChairliftTerminals()
+		var mapMarker = InAppLocations.checkIfIOnChairlift()
 		if (mapMarker != null) {
-			this.appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
-			return
-		}
-
-		mapMarker = InAppLocations.checkIfIOnChairlift()
-		if (mapMarker != null) {
-			this.appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
+			appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
 			return
 		}
 
 		mapMarker = InAppLocations.checkIfOnOther()
 		if (mapMarker != null) {
-			this.appendSkiingActivity(R.string.current_other, mapMarker, location)
+			appendSkiingActivity(R.string.current_other, mapMarker, location)
 			return
 		}
 
 		mapMarker = InAppLocations.checkIfOnRun()
 		if (mapMarker != null) {
-			this.appendSkiingActivity(R.string.current_run, mapMarker, location)
+			appendSkiingActivity(R.string.current_run, mapMarker, location)
 			return
 		}
 
-		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(this.getString(R.string.app_name)) }
-		this.updateTrackingNotification(this.getString(R.string.tracking_notice), null)
+		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(getString(R.string.app_name)) }
+		updateTrackingNotification(this.getString(R.string.tracking_notice), null)
 	}
 
 	private fun appendSkiingActivity(@StringRes textResource: Int, mapMarker: MapMarker, location: Location) {
 		val text: String = this.getString(textResource, mapMarker.name)
 		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
-		this.updateTrackingNotification(text, mapMarker.icon)
+		updateTrackingNotification(text, mapMarker.icon)
 
 		SkiingActivityManager.InProgressActivities.add(SkiingActivity(location))
 	}
@@ -188,8 +182,8 @@ class SkierLocationService : Service(), LocationListener {
 			null
 		}
 
-		val notification: Notification = this.createPersistentNotification(title, bitmap)
-		this.notificationManager.notify(TRACKING_SERVICE_ID, notification)
+		val notification: Notification = createPersistentNotification(title, bitmap)
+		notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
 	@SuppressLint("UnspecifiedImmutableFlag")

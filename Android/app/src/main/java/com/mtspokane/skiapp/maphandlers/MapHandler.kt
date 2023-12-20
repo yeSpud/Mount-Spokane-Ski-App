@@ -65,7 +65,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 
 		// Clear the map if its not null.
 		Log.v("MapHandler", "Clearing map.")
-		this.map.clear()
+		map.clear()
 	}
 
 	/**
@@ -153,18 +153,32 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 			Log.v(tag, "Finished adding other bounds")
 		}
 
-		if (MtSpokaneMapBounds.chairliftTerminals.isEmpty()) {
-			Log.d(tag, "Adding chairlift terminals...")
-			val chairliftTerminals = loadPolygons(R.raw.lift_terminal_polygons, R.color.chairlift_polygon)
-			for (name in chairliftTerminals.keys) {
-				val values = chairliftTerminals[name]!!
+		if (MtSpokaneMapBounds.startingChairliftTerminals.isEmpty()) {
+			Log.d(tag, "Adding starting chairlift terminals...")
+			val startingChairliftTerminal = loadPolygons(R.raw.starting_lift_polygons, R.color.chairlift_polygon)
+			for (name in startingChairliftTerminal.keys) {
+				val values = startingChairliftTerminal[name]!!
 				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
 				for (value in values) {
 					polygonPoints.add(value.points)
 				}
-				MtSpokaneMapBounds.chairliftTerminals.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
+				MtSpokaneMapBounds.startingChairliftTerminals.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
 			}
-			Log.v(tag, "Finished adding chairlift terminals")
+			Log.v(tag, "Finished adding ending chairlift terminals")
+		}
+
+		if (MtSpokaneMapBounds.endingChairliftTerminals.isEmpty()) {
+			Log.d(tag, "Adding ending chairlift terminals...")
+			val endingChairliftTerminal = loadPolygons(R.raw.ending_lift_polygons, R.color.chairlift_polygon)
+			for (name in endingChairliftTerminal.keys) {
+				val values = endingChairliftTerminal[name]!!
+				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+				for (value in values) {
+					polygonPoints.add(value.points)
+				}
+				MtSpokaneMapBounds.endingChairliftTerminals.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
+			}
+			Log.v(tag, "Finished adding ending chairlift terminals")
 		}
 
 		if (MtSpokaneMapBounds.chairliftsBounds.isEmpty()) {
@@ -231,6 +245,9 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 
 	private fun parseKmlFile(@RawRes file: Int): Iterable<KmlPlacemark> {
 		val kml = kmlLayer(map, file, activity)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && kml.placemarks.spliterator().estimateSize() == 0L) {
+			Log.w("parseKmlFile", "No placemarks in kml file!")
+		}
 		return kml.placemarks
 	}
 
@@ -305,7 +322,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 	fun loadPolygons(@RawRes fileRes: Int, @ColorRes color: Int, visible: Boolean = BuildConfig.DEBUG):
 			HashMap<String, List<Polygon>> {
 
-		val hashMap: HashMap<String, List<Polygon>> = HashMap() // TODO Consider making this a set or regular map..
+		val hashMap: HashMap<String, List<Polygon>> = HashMap() // todo Consider making this a set or regular map..
 
 		// Load the polygons file.
 		for (placemark in parseKmlFile(fileRes)) {
@@ -395,7 +412,9 @@ object MtSpokaneMapBounds {
 
 	val other: MutableList<MapItem> = mutableListOf() // Should be 9
 
-	val chairliftTerminals: MutableList<MapItem> = mutableListOf() // Should be size 6
+	val startingChairliftTerminals: MutableList<MapItem> = mutableListOf() // Should be size 6
+
+	val endingChairliftTerminals: MutableList<MapItem> = mutableListOf() // Should be size 6
 
 	val chairliftsBounds: MutableList<MapItem> = mutableListOf() // Should be size 6
 
