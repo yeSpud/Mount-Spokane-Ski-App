@@ -297,8 +297,10 @@ class ActivitySummary : FragmentActivity() {
 			val altitudeString = "Altitude: ${mapMarker.debugAltitude}"
 			val speedString = "Speed: ${mapMarker.debugSpeed}"
 			val verticalDirectionString = "Vertical: ${mapMarker.debugVertical.name}"
+			val isOnChairlift = "Is on chairlift polyline: ${mapMarker.debugChairlift}"
 
-			"$altitudeString | $speedString | $verticalDirectionString"
+
+			"$altitudeString | $speedString | $verticalDirectionString | $isOnChairlift"
 		} else {
 			null
 		}

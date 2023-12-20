@@ -44,7 +44,8 @@ abstract class Locations<T> {
 					if (it.locationInsidePoints(ActivitySummaryLocations.currentLocation!!)) {
 						return MapMarker(it.name, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_chairlift,
 								BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
-								ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence, ActivitySummaryLocations.getVerticalDirection())
+								ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+							ActivitySummaryLocations.getVerticalDirection(), true)
 					}
 				}
 			}
@@ -54,7 +55,8 @@ abstract class Locations<T> {
 					if (it.locationInsidePoints(ActivitySummaryLocations.currentLocation!!)) {
 						return MapMarker(it.name, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_chairlift,
 								BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
-								ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence, ActivitySummaryLocations.getVerticalDirection())
+								ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
+							ActivitySummaryLocations.getVerticalDirection(), true)
 					}
 				}
 			}
@@ -158,13 +160,16 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 				return when (other.icon) {
 					R.drawable.ic_parking -> MapMarker(other.name, currentLocation!!, other.icon,
 							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-							Color.GRAY, altitudeConfidence, speedConfidence, getVerticalDirection())
+							Color.GRAY, altitudeConfidence, speedConfidence, getVerticalDirection(),
+						false)
 					R.drawable.ic_ski_patrol_icon -> MapMarker(other.name, currentLocation!!, other.icon,
 							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-							Color.WHITE, altitudeConfidence, speedConfidence, getVerticalDirection())
+							Color.WHITE, altitudeConfidence, speedConfidence, getVerticalDirection(),
+						false)
 					else -> MapMarker(other.name, currentLocation!!, other.icon ?: R.drawable.ic_missing,
 							BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-							Color.MAGENTA, altitudeConfidence, speedConfidence, getVerticalDirection())
+							Color.MAGENTA, altitudeConfidence, speedConfidence, getVerticalDirection(),
+						false)
 				}
 			}
 		}
@@ -183,7 +188,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 			if (it.locationInsidePoints(currentLocation!!)) {
 				return MapMarker(it.name, currentLocation!!, R.drawable.ic_chairlift,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
-						altitudeConfidence, speedConfidence, getVerticalDirection())
+						altitudeConfidence, speedConfidence, getVerticalDirection(), true)
 			}
 		}
 
@@ -201,7 +206,8 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 			if (it.locationInsidePoints(currentLocation!!)) {
 				return MapMarker(it.name, currentLocation!!, R.drawable.ic_easy,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
-						Color.GREEN, altitudeConfidence, speedConfidence, getVerticalDirection())
+						Color.GREEN, altitudeConfidence, speedConfidence, getVerticalDirection(),
+					false)
 			}
 		}
 
@@ -209,7 +215,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 			if (it.locationInsidePoints(currentLocation!!)) {
 				return MapMarker(it.name, currentLocation!!, R.drawable.ic_moderate,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE), Color.BLUE,
-						altitudeConfidence, speedConfidence, getVerticalDirection())
+						altitudeConfidence, speedConfidence, getVerticalDirection(), false)
 			}
 		}
 
@@ -218,7 +224,8 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 				return MapMarker(it.name, currentLocation!!, R.drawable.ic_difficult,
 						/*bitmapDescriptorFromVector(context, R.drawable.ic_black_marker)*/
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
-						Color.BLACK, altitudeConfidence, speedConfidence, getVerticalDirection())
+						Color.BLACK, altitudeConfidence, speedConfidence, getVerticalDirection(),
+					false)
 			}
 		}
 
@@ -319,16 +326,16 @@ object InAppLocations: Locations<Location>() {
 					R.drawable.ic_parking -> MapMarker(it.name, SkiingActivity(currentLocation!!),
 							it.icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 							Color.GRAY, ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
-							ActivitySummaryLocations.getVerticalDirection())
+							ActivitySummaryLocations.getVerticalDirection(), false)
 					R.drawable.ic_ski_patrol_icon -> MapMarker(it.name, SkiingActivity(currentLocation!!),
 							it.icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 							Color.WHITE, ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
-							ActivitySummaryLocations.getVerticalDirection())
+							ActivitySummaryLocations.getVerticalDirection(), false)
 					else -> MapMarker(it.name, SkiingActivity(currentLocation!!),
 							it.icon ?: R.drawable.ic_missing, BitmapDescriptorFactory
 							.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA,
 							ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
-							ActivitySummaryLocations.getVerticalDirection())
+							ActivitySummaryLocations.getVerticalDirection(), false)
 				}
 			}
 		}
@@ -348,7 +355,7 @@ object InAppLocations: Locations<Location>() {
 				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_chairlift,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
 						ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
-						ActivitySummaryLocations.getVerticalDirection())
+						ActivitySummaryLocations.getVerticalDirection(), false)
 			}
 		}
 
@@ -367,7 +374,7 @@ object InAppLocations: Locations<Location>() {
 				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_easy,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
 						Color.GREEN, ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
-						ActivitySummaryLocations.getVerticalDirection())
+						ActivitySummaryLocations.getVerticalDirection(), false)
 			}
 		}
 
@@ -376,7 +383,7 @@ object InAppLocations: Locations<Location>() {
 				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_moderate,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE), Color.BLUE,
 						ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
-						ActivitySummaryLocations.getVerticalDirection())
+						ActivitySummaryLocations.getVerticalDirection(), false)
 			}
 		}
 
@@ -386,7 +393,7 @@ object InAppLocations: Locations<Location>() {
 						/*bitmapDescriptorFromVector(context, R.drawable.ic_black_marker)*/
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
 						Color.BLACK, ActivitySummaryLocations.altitudeConfidence, ActivitySummaryLocations.speedConfidence,
-						ActivitySummaryLocations.getVerticalDirection())
+						ActivitySummaryLocations.getVerticalDirection(), false)
 			}
 		}
 
