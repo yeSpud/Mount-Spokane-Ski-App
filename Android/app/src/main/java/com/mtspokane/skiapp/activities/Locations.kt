@@ -186,7 +186,7 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 
 		for (it in MtSpokaneMapBounds.chairliftTerminals) {
 			if (it.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(it.name, currentLocation!!, R.drawable.ic_chairlift,
+				return MapMarker("Terminal ${it.name}", currentLocation!!, R.drawable.ic_chairlift,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED,
 						altitudeConfidence, speedConfidence, getVerticalDirection(), true)
 			}
