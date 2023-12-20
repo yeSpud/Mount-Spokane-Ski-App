@@ -11,9 +11,7 @@ import com.mtspokane.skiapp.activities.Locations
 import com.mtspokane.skiapp.databases.SkiingActivity
 
 data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @DrawableRes val icon: Int,
-                     val markerColor: BitmapDescriptor, val circleColor: Int, val debugAltitude: UShort,
-                     val debugSpeed: UShort, val debugVertical: Locations.VerticalDirection,
-					 val debugChairlift: Boolean) {
+                     val markerColor: BitmapDescriptor, val circleColor: Int) {
 
 	// TODO Add equals operator
 
@@ -37,11 +35,6 @@ data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @Draw
 				return marker
 			}
 
-			marker = ActivitySummaryLocations.checkIfAtChairliftTerminals()
-			if (marker != null) {
-				return marker
-			}
-
 			marker = ActivitySummaryLocations.checkIfOnOther()
 			if (marker != null) {
 				return marker
@@ -55,8 +48,7 @@ data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @Draw
 			Log.w("getMapMarker", "Unable to determine location")
 			return MapMarker(UNKNOWN_LOCATION, ActivitySummaryLocations.currentLocation!!, R.drawable.ic_missing,
 					BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
-					Color.MAGENTA, 0u, 0u, Locations.VerticalDirection.UNKNOWN,
-				false)
+					Color.MAGENTA)
 		}
 	}
 }
