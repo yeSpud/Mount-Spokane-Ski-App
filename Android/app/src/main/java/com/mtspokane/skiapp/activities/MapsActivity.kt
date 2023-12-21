@@ -12,7 +12,6 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.Process
@@ -29,7 +28,6 @@ import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
-import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
@@ -266,7 +264,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 			} else {
 
 				// Otherwise just update the LatLng location.
-				this.locationMarker!!.position = LatLng(location.latitude, location.longitude)
+				locationMarker!!.position = LatLng(location.latitude, location.longitude)
 			}
 		}
 	}

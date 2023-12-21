@@ -8,6 +8,7 @@ import androidx.annotation.RawRes
 import androidx.annotation.UiThread
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -28,6 +29,11 @@ import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 
 abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyCallback {
 
@@ -115,77 +121,91 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
 		// Load the various polylines onto the map.
-		Log.d(tag, "Loading polylines...")
-		chairliftPolylines = loadPolylines(R.raw.lifts, R.color.chairlift, 4f, R.drawable.ic_chairlift)
-		easyRunsPolylines = loadPolylines(R.raw.easy, R.color.easy, 3f, R.drawable.ic_easy)
-		moderateRunsPolylines = loadPolylines(R.raw.moderate, R.color.moderate, 2f, R.drawable.ic_moderate)
-		difficultRunsPolylines = loadPolylines(R.raw.difficult, R.color.difficult, 1f, R.drawable.ic_difficult)
-		Log.d(tag, "Finished loading polylines")
+		activity.lifecycleScope.launch {
 
-		Log.d(tag, "Adding other bounds...")
-		val other = loadPolygons(R.raw.other, R.color.other_polygon_fill)
-		val bounds = mutableListOf<MapItem>()
-		for (name in other.keys) {
-			val values = other[name]!!
-			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
-			for (value in values) {
-				polygonPoints.add(value.points)
+			val polylinesJob = async(context=Dispatchers.Main, start=CoroutineStart.LAZY) {
+				Log.d(tag, "Loading polylines...")
+				chairliftPolylines = loadPolylines(R.raw.lifts, R.color.chairlift, 4f,
+					R.drawable.ic_chairlift)
+				easyRunsPolylines = loadPolylines(R.raw.easy, R.color.easy, 3f, R.drawable.ic_easy)
+				moderateRunsPolylines = loadPolylines(R.raw.moderate, R.color.moderate, 2f,
+					R.drawable.ic_moderate)
+				difficultRunsPolylines = loadPolylines(R.raw.difficult, R.color.difficult, 1f,
+					R.drawable.ic_difficult)
+				Log.d(tag, "Finished loading polylines")
 			}
 
-			if (name == "Ski Area Bounds") {
-				values[0].remove()
-				skiAreaBounds = MapItem(name, polygonPoints)
-				continue
-			}
+			val polygonsJob = async(context=Dispatchers.Main, start=CoroutineStart.LAZY) {
+				Log.d(tag, "Adding other bounds...")
+				val other = loadPolygons(R.raw.other, R.color.other_polygon_fill)
+				val bounds = mutableListOf<MapItem>()
+				for (name in other.keys) {
+					val values = other[name]!!
+					val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+					for (value in values) {
+						polygonPoints.add(value.points)
+					}
 
-			Log.d(tag, "Getting icon for $name")
-			val icon: Int? = when (name) {
-				"Lodge 1" -> R.drawable.ic_lodge
-				"Lodge 2" -> R.drawable.ic_lodge
-				"Yurt" -> R.drawable.ic_yurt
-				"Vista House" -> R.drawable.ic_vista_house
-				"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
-				"Lodge 1 Parking Lot" -> R.drawable.ic_parking
-				"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-				"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
-				"Ski School" -> R.drawable.ic_missing // TODO Ski school icon
-				else -> {
-					Log.w(tag, "$name does not have an icon")
-					null
+					if (name == "Ski Area Bounds") {
+						values[0].remove()
+						skiAreaBounds = MapItem(name, polygonPoints)
+						continue
+					}
+
+					Log.d(tag, "Getting icon for $name")
+					val icon: Int? = when (name) {
+						"Lodge 1" -> R.drawable.ic_lodge
+						"Lodge 2" -> R.drawable.ic_lodge
+						"Yurt" -> R.drawable.ic_yurt
+						"Vista House" -> R.drawable.ic_vista_house
+						"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
+						"Lodge 1 Parking Lot" -> R.drawable.ic_parking
+						"Lodge 2 Parking Lot" -> R.drawable.ic_parking
+						"Tubing Area" -> R.drawable.ic_missing // todo Tubing area icon
+						"Ski School" -> R.drawable.ic_missing // todo Ski school icon
+						else -> {
+							Log.w(tag, "$name does not have an icon")
+							null
+						}
+					}
+					bounds.add(MapItem(name, polygonPoints, icon))
 				}
+				otherBounds = bounds
+				Log.d(tag, "Finished adding other bounds")
+
+				Log.d(tag, "Adding starting chairlift terminals...")
+				startingChairliftTerminals = loadMapItems(R.raw.starting_lift_polygons,
+					R.color.chairlift_polygon, R.drawable.ic_chairlift)
+				Log.d(tag, "Finished adding ending chairlift terminals")
+
+				Log.d(tag, "Adding ending chairlift terminals...")
+				endingChairliftTerminals = loadMapItems(R.raw.ending_lift_polygons,
+					R.color.chairlift_polygon, R.drawable.ic_chairlift)
+				Log.d(tag, "Finished adding ending chairlift terminals")
+
+				Log.d(tag, "Adding easy bounds...")
+				easyRunsBounds = loadMapItems(R.raw.easy_polygons, R.color.easy_polygon, R.drawable.ic_easy)
+				Log.d(tag, "Finished adding easy bounds")
+
+				Log.d(tag, "Adding moderate bounds...")
+				moderateRunsBounds = loadMapItems(R.raw.moderate_polygons, R.color.moderate_polygon,
+					R.drawable.ic_moderate)
+				Log.d(tag, "Finished adding moderate bounds")
+
+				Log.d(tag, "Adding difficult bounds...")
+				difficultRunsBounds = loadMapItems(R.raw.difficult_polygons, R.color.difficult_polygon,
+					R.drawable.ic_difficult)
+				Log.d(tag, "Finished adding difficult bounds")
 			}
-			bounds.add(MapItem(name, polygonPoints, icon))
+
+			val callbackJob = async(context=Dispatchers.Main, start=CoroutineStart.LAZY) {
+				Log.d("onMapReady", "Running additional setup steps...")
+				additionalCallback.onMapReady(googleMap)
+				Log.d("onMapReady", "Finished setting up map.")
+			}
+
+			awaitAll(polylinesJob, polygonsJob, callbackJob)
 		}
-		otherBounds = bounds
-		Log.d(tag, "Finished adding other bounds")
-
-		Log.d(tag, "Adding starting chairlift terminals...")
-		startingChairliftTerminals = loadMapItems(R.raw.starting_lift_polygons, R.color.chairlift_polygon,
-			R.drawable.ic_chairlift)
-		Log.d(tag, "Finished adding ending chairlift terminals")
-
-		Log.d(tag, "Adding ending chairlift terminals...")
-		endingChairliftTerminals = loadMapItems(R.raw.ending_lift_polygons, R.color.chairlift_polygon,
-			R.drawable.ic_chairlift)
-		Log.d(tag, "Finished adding ending chairlift terminals")
-
-		Log.d(tag, "Adding easy bounds...")
-		easyRunsBounds = loadMapItems(R.raw.easy_polygons, R.color.easy_polygon, R.drawable.ic_easy)
-		Log.d(tag, "Finished adding easy bounds")
-
-		Log.d(tag, "Adding moderate bounds...")
-		moderateRunsBounds = loadMapItems(R.raw.moderate_polygons, R.color.moderate_polygon,
-			R.drawable.ic_moderate)
-		Log.d(tag, "Finished adding moderate bounds")
-
-		Log.d(tag, "Adding difficult bounds...")
-		difficultRunsBounds = loadMapItems(R.raw.difficult_polygons, R.color.difficult_polygon,
-			R.drawable.ic_difficult)
-		Log.d(tag, "Finished adding difficult bounds")
-
-		Log.d("onMapReady", "Running additional setup steps...")
-		additionalCallback.onMapReady(googleMap)
-		Log.d("onMapReady", "Finished setting up map.")
 	}
 
 	private fun parseKmlFile(@RawRes file: Int): Iterable<KmlPlacemark> {
