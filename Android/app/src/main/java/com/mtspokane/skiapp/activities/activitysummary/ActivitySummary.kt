@@ -27,6 +27,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.RoundCap
+import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.SkierLocationService
@@ -113,7 +114,7 @@ class ActivitySummary : FragmentActivity() {
 		val binding: ActivitySummaryBinding = ActivitySummaryBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
-		totalRuns = binding.toalRuns
+		totalRuns = binding.totalRuns
 		maxSpeed = binding.maxSpeed
 		averageSpeed = binding.averageSpeed
 		container = binding.container
@@ -234,10 +235,10 @@ class ActivitySummary : FragmentActivity() {
 				polyline = null
 			}
 
-			for (marker in locationMarkers) {
+			for (marker in circles) {
 				marker.destroy()
 			}
-			locationMarkers.clear()
+			circles.clear()
 		}
 
 		if (activities.isEmpty()) {
@@ -247,36 +248,46 @@ class ActivitySummary : FragmentActivity() {
 		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
 		loadingToast.show()
 
-		val mapMarkers: Array<MapMarker> = Array(activities.size) { getMapMarker(activities[it]) }
-		val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkers)
-
 		lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
 
-			for (mapMarker in mapMarkers) {
-				map.locationMarkers.add(ActivitySummaryLocationMarkers(map.googleMap, mapMarker))
+			var mapMarkers: Array<MapMarker> = arrayOf()
+			var activitySummaryEntries: Array<ActivitySummaryEntry> = arrayOf()
+			val processingJob = async(Dispatchers.IO, CoroutineStart.LAZY) {
+				mapMarkers = Array(activities.size) { getMapMarker(activities[it]) }
+				activitySummaryEntries = parseMapMarkersForMap(mapMarkers)
 			}
+			processingJob.start()
+			processingJob.join()
 
-			for (entry in activitySummaryEntries) {
-				val view: ActivityView = createActivityView(entry)
-				container.addView(view)
+			val uiJob = async(Dispatchers.Main, CoroutineStart.LAZY) {
+				for (mapMarker in mapMarkers) {
+					map.circles.add(ActivitySummaryCircles(map.googleMap, mapMarker))
+				}
+
+				for (entry in activitySummaryEntries) {
+					val view: ActivityView = createActivityView(entry)
+					container.addView(view)
+				}
+
+				totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
+				totalRuns.visibility = View.VISIBLE
+
+				try {
+					maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
+					maxSpeed.visibility = View.VISIBLE
+				} catch (e: IllegalArgumentException) {
+					maxSpeed.visibility = View.INVISIBLE
+				}
+
+				try {
+					averageSpeed.text = getString(R.string.average_speed, (averageSpeedSum/totalRunsNumber).roundToInt())
+					averageSpeed.visibility = View.VISIBLE
+				} catch (e: IllegalArgumentException) {
+					averageSpeed.visibility = View.INVISIBLE
+				}
 			}
-
-			totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
-			totalRuns.visibility = View.VISIBLE
-
-			try {
-				maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
-				maxSpeed.visibility = View.VISIBLE
-			} catch (e: IllegalArgumentException) {
-				maxSpeed.visibility = View.INVISIBLE
-			}
-
-			try {
-				averageSpeed.text = getString(R.string.average_speed, (averageSpeedSum/totalRunsNumber).roundToInt())
-				averageSpeed.visibility = View.VISIBLE
-			} catch (e: IllegalArgumentException) {
-				averageSpeed.visibility = View.INVISIBLE
-			}
+			uiJob.start()
+			uiJob.join()
 
 			loadingToast.cancel()
 			Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
@@ -362,8 +373,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		Log.w("getMapMarker", "Unable to determine location")
-		return MapMarker(
-			UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
+		return MapMarker(UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
 			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
 	}
 
@@ -472,7 +482,9 @@ class ActivitySummary : FragmentActivity() {
 
 	private inner class Map : MapHandler(this@ActivitySummary), GoogleMap.InfoWindowAdapter {
 
-		var locationMarkers: MutableList<ActivitySummaryLocationMarkers> = mutableListOf()
+		var circles: MutableList<ActivitySummaryCircles> = mutableListOf()
+
+		private var runMarker: Marker? = null
 
 		var polyline: Polyline? = null
 
@@ -492,14 +504,28 @@ class ActivitySummary : FragmentActivity() {
 
 				googleMap.setInfoWindowAdapter(this)
 
-				if (it.tag is ActivitySummaryLocationMarkers) {
+				if (it.tag is ActivitySummaryCircles) {
 
-					val activitySummaryLocationMarker: ActivitySummaryLocationMarkers = it.tag as ActivitySummaryLocationMarkers
+					val activitySummaryLocationMarker = it.tag as ActivitySummaryCircles
 
-					if (activitySummaryLocationMarker.marker != null) {
-						activitySummaryLocationMarker.marker!!.isVisible = true
-						activitySummaryLocationMarker.marker!!.showInfoWindow()
+					if (runMarker == null) {
+						runMarker = googleMap.addMarker {
+							position(activitySummaryLocationMarker.circle!!.center)
+							icon(activitySummaryLocationMarker.mapMarker.markerColor)
+							title(activitySummaryLocationMarker.mapMarker.name)
+							zIndex(99.0F)
+							visible(true)
+						}
+					} else {
+						runMarker!!.position = activitySummaryLocationMarker.circle!!.center
+						runMarker!!.setIcon(activitySummaryLocationMarker.mapMarker.markerColor)
+						runMarker!!.title = activitySummaryLocationMarker.mapMarker.name
+						runMarker!!.isVisible = true
 					}
+
+					runMarker!!.isVisible = true
+					runMarker!!.tag = activitySummaryLocationMarker.mapMarker
+					runMarker!!.showInfoWindow()
 				}
 			}
 
@@ -508,13 +534,13 @@ class ActivitySummary : FragmentActivity() {
 
 		override fun destroy() {
 
-			if (locationMarkers.isNotEmpty()) {
+			if (circles.isNotEmpty()) {
 
 				Log.v("ActivitySummaryMap", "Removing location markers")
-				for (marker in locationMarkers) {
+				for (marker in circles) {
 					marker.destroy()
 				}
-				locationMarkers.clear()
+				circles.clear()
 			}
 
 			if (polyline != null) {
@@ -577,7 +603,7 @@ class ActivitySummary : FragmentActivity() {
 
 			polyline = googleMap.addPolyline {
 
-				for (marker in locationMarkers) {
+				for (marker in circles) {
 					if (marker.circle != null) {
 						add(marker.circle!!.center)
 					}

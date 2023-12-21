@@ -14,7 +14,7 @@
         android:orientation="horizontal"><!-- FIXME Change this to visible once trail tracking has been fixed -->
 
         <TextView
-            android:id="@+id/toal_runs"
+            android:id="@+id/total_runs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"

@@ -9,9 +9,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addCircle
-import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MapMarker
 
@@ -48,20 +46,12 @@ class ActivityView : ConstraintLayout {
 }
 
 @UiThread
-class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker) {
-
-    var marker: Marker? = null
-        private set
+class ActivitySummaryCircles(map: GoogleMap, val mapMarker: MapMarker) {
 
     var circle: Circle? = null
         private set
 
     fun destroy() {
-
-        if (marker != null) {
-            marker!!.remove()
-            marker = null
-        }
 
         if (circle != null) {
             circle!!.remove()
@@ -82,16 +72,6 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker) {
             zIndex(50.0F)
             visible(true)
         }
-
-        marker = map.addMarker {
-            position(location)
-            icon(mapMarker.markerColor)
-            title(mapMarker.name)
-            zIndex(99.0F)
-            visible(false)
-        }
-
-        marker!!.tag = mapMarker
 
         circle!!.tag = this
     }
