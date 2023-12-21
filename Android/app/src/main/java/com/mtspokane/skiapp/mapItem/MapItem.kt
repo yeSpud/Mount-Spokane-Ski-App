@@ -11,26 +11,21 @@ open class MapItem(val name: String, val points: List<List<LatLng>>, @DrawableRe
 
 	@AnyThread
 	fun locationInsidePoints(skiingActivity: SkiingActivity): Boolean {
-
 		for (point in points) {
 			if (PolyUtil.containsLocation(skiingActivity.latitude, skiingActivity.longitude, point, true)) {
 				return true
 			}
 		}
-
 		return false
-
 	}
 
 	@AnyThread
-	fun locationInsidePoints(point: Location): Boolean {
-
-		for (p in points) {
-			if (PolyUtil.containsLocation(point.latitude, point.longitude, p, true)) {
+	fun locationInsidePoints(location: Location): Boolean {
+		for (point in points) {
+			if (PolyUtil.containsLocation(location.latitude, location.longitude, point, true)) {
 				return true
 			}
 		}
-
 		return false
 	}
 }

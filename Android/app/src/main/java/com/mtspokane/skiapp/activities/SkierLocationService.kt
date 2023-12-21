@@ -36,7 +36,7 @@ import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
 
-	private val binder: IBinder = LocalBinder()
+	private var binder: IBinder? = LocalBinder()
 
 	private var serviceCallbacks: ServiceCallbacks? = null
 
@@ -132,6 +132,8 @@ class SkierLocationService : Service(), LocationListener {
 
 			notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 		}
+
+		binder = null
 	}
 
 	override fun onLocationChanged(location: Location) {
@@ -230,7 +232,7 @@ class SkierLocationService : Service(), LocationListener {
 			.setContentIntent(pendingIntent)
 	}
 
-	override fun onBind(intent: Intent?): IBinder {
+	override fun onBind(intent: Intent?): IBinder? {
 		return binder
 	}
 

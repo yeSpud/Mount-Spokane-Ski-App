@@ -107,6 +107,12 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		InAppLocations.visibleLocationUpdates.remove(this.locationChangeCallback)
 		locationChangeCallback = null
 
+		if (bound) {
+			skierLocationService!!.setCallbacks(null)
+			unbindService(serviceConnection)
+			bound = false
+		}
+
 		map.destroy()
 	}
 
@@ -120,21 +126,9 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		}
 
 		override fun onServiceDisconnected(name: ComponentName?) {
-			bound = false
-		}
-	}
-
-	override fun onStart() {
-		super.onStart()
-		val intent = Intent(this, SkierLocationService::class.java)
-		bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-	}
-
-	override fun onStop() {
-		super.onStop()
-		if (bound) {
 			skierLocationService!!.setCallbacks(null)
-			unbindService(serviceConnection)
+			unbindService(this)
+			skierLocationService = null
 			bound = false
 		}
 	}
@@ -180,11 +174,8 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 				}
 			}
 
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				startForegroundService(serviceIntent)
-			} else {
-				startService(serviceIntent)
-			}
+			bindService(serviceIntent, serviceConnection, Context.BIND_NOT_FOREGROUND)
+			startService(serviceIntent)
 
 			// Add listener for map for a location change.
 			if (this.locationChangeCallback != null) {
