@@ -52,7 +52,6 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var totalRuns: TextView
 	private var totalRunsNumber = 0
-
 	private lateinit var maxSpeed: TextView
 	private var absoluteMaxSpeed = 0F
 
@@ -226,15 +225,15 @@ class ActivitySummary : FragmentActivity() {
 
 		with(map) {
 
-			if (this.polyline != null) {
-				this.polyline!!.remove()
-				this.polyline = null
+			if (polyline != null) {
+				polyline!!.remove()
+				polyline = null
 			}
 
-			this.locationMarkers.forEach {
-				it.destroy()
+			for (marker in locationMarkers) {
+				marker.destroy()
 			}
-			this.locationMarkers.clear()
+			locationMarkers.clear()
 		}
 
 		if (activities.isEmpty()) {
@@ -244,17 +243,18 @@ class ActivitySummary : FragmentActivity() {
 		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
 		lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
 
-			//async(Dispatchers.IO, CoroutineStart.LAZY) {
 			loadingToast.show()
 
-			val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(activities)
-			for (mapMarker in mapMarkers) {
-				addMapMarkerToMap(mapMarker)
-			}
-
+			val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(activities,
+				map.startingChairliftTerminals, map.endingChairliftTerminals, map.easyRunsBounds,
+				map.moderateRunsBounds, map.difficultRunsBounds, map.otherBounds)
 			val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkers)
 
 			withContext(Dispatchers.Main) {
+
+				for (mapMarker in mapMarkers) {
+					map.locationMarkers.add(ActivitySummaryLocationMarkers(map.googleMap, mapMarker))
+				}
 
 				for (entry in activitySummaryEntries) {
 					val view: ActivityView = this@ActivitySummary.createActivityView(entry)
@@ -283,32 +283,9 @@ class ActivitySummary : FragmentActivity() {
 				Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
 				map.addPolylineFromMarker()
 			}
-			//}.await()
 		}.start()
 
 		//loadingToast.show()
-	}
-
-	@AnyThread
-	private suspend fun addMapMarkerToMap(mapMarker: MapMarker) = coroutineScope {
-
-		/*
-		val snippetText: String? = if (BuildConfig.DEBUG) {
-
-			val altitudeString = "Altitude: ${mapMarker.debugAltitude}"
-			val speedString = "Speed: ${mapMarker.debugSpeed}"
-			val verticalDirectionString = "Vertical: ${mapMarker.debugVertical.name}"
-
-			"$altitudeString | $speedString | $verticalDirectionString"
-		} else {
-			null
-		}*/
-
-		val snippetText = null
-		withContext(Dispatchers.Main) {
-			val activitySummaryLocation = ActivitySummaryLocationMarkers(map.map, mapMarker, snippetText)
-			map.locationMarkers.add(activitySummaryLocation)
-		}
 	}
 
 	@MainThread
@@ -484,9 +461,9 @@ class ActivitySummary : FragmentActivity() {
 				loadActivities(SkiingActivityManager.InProgressActivities.toTypedArray())
 			}
 
-			map.setOnCircleClickListener {
+			googleMap.setOnCircleClickListener {
 
-				map.setInfoWindowAdapter(this)
+				googleMap.setInfoWindowAdapter(this)
 
 				if (it.tag is ActivitySummaryLocationMarkers) {
 
@@ -499,7 +476,7 @@ class ActivitySummary : FragmentActivity() {
 				}
 			}
 
-			map.setOnInfoWindowCloseListener { it.isVisible = false }
+			googleMap.setOnInfoWindowCloseListener { it.isVisible = false }
 		}
 
 		override fun destroy() {
@@ -524,14 +501,14 @@ class ActivitySummary : FragmentActivity() {
 		override fun getInfoContents(marker: Marker): View? {
 			Log.v("CustomInfoWindow", "getInfoContents called")
 
-			if (marker.tag is Pair<*, *>) {
+			if (marker.tag is MapMarker) {
 
-				val markerInfo: Pair<MapMarker, String?> = marker.tag as Pair<MapMarker, String?>
+				val markerInfo: MapMarker = marker.tag as MapMarker
 
 				val markerView: View = layoutInflater.inflate(R.layout.info_window, null)
 
 				val name: TextView = markerView.findViewById(R.id.marker_name)
-				name.text = markerInfo.first.name
+				name.text = markerInfo.name
 
 				val altitude: TextView = markerView.findViewById(R.id.marker_altitude)
 
@@ -540,7 +517,7 @@ class ActivitySummary : FragmentActivity() {
 
 				try {
 					altitude.text = getString(R.string.marker_altitude,
-							(markerInfo.first.skiingActivity.altitude * altitudeConversion).roundToInt())
+						(markerInfo.skiingActivity.altitude * altitudeConversion).roundToInt())
 				} catch (e: IllegalArgumentException) {
 					altitude.text = getString(R.string.marker_altitude, 0)
 				}
@@ -552,14 +529,9 @@ class ActivitySummary : FragmentActivity() {
 
 				try {
 					speed.text = getString(R.string.marker_speed,
-							(markerInfo.first.skiingActivity.speed / speedConversion).roundToInt())
+							(markerInfo.skiingActivity.speed / speedConversion).roundToInt())
 				} catch (e: IllegalArgumentException) {
 					speed.text = getString(R.string.marker_speed, 0)
-				}
-
-				if (markerInfo.second != null) {
-					val debug: TextView = markerView.findViewById(R.id.marker_debug)
-					debug.text = markerInfo.second
 				}
 
 				return markerView
@@ -576,7 +548,7 @@ class ActivitySummary : FragmentActivity() {
 		@MainThread
 		fun addPolylineFromMarker() {
 
-			polyline = map.addPolyline {
+			polyline = googleMap.addPolyline {
 
 				for (marker in locationMarkers) {
 					if (marker.circle != null) {

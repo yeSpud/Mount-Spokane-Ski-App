@@ -10,7 +10,7 @@ import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.mapItem.MapMarker
 
 @UiThread
-class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debugSnippetText: String?) {
+class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker) {
 
 	var marker: Marker? = null
 		private set
@@ -20,14 +20,14 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debug
 
 	fun destroy() {
 
-		if (this.marker != null) {
-			this.marker!!.remove()
-			this.marker = null
+		if (marker != null) {
+			marker!!.remove()
+			marker = null
 		}
 
-		if (this.circle != null) {
-			this.circle!!.remove()
-			this.circle = null
+		if (circle != null) {
+			circle!!.remove()
+			circle = null
 		}
 	}
 
@@ -35,7 +35,7 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debug
 
 		val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
 
-		this.circle = map.addCircle {
+		circle = map.addCircle {
 			center(location)
 			strokeColor(mapMarker.circleColor)
 			fillColor(mapMarker.circleColor)
@@ -45,7 +45,7 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debug
 			visible(true)
 		}
 
-		this.marker = map.addMarker {
+		marker = map.addMarker {
 			position(location)
 			icon(mapMarker.markerColor)
 			title(mapMarker.name)
@@ -53,8 +53,8 @@ class ActivitySummaryLocationMarkers(map: GoogleMap, mapMarker: MapMarker, debug
 			visible(false)
 		}
 
-		this.marker!!.tag = Pair(mapMarker, debugSnippetText)
+		marker!!.tag = mapMarker
 
-		this.circle!!.tag = this
+		circle!!.tag = this
 	}
 }

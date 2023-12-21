@@ -90,7 +90,7 @@ class SkiingActivityParseTest {
 
 		//MtSpokaneMapItems.checkoutObject(this::class)
 
-		val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(skiingActivities)
+		// val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(skiingActivities)
 		//val unprocessedSummaries: Array<ActivitySummaryEntry> = ActivitySummaryEntry.loadAllFromMapMarkers(mapMarkers)
 		//val processedSummaries: Array<ActivitySummaryEntry> = ActivitySummaryEntry.crushDownActivities(unprocessedSummaries)
 		//Assert.assertNotEquals(unprocessedSummaries.size, processedSummaries.size)

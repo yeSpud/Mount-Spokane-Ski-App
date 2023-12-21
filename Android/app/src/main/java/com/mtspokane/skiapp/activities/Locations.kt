@@ -2,13 +2,12 @@ package com.mtspokane.skiapp.activities
 
 import android.graphics.Color
 import android.location.Location
-import android.os.Build
 import android.util.Log
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.maphandlers.MtSpokaneMapBounds
 
 abstract class Locations<T> {
 
@@ -24,15 +23,17 @@ abstract class Locations<T> {
 
 	abstract fun updateLocations(newVariable: T)
 
-	abstract fun checkIfOnOther(): MapMarker?
+	abstract fun checkIfOnOther(otherBounds: List<MapItem>): MapMarker?
 
-	abstract fun isInStartingTerminal(): String?
+	abstract fun isInStartingTerminal(startingChairliftBounds: List<MapItem>): String?
 
-	abstract fun isInEndingTerminal(): String?
+	abstract fun isInEndingTerminal(endingChairliftBounds: List<MapItem>): String?
 
-	abstract fun checkIfIOnChairlift(): MapMarker?
+	abstract fun checkIfIOnChairlift(startingChairliftBounds: List<MapItem>,
+									 endingChairliftBounds: List<MapItem>): MapMarker?
 
-	abstract fun checkIfOnRun(): MapMarker?
+	abstract fun checkIfOnRun(easyRunsBounds: List<MapItem>, moderateRunsBounds: List<MapItem>,
+							  difficultRunsBounds: List<MapItem>): MapMarker?
 }
 
 object ActivitySummaryLocations: Locations<SkiingActivity>() {
@@ -42,14 +43,14 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		currentLocation = newVariable
 	}
 
-	override fun checkIfOnOther(): MapMarker? {
+	override fun checkIfOnOther(otherBounds: List<MapItem>): MapMarker? {
 
 		if (currentLocation == null) {
 			Log.w("checkIfOnOther", "Other map items have not been set up")
 			return null
 		}
 
-		for (other in MtSpokaneMapBounds.other) {
+		for (other in otherBounds) {
 			if (other.locationInsidePoints(currentLocation!!)) {
 
 				return when (other.icon) {
@@ -69,41 +70,42 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		return null
 	}
 
-	override fun isInStartingTerminal(): String? {
-		for (it in MtSpokaneMapBounds.startingChairliftTerminals) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return it.name
+	override fun isInStartingTerminal(startingChairliftBounds: List<MapItem>): String? {
+		for (startingChairlift in startingChairliftBounds) {
+			if (startingChairlift.locationInsidePoints(currentLocation!!)) {
+				return startingChairlift.name
 			}
 		}
 
 		return null
 	}
 
-	override fun isInEndingTerminal(): String? {
-		for (it in MtSpokaneMapBounds.endingChairliftTerminals) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return it.name
+	override fun isInEndingTerminal(endingChairliftBounds: List<MapItem>): String? {
+		for (endingChairlift in endingChairliftBounds) {
+			if (endingChairlift.locationInsidePoints(currentLocation!!)) {
+				return endingChairlift.name
 			}
 		}
 
 		return null
 	}
 
-	override fun checkIfIOnChairlift(): MapMarker? {
+	override fun checkIfIOnChairlift(startingChairliftBounds: List<MapItem>,
+									 endingChairliftBounds: List<MapItem>): MapMarker? {
 
 		if (currentLocation == null) {
 			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
 			return null
 		}
 
-		val startingTerminal = isInStartingTerminal()
+		val startingTerminal = isInStartingTerminal(startingChairliftBounds)
 		if (startingTerminal != null) {
 			isOnChairlift = startingTerminal
 			return MapMarker(startingTerminal, currentLocation!!, R.drawable.ic_chairlift,
 				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 		}
 
-		val endingTerminal = isInEndingTerminal()
+		val endingTerminal = isInEndingTerminal(endingChairliftBounds)
 		if (endingTerminal != null) {
 			isOnChairlift = null
 			return MapMarker(endingTerminal, currentLocation!!, R.drawable.ic_chairlift,
@@ -118,32 +120,33 @@ object ActivitySummaryLocations: Locations<SkiingActivity>() {
 		return null
 	}
 
-	override fun checkIfOnRun(): MapMarker? {
+	override fun checkIfOnRun(easyRunsBounds: List<MapItem>, moderateRunsBounds: List<MapItem>,
+		difficultRunsBounds: List<MapItem>): MapMarker? {
 
 		if (currentLocation == null) {
 			Log.w("checkIfOnRun", "Ski runs have not been set up")
 			return null
 		}
 
-		for (it in MtSpokaneMapBounds.easyRunsBounds) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(it.name, currentLocation!!, R.drawable.ic_easy,
+		for (easyRunBounds in easyRunsBounds) {
+			if (easyRunBounds.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(easyRunBounds.name, currentLocation!!, R.drawable.ic_easy,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
 						Color.GREEN)
 			}
 		}
 
-		for (it in MtSpokaneMapBounds.moderateRunsBounds) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(it.name, currentLocation!!, R.drawable.ic_moderate,
+		for (moderateRunBounds in moderateRunsBounds) {
+			if (moderateRunBounds.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(moderateRunBounds.name, currentLocation!!, R.drawable.ic_moderate,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
 					Color.BLUE)
 			}
 		}
 
-		for (it in MtSpokaneMapBounds.difficultRunsBounds) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(it.name, currentLocation!!, R.drawable.ic_difficult,
+		for (difficultRunBounds in difficultRunsBounds) {
+			if (difficultRunBounds.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(difficultRunBounds.name, currentLocation!!, R.drawable.ic_difficult,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
 						Color.BLACK)
 			}
@@ -162,24 +165,24 @@ object InAppLocations: Locations<Location>() {
 		currentLocation = newVariable
 	}
 
-	override fun checkIfOnOther(): MapMarker? {
+	override fun checkIfOnOther(otherBounds: List<MapItem>): MapMarker? {
 
 		if (currentLocation == null) {
 			Log.w("checkIfOnOther", "Other map item has not been set up")
 			return null
 		}
 
-		for (it in MtSpokaneMapBounds.other) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return when (it.icon) {
-					R.drawable.ic_parking -> MapMarker(it.name, SkiingActivity(currentLocation!!),
-							it.icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+		for (otherBound in otherBounds) {
+			if (otherBound.locationInsidePoints(currentLocation!!)) {
+				return when (otherBound.icon) {
+					R.drawable.ic_parking -> MapMarker(otherBound.name, SkiingActivity(currentLocation!!),
+							otherBound.icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 							Color.GRAY)
-					R.drawable.ic_ski_patrol_icon -> MapMarker(it.name, SkiingActivity(currentLocation!!),
-							it.icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+					R.drawable.ic_ski_patrol_icon -> MapMarker(otherBound.name, SkiingActivity(currentLocation!!),
+							otherBound.icon, BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 							Color.WHITE)
-					else -> MapMarker(it.name, SkiingActivity(currentLocation!!),
-							it.icon ?: R.drawable.ic_missing, BitmapDescriptorFactory
+					else -> MapMarker(otherBound.name, SkiingActivity(currentLocation!!),
+							otherBound.icon ?: R.drawable.ic_missing, BitmapDescriptorFactory
 							.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
 				}
 			}
@@ -188,41 +191,42 @@ object InAppLocations: Locations<Location>() {
 		return null
 	}
 
-	override fun isInStartingTerminal(): String? {
-		for (it in MtSpokaneMapBounds.startingChairliftTerminals) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return it.name
+	override fun isInStartingTerminal(startingChairliftBounds: List<MapItem>): String? {
+		for (startingChairlift in startingChairliftBounds) {
+			if (startingChairlift.locationInsidePoints(currentLocation!!)) {
+				return startingChairlift.name
 			}
 		}
 
 		return null
 	}
 
-	override fun isInEndingTerminal(): String? {
-		for (it in MtSpokaneMapBounds.endingChairliftTerminals) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return it.name
+	override fun isInEndingTerminal(endingChairliftBounds: List<MapItem>): String? {
+		for (endingChairlift in endingChairliftBounds) {
+			if (endingChairlift.locationInsidePoints(currentLocation!!)) {
+				return endingChairlift.name
 			}
 		}
 
 		return null
 	}
 
-	override fun checkIfIOnChairlift(): MapMarker? {
+	override fun checkIfIOnChairlift(startingChairliftBounds: List<MapItem>,
+		endingChairliftBounds: List<MapItem>): MapMarker? {
 
 		if (currentLocation == null) {
 			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
 			return null
 		}
 
-		val startingTerminal = isInStartingTerminal()
+		val startingTerminal = isInStartingTerminal(startingChairliftBounds)
 		if (startingTerminal != null) {
 			isOnChairlift = startingTerminal
 			return MapMarker(startingTerminal, SkiingActivity(currentLocation!!), R.drawable.ic_chairlift,
 				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 		}
 
-		val endingTerminal = isInEndingTerminal()
+		val endingTerminal = isInEndingTerminal(endingChairliftBounds)
 		if (endingTerminal != null) {
 			isOnChairlift = null
 			return MapMarker(endingTerminal, SkiingActivity(currentLocation!!), R.drawable.ic_chairlift,
@@ -237,32 +241,33 @@ object InAppLocations: Locations<Location>() {
 		return null
 	}
 
-	override fun checkIfOnRun(): MapMarker? {
+	override fun checkIfOnRun(easyRunsBounds: List<MapItem>, moderateRunsBounds: List<MapItem>,
+		difficultRunsBounds: List<MapItem>): MapMarker? {
 
 		if (currentLocation == null) {
 			Log.w("checkIfOnRun", "Ski runs have not been set up")
 			return null
 		}
 
-		for (it in MtSpokaneMapBounds.easyRunsBounds) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_easy,
+		for (endingRunBounds in easyRunsBounds) {
+			if (endingRunBounds.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(endingRunBounds.name, SkiingActivity(currentLocation!!), R.drawable.ic_easy,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
 						Color.GREEN)
 			}
 		}
 
-		for (it in MtSpokaneMapBounds.moderateRunsBounds) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_moderate,
+		for (moderateRunBounds in moderateRunsBounds) {
+			if (moderateRunBounds.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(moderateRunBounds.name, SkiingActivity(currentLocation!!), R.drawable.ic_moderate,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
 					Color.BLUE)
 			}
 		}
 
-		for (it in MtSpokaneMapBounds.difficultRunsBounds) {
-			if (it.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(it.name, SkiingActivity(currentLocation!!), R.drawable.ic_difficult,
+		for (difficultRunBounds in difficultRunsBounds) {
+			if (difficultRunBounds.locationInsidePoints(currentLocation!!)) {
+				return MapMarker(difficultRunBounds.name, SkiingActivity(currentLocation!!), R.drawable.ic_difficult,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
 						Color.BLACK)
 			}
@@ -271,6 +276,8 @@ object InAppLocations: Locations<Location>() {
 		return null
 	}
 
+	@Deprecated("Will be removed(?)")
+	// todo Remove me?
 	interface VisibleLocationUpdate {
 		fun updateLocation(locationString: String)
 	}

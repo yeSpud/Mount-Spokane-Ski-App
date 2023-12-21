@@ -2,10 +2,10 @@ package com.mtspokane.skiapp.maphandlers
 
 import android.os.Build
 import android.util.Log
-import androidx.annotation.AnyThread
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.RawRes
+import androidx.annotation.UiThread
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -31,19 +31,25 @@ import com.mtspokane.skiapp.mapItem.PolylineMapItem
 
 abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyCallback {
 
-	internal lateinit var map: GoogleMap
+	internal lateinit var googleMap: GoogleMap
 
 	var isNightOnly = false
 
 	abstract val additionalCallback: OnMapReadyCallback
 
 	lateinit var chairliftPolylines: List<PolylineMapItem>
-
 	lateinit var easyRunsPolylines: List<PolylineMapItem>
-
 	lateinit var moderateRunsPolylines: List<PolylineMapItem>
-
 	lateinit var difficultRunsPolylines: List<PolylineMapItem>
+
+	lateinit var skiAreaBounds: MapItem
+	lateinit var otherBounds: List<MapItem> // Should be 9
+	lateinit var startingChairliftTerminals: List<MapItem> // Should be size 6
+	lateinit var endingChairliftTerminals: List<MapItem> // Should be size 6
+
+	lateinit var easyRunsBounds: List<MapItem> // Should be size 22 todo determine me
+	lateinit var moderateRunsBounds: List<MapItem> // Should be size 19 todo determine me
+	lateinit var difficultRunsBounds: List<MapItem> // Should be size 25 todo determine me
 
 	open fun destroy() {
 
@@ -65,7 +71,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 
 		// Clear the map if its not null.
 		Log.v("MapHandler", "Clearing map.")
-		map.clear()
+		googleMap.clear()
 	}
 
 	/**
@@ -77,17 +83,17 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 	 * it inside the SupportMapFragment. This method will only be triggered once the user has
 	 * installed Google Play services and returned to the app.
 	 */
-	override fun onMapReady(googleMap: GoogleMap) {
+	override fun onMapReady(map: GoogleMap) {
 
 		val tag = "onMapReady"
 
 		Log.v(tag, "Setting up map for the first time...")
-		map = googleMap
+		googleMap = map
 
 		// Setup camera view logging.
 		if (BuildConfig.DEBUG) {
-			map.setOnCameraIdleListener {
-				val cameraPosition: CameraPosition = map.cameraPosition
+			googleMap.setOnCameraIdleListener {
+				val cameraPosition: CameraPosition = googleMap.cameraPosition
 
 				val cameraTag = "OnCameraIdle"
 				Log.d(cameraTag, "Bearing: ${cameraPosition.bearing}")
@@ -98,15 +104,15 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		}
 
 		// Move the map camera view and set the view restrictions.
-		map.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.Builder()
+		googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.Builder()
 				.target(LatLng(47.92517834073426, -117.10480503737926)).tilt(45F)
 				.bearing(317.50552F).zoom(14.414046F).build()))
-		map.setLatLngBoundsForCameraTarget(CAMERA_BOUNDS)
-		map.setMinZoomPreference(MINIMUM_ZOOM)
-		map.setMaxZoomPreference(MAXIMUM_ZOOM)
+		googleMap.setLatLngBoundsForCameraTarget(CAMERA_BOUNDS)
+		googleMap.setMinZoomPreference(MINIMUM_ZOOM)
+		googleMap.setMaxZoomPreference(MAXIMUM_ZOOM)
 
 		// Set the map view type to satellite.
-		map.mapType = GoogleMap.MAP_TYPE_SATELLITE
+		googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
 		// Load the various polylines onto the map.
 		Log.d(tag, "Loading polylines...")
@@ -114,144 +120,162 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		easyRunsPolylines = loadPolylines(R.raw.easy, R.color.easy, 3f, R.drawable.ic_easy)
 		moderateRunsPolylines = loadPolylines(R.raw.moderate, R.color.moderate, 2f, R.drawable.ic_moderate)
 		difficultRunsPolylines = loadPolylines(R.raw.difficult, R.color.difficult, 1f, R.drawable.ic_difficult)
+		Log.d(tag, "Finished loading polylines")
 
-		if (MtSpokaneMapBounds.other.isEmpty() || MtSpokaneMapBounds.skiAreaBounds == null) {
-			Log.d(tag, "Adding other bounds...")
-			val otherBounds = loadPolygons(R.raw.other, R.color.other_polygon_fill)
-			for (name in otherBounds.keys) {
-				val values = otherBounds[name]!!
-				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
-				for (value in values) {
-					polygonPoints.add(value.points)
-				}
-
-				if (name == "Ski Area Bounds") {
-					values[0].remove()
-					MtSpokaneMapBounds.skiAreaBounds = MapItem(name, polygonPoints)
-					continue
-				}
-
-				Log.d(tag, "Getting icon for $name")
-				val icon: Int? = when (name) {
-					"Lodge 1" -> R.drawable.ic_lodge
-					"Lodge 2" -> R.drawable.ic_lodge
-					"Yurt" -> R.drawable.ic_yurt
-					"Vista House" -> R.drawable.ic_vista_house
-					"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
-					"Lodge 1 Parking Lot" -> R.drawable.ic_parking
-					"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-					"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
-					"Ski School" -> R.drawable.ic_missing // TODO Ski school icon
-					else -> {
-						Log.w(tag, "$name does not have an icon")
-						null
-					}
-				}
-
-				MtSpokaneMapBounds.other.add(MapItem(name, polygonPoints, icon))
+		//if (MtSpokaneMapBounds.other.isEmpty() || MtSpokaneMapBounds.skiAreaBounds == null) {
+		Log.d(tag, "Adding other bounds...")
+		val other = loadPolygons(R.raw.other, R.color.other_polygon_fill)
+		val bounds = mutableListOf<MapItem>()
+		for (name in other.keys) {
+			val values = other[name]!!
+			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+			for (value in values) {
+				polygonPoints.add(value.points)
 			}
-			Log.v(tag, "Finished adding other bounds")
-		}
 
-		if (MtSpokaneMapBounds.startingChairliftTerminals.isEmpty()) {
-			Log.d(tag, "Adding starting chairlift terminals...")
-			val startingChairliftTerminal = loadPolygons(R.raw.starting_lift_polygons, R.color.chairlift_polygon)
-			for (name in startingChairliftTerminal.keys) {
-				val values = startingChairliftTerminal[name]!!
-				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
-				for (value in values) {
-					polygonPoints.add(value.points)
-				}
-				MtSpokaneMapBounds.startingChairliftTerminals.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
+			if (name == "Ski Area Bounds") {
+				values[0].remove()
+				skiAreaBounds = MapItem(name, polygonPoints)
+				continue
 			}
-			Log.v(tag, "Finished adding ending chairlift terminals")
-		}
 
-		if (MtSpokaneMapBounds.endingChairliftTerminals.isEmpty()) {
-			Log.d(tag, "Adding ending chairlift terminals...")
-			val endingChairliftTerminal = loadPolygons(R.raw.ending_lift_polygons, R.color.chairlift_polygon)
-			for (name in endingChairliftTerminal.keys) {
-				val values = endingChairliftTerminal[name]!!
-				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
-				for (value in values) {
-					polygonPoints.add(value.points)
+			Log.d(tag, "Getting icon for $name")
+			val icon: Int? = when (name) {
+				"Lodge 1" -> R.drawable.ic_lodge
+				"Lodge 2" -> R.drawable.ic_lodge
+				"Yurt" -> R.drawable.ic_yurt
+				"Vista House" -> R.drawable.ic_vista_house
+				"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
+				"Lodge 1 Parking Lot" -> R.drawable.ic_parking
+				"Lodge 2 Parking Lot" -> R.drawable.ic_parking
+				"Tubing Area" -> R.drawable.ic_missing // TODO Tubing area icon
+				"Ski School" -> R.drawable.ic_missing // TODO Ski school icon
+				else -> {
+					Log.w(tag, "$name does not have an icon")
+					null
 				}
-				MtSpokaneMapBounds.endingChairliftTerminals.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
 			}
-			Log.v(tag, "Finished adding ending chairlift terminals")
+			bounds.add(MapItem(name, polygonPoints, icon))
 		}
+		otherBounds = bounds
+		Log.d(tag, "Finished adding other bounds")
+		//}
 
-		if (MtSpokaneMapBounds.chairliftsBounds.isEmpty()) {
-			Log.d(tag, "Adding chairlift bounds...")
-			val chairliftBounds = loadPolygons(R.raw.lift_polygons, R.color.chairlift_polygon)
-			for (name in chairliftBounds.keys) {
-				val values = chairliftBounds[name]!!
-				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
-				for (value in values) {
-					polygonPoints.add(value.points)
-				}
-				MtSpokaneMapBounds.chairliftsBounds.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
+		//if (MtSpokaneMapBounds.startingChairliftTerminals.isEmpty()) {
+		Log.d(tag, "Adding starting chairlift terminals...")
+		startingChairliftTerminals = loadMapItems(R.raw.starting_lift_polygons, R.color.chairlift_polygon,
+			R.drawable.ic_chairlift)
+		/*
+		val startingChairliftTerminal = loadPolygons(R.raw.starting_lift_polygons, R.color.chairlift_polygon)
+		for (name in startingChairliftTerminal.keys) {
+			val values = startingChairliftTerminal[name]!!
+			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+			for (value in values) {
+				polygonPoints.add(value.points)
 			}
-			Log.v(tag, "Finished adding chairlift bounds")
-		}
+			startingChairliftTerminals.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
+		}*/
+		Log.d(tag, "Finished adding ending chairlift terminals")
+		//}
 
-		if (MtSpokaneMapBounds.easyRunsBounds.isEmpty()) {
-			Log.d(tag, "Adding easy bounds...")
-			val easyBounds = loadPolygons(R.raw.easy_polygons, R.color.easy_polygon)
-			for (name in easyBounds.keys) {
-				val values = easyBounds[name]!!
-				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
-				for (value in values) {
-					polygonPoints.add(value.points)
-				}
-				MtSpokaneMapBounds.easyRunsBounds.add(MapItem(name, polygonPoints, R.drawable.ic_easy))
+		//if (MtSpokaneMapBounds.endingChairliftTerminals.isEmpty()) {
+		Log.d(tag, "Adding ending chairlift terminals...")
+		endingChairliftTerminals = loadMapItems(R.raw.ending_lift_polygons, R.color.chairlift_polygon,
+			R.drawable.ic_chairlift)
+		/*
+		val endingChairliftTerminal = loadPolygons(R.raw.ending_lift_polygons, R.color.chairlift_polygon)
+		for (name in endingChairliftTerminal.keys) {
+			val values = endingChairliftTerminal[name]!!
+			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+			for (value in values) {
+				polygonPoints.add(value.points)
 			}
-			Log.v(tag, "Finished adding easy bounds")
-		}
+			endingChairliftTerminals.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
+		}*/
+		Log.d(tag, "Finished adding ending chairlift terminals")
+		//}
 
-		if (MtSpokaneMapBounds.moderateRunsBounds.isEmpty()) {
-			Log.d(tag, "Adding moderate bounds...")
-			val moderateBounds = loadPolygons(R.raw.moderate_polygons, R.color.moderate_polygon)
-			for (name in moderateBounds.keys) {
-				val values = moderateBounds[name]!!
-				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
-				for (value in values) {
-					polygonPoints.add(value.points)
-				}
-				MtSpokaneMapBounds.moderateRunsBounds.add(MapItem(name, polygonPoints, R.drawable.ic_moderate))
+		//if (MtSpokaneMapBounds.chairliftsBounds.isEmpty()) {
+		// todo remove me?
+		/*
+		Log.d(tag, "Adding chairlift bounds...")
+		val chairliftBounds = loadPolygons(R.raw.lift_polygons, R.color.chairlift_polygon)
+		for (name in chairliftBounds.keys) {
+			val values = chairliftBounds[name]!!
+			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+			for (value in values) {
+				polygonPoints.add(value.points)
 			}
-			Log.v(tag, "Finished adding moderate bounds")
+			MtSpokaneMapBounds.chairliftsBounds.add(MapItem(name, polygonPoints, R.drawable.ic_chairlift))
 		}
+		Log.d(tag, "Finished adding chairlift bounds")*/
+		//}
 
-		if (MtSpokaneMapBounds.difficultRunsBounds.isEmpty()) {
-			Log.d(tag, "Adding difficult bounds...")
-			val difficultBounds = loadPolygons(R.raw.difficult_polygons, R.color.difficult_polygon)
-			for (name in difficultBounds.keys) {
-				val values = difficultBounds[name]!!
-				val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
-				for (value in values) {
-					polygonPoints.add(value.points)
-				}
-				MtSpokaneMapBounds.difficultRunsBounds.add(MapItem(name, polygonPoints, R.drawable.ic_difficult))
+		//if (MtSpokaneMapBounds.easyRunsBounds.isEmpty()) {
+		Log.d(tag, "Adding easy bounds...")
+		easyRunsBounds = loadMapItems(R.raw.easy_polygons, R.color.easy_polygon, R.drawable.ic_easy)
+		/*
+		val easyBounds = loadPolygons(R.raw.easy_polygons, R.color.easy_polygon)
+		for (name in easyBounds.keys) {
+			val values = easyBounds[name]!!
+			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+			for (value in values) {
+				polygonPoints.add(value.points)
 			}
-			Log.v(tag, "Finished adding difficult bounds")
-		}
+			easyRunsBounds.add(MapItem(name, polygonPoints, R.drawable.ic_easy))
+		}*/
+		Log.d(tag, "Finished adding easy bounds")
+		//}
+
+		//if (MtSpokaneMapBounds.moderateRunsBounds.isEmpty()) {
+		Log.d(tag, "Adding moderate bounds...")
+		moderateRunsBounds = loadMapItems(R.raw.moderate_polygons, R.color.moderate_polygon,
+			R.drawable.ic_moderate)
+		/*
+		val moderateBounds = loadPolygons(R.raw.moderate_polygons, R.color.moderate_polygon)
+		for (name in moderateBounds.keys) {
+			val values = moderateBounds[name]!!
+			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+			for (value in values) {
+				polygonPoints.add(value.points)
+			}
+			moderateRunsBounds.add(MapItem(name, polygonPoints, R.drawable.ic_moderate))
+		}*/
+		Log.d(tag, "Finished adding moderate bounds")
+		//}
+
+		//if (MtSpokaneMapBounds.difficultRunsBounds.isEmpty()) {
+		Log.d(tag, "Adding difficult bounds...")
+		difficultRunsBounds = loadMapItems(R.raw.difficult_polygons, R.color.difficult_polygon,
+			R.drawable.ic_difficult)
+		/*
+		val difficultBounds = loadPolygons(R.raw.difficult_polygons, R.color.difficult_polygon)
+		for (name in difficultBounds.keys) {
+			val values = difficultBounds[name]!!
+			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+			for (value in values) {
+				polygonPoints.add(value.points)
+			}
+			difficultRunsBounds.add(MapItem(name, polygonPoints, R.drawable.ic_difficult))
+		}*/
+		Log.d(tag, "Finished adding difficult bounds")
+		//}
 
 		Log.v("onMapReady", "Running additional setup steps...")
-		additionalCallback.onMapReady(map)
+		additionalCallback.onMapReady(googleMap)
 
 		Log.v("onMapReady", "Finished setting up map.")
 	}
 
 	private fun parseKmlFile(@RawRes file: Int): Iterable<KmlPlacemark> {
-		val kml = kmlLayer(map, file, activity)
+		val kml = kmlLayer(googleMap, file, activity)
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && kml.placemarks.spliterator().estimateSize() == 0L) {
 			Log.w("parseKmlFile", "No placemarks in kml file!")
 		}
 		return kml.placemarks
 	}
 
-	@AnyThread
+	@UiThread
 	private fun loadPolylines(@RawRes fileRes: Int, @ColorRes color: Int, zIndex: Float,
 	                          @DrawableRes icon: Int? = null): List<PolylineMapItem> {
 
@@ -268,7 +292,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 			val coordinates: ArrayList<LatLng> = lineString.geometryObject
 
 			// Get the color of the polyline.
-			val argb = this@MapHandler.getARGB(color)
+			val argb = getARGB(color)
 
 			// Get the properties of the polyline.
 			val polylineProperties: List<String>? = if (placemark.hasProperty(PROPERTY_KEY)) {
@@ -281,7 +305,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 			val easiestWayDown = polylineHasProperty(polylineProperties, "easiest way down")
 
 			// Create the polyline using the coordinates and other options.
-			val polyline = map.addPolyline {
+			val polyline = googleMap.addPolyline {
 				addAll(coordinates)
 				color(argb)
 				if (easiestWayDown) {
@@ -318,8 +342,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		return hashMap.values.toList()
 	}
 
-	@AnyThread
-	fun loadPolygons(@RawRes fileRes: Int, @ColorRes color: Int, visible: Boolean = BuildConfig.DEBUG):
+	@UiThread
+	private fun loadPolygons(@RawRes fileRes: Int, @ColorRes color: Int):
 			HashMap<String, List<Polygon>> {
 
 		val hashMap: HashMap<String, List<Polygon>> = HashMap() // todo Consider making this a set or regular map..
@@ -331,7 +355,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 
 			val argb = getARGB(color)
 
-			val polygon = map.addPolygon {
+			val polygon = googleMap.addPolygon {
 				addAll(kmlPolygon.outerBoundaryCoordinates)
 				clickable(false)
 				geodesic(true)
@@ -339,7 +363,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 				fillColor(argb)
 				strokeColor(argb)
 				strokeWidth(8.0F)
-				visible(visible)
+				visible(BuildConfig.DEBUG)
 			}
 
 			val name: String = getPlacemarkName(placemark)
@@ -355,6 +379,21 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		}
 
 		return hashMap
+	}
+
+	private fun loadMapItems(@RawRes fileRes: Int, @ColorRes color: Int,
+							 @DrawableRes drawableRes: Int? = null): List<MapItem> {
+		val mapItems = mutableListOf<MapItem>()
+		val polygons = loadPolygons(fileRes, color)
+		for (name in polygons.keys) {
+			val values = polygons[name]!!
+			val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
+			for (value in values) {
+				polygonPoints.add(value.points)
+			}
+			mapItems.add(MapItem(name, polygonPoints, drawableRes))
+		}
+		return mapItems
 	}
 
 	fun getARGB(@ColorRes color: Int): Int {
@@ -404,23 +443,4 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 			return false
 		}
 	}
-}
-
-object MtSpokaneMapBounds {
-
-	var skiAreaBounds: MapItem? = null
-
-	val other: MutableList<MapItem> = mutableListOf() // Should be 9
-
-	val startingChairliftTerminals: MutableList<MapItem> = mutableListOf() // Should be size 6
-
-	val endingChairliftTerminals: MutableList<MapItem> = mutableListOf() // Should be size 6
-
-	val chairliftsBounds: MutableList<MapItem> = mutableListOf() // Should be size 6
-
-	val easyRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 22
-
-	val moderateRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 19
-
-	val difficultRunsBounds: MutableList<MapItem> = mutableListOf() // Should be size 25
 }

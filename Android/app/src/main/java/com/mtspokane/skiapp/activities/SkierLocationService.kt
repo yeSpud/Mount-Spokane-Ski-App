@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -28,12 +29,20 @@ import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
+import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.maphandlers.MtSpokaneMapBounds
 import kotlin.reflect.KClass
 
 
 class SkierLocationService : Service(), LocationListener {
+
+	private val binder: IBinder = LocalBinder()
+
+	private var serviceCallbacks: ServiceCallbacks? = null
+
+	inner class LocalBinder: Binder() {
+		fun getService(): SkierLocationService = this@SkierLocationService
+	}
 
 	private lateinit var locationManager: LocationManager
 
@@ -78,6 +87,10 @@ class SkierLocationService : Service(), LocationListener {
 		Toast.makeText(this, R.string.starting_tracking, Toast.LENGTH_SHORT).show()
 	}
 
+	fun setCallbacks(callbacks: ServiceCallbacks?) {
+		serviceCallbacks = callbacks
+	}
+
 	@RequiresApi(Build.VERSION_CODES.O)
 	private fun createNotificationChannels() {
 
@@ -92,7 +105,6 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("createNotificatnChnnls", "Created new notification channel")
 	}
 
-	@SuppressLint("MissingPermission")
 	override fun onDestroy() {
 		Log.v("SkierLocationService", "onDestroy has been called!")
 		super.onDestroy()
@@ -124,51 +136,42 @@ class SkierLocationService : Service(), LocationListener {
 
 	override fun onLocationChanged(location: Location) {
 
-		if (MtSpokaneMapBounds.skiAreaBounds == null) {
-			Log.w("SkierLocationService", "Ski bounds have not been set up!")
-			return
-		}
-
 		InAppLocations.updateLocations(location)
 
-		// If we are not on the mountain stop the tracking.
-		if (MtSpokaneMapBounds.skiAreaBounds!!.points.isEmpty()) {
-			Toast.makeText(this, R.string.bounds_missing,
-				Toast.LENGTH_LONG).show()
-			stopSelf()
-			return
-		} else if (!MtSpokaneMapBounds.skiAreaBounds!!.locationInsidePoints(location)) {
-			Toast.makeText(this, R.string.out_of_bounds,
-				Toast.LENGTH_LONG).show()
-			stopSelf()
-			return
+		if (serviceCallbacks != null) {
+
+			// If we are not on the mountain stop the tracking.
+			if (!serviceCallbacks!!.isInBounds(location)) {
+				Toast.makeText(this, R.string.out_of_bounds,
+					Toast.LENGTH_LONG).show()
+				stopSelf()
+				return
+			}
+
+			var mapMarker = serviceCallbacks!!.getOnLocation(location)
+			if (mapMarker != null) {
+				appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
+				return
+			}
+
+			mapMarker = serviceCallbacks!!.getInLocation(location)
+			if (mapMarker != null) {
+				appendSkiingActivity(R.string.current_other, mapMarker, location)
+				return
+			}
 		}
 
-		var mapMarker = InAppLocations.checkIfIOnChairlift()
-		if (mapMarker != null) {
-			appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
-			return
+		for (locationUpdate in InAppLocations.visibleLocationUpdates) {
+			locationUpdate.updateLocation(getString(R.string.app_name))
 		}
-
-		mapMarker = InAppLocations.checkIfOnOther()
-		if (mapMarker != null) {
-			appendSkiingActivity(R.string.current_other, mapMarker, location)
-			return
-		}
-
-		mapMarker = InAppLocations.checkIfOnRun()
-		if (mapMarker != null) {
-			appendSkiingActivity(R.string.current_run, mapMarker, location)
-			return
-		}
-
-		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(getString(R.string.app_name)) }
 		updateTrackingNotification(this.getString(R.string.tracking_notice), null)
 	}
 
 	private fun appendSkiingActivity(@StringRes textResource: Int, mapMarker: MapMarker, location: Location) {
-		val text: String = this.getString(textResource, mapMarker.name)
-		InAppLocations.visibleLocationUpdates.forEach { it.updateLocation(text) }
+		val text: String = getString(textResource, mapMarker.name)
+		for (locationUpdate in InAppLocations.visibleLocationUpdates) {
+			locationUpdate.updateLocation(text)
+		}
 		updateTrackingNotification(text, mapMarker.icon)
 
 		SkiingActivityManager.InProgressActivities.add(SkiingActivity(location))
@@ -227,9 +230,8 @@ class SkierLocationService : Service(), LocationListener {
 			.setContentIntent(pendingIntent)
 	}
 
-	override fun onBind(intent: Intent?): IBinder? {
-		// We don't provide binding, so return null
-		return null
+	override fun onBind(intent: Intent?): IBinder {
+		return binder
 	}
 
 	override fun onProviderEnabled(provider: String) {}
@@ -269,5 +271,13 @@ class SkierLocationService : Service(), LocationListener {
 
 			return bitmap
 		}
+	}
+
+	interface ServiceCallbacks {
+		fun isInBounds(location: Location): Boolean
+
+		fun getOnLocation(location: Location): MapMarker?
+
+		fun getInLocation(location: Location): MapMarker?
 	}
 }

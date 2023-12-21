@@ -19,28 +19,35 @@ data class MapMarker(val name: String, val skiingActivity: SkiingActivity, @Draw
 
 		const val UNKNOWN_LOCATION = "Unknown Location"
 
-		fun loadFromSkiingActivityArray(array: Array<SkiingActivity>): Array<MapMarker> {
+		fun loadFromSkiingActivityArray(array: Array<SkiingActivity>, startingChairliftTerminal: List<MapItem>,
+										endingChairliftBounds: List<MapItem>, easyRunsBounds: List<MapItem>,
+										moderateRunsBounds: List<MapItem>, difficultRunsBounds: List<MapItem>,
+										otherBounds: List<MapItem>): Array<MapMarker> {
 
 			return Array(array.size) {
-				getMapMarker(array[it])
+				getMapMarker(array[it], startingChairliftTerminal, endingChairliftBounds, easyRunsBounds,
+					moderateRunsBounds, difficultRunsBounds, otherBounds)
 			}
 		}
 
-		private fun getMapMarker(skiingActivity: SkiingActivity): MapMarker {
+		private fun getMapMarker(skiingActivity: SkiingActivity, startingChairliftTerminal: List<MapItem>,
+								 endingChairliftBounds: List<MapItem>, easyRunsBounds: List<MapItem>,
+								 moderateRunsBounds: List<MapItem>, difficultRunsBounds: List<MapItem>,
+								 otherBounds: List<MapItem>): MapMarker {
 
 			ActivitySummaryLocations.updateLocations(skiingActivity)
 
-			var marker: MapMarker? = ActivitySummaryLocations.checkIfIOnChairlift()
+			var marker: MapMarker? = ActivitySummaryLocations.checkIfIOnChairlift(startingChairliftTerminal, endingChairliftBounds)
 			if (marker != null) {
 				return marker
 			}
 
-			marker = ActivitySummaryLocations.checkIfOnOther()
+			marker = ActivitySummaryLocations.checkIfOnOther(otherBounds)
 			if (marker != null) {
 				return marker
 			}
 
-			marker = ActivitySummaryLocations.checkIfOnRun()
+			marker = ActivitySummaryLocations.checkIfOnRun(easyRunsBounds, moderateRunsBounds, difficultRunsBounds)
 			if (marker != null) {
 				return marker
 			}

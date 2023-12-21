@@ -5,13 +5,16 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.AlertDialog
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.os.Process
 import android.util.Log
 import android.view.View
@@ -26,19 +29,23 @@ import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
+import com.mtspokane.skiapp.mapItem.MapItem
+import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
 import com.orhanobut.dialogplus.DialogPlus
 import kotlinx.coroutines.*
 
-class MapsActivity : FragmentActivity() {
+class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 	private lateinit var map: Map
-
 	private var isMapSetup = false
 
 	private var locationChangeCallback: InAppLocations.VisibleLocationUpdate? = null
+
+	private var skierLocationService: SkierLocationService? = null
+	private var bound = false
 
 	// Boolean used to determine if the user's precise location is enabled (and therefore accessible).
 	var locationEnabled = false
@@ -103,6 +110,35 @@ class MapsActivity : FragmentActivity() {
 		map.destroy()
 	}
 
+	private val serviceConnection = object : ServiceConnection {
+
+		override fun onServiceConnected(name: ComponentName?, service: IBinder) {
+			val binder = service as SkierLocationService.LocalBinder
+			skierLocationService = binder.getService()
+			bound = true
+			skierLocationService!!.setCallbacks(this@MapsActivity)
+		}
+
+		override fun onServiceDisconnected(name: ComponentName?) {
+			bound = false
+		}
+	}
+
+	override fun onStart() {
+		super.onStart()
+		val intent = Intent(this, SkierLocationService::class.java)
+		bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+	}
+
+	override fun onStop() {
+		super.onStop()
+		if (bound) {
+			skierLocationService!!.setCallbacks(null)
+			unbindService(serviceConnection)
+			bound = false
+		}
+	}
+
 	override fun onResume() {
 		super.onResume()
 
@@ -159,6 +195,31 @@ class MapsActivity : FragmentActivity() {
 		}
 	}
 
+	override fun isInBounds(location: Location): Boolean {
+		return map.skiAreaBounds.locationInsidePoints(location)
+	}
+
+	override fun getOnLocation(location: Location): MapMarker? {
+
+		var mapMarker = InAppLocations.checkIfIOnChairlift(map.startingChairliftTerminals,
+			map.endingChairliftTerminals)
+		if (mapMarker != null) {
+			return mapMarker
+		}
+
+		mapMarker = InAppLocations.checkIfOnRun(map.easyRunsBounds, map.moderateRunsBounds,
+			map.difficultRunsBounds)
+		if (mapMarker != null) {
+			return mapMarker
+		}
+
+		return null
+	}
+
+	override fun getInLocation(location: Location): MapMarker? {
+		return InAppLocations.checkIfOnOther(map.otherBounds)
+	}
+
 	companion object {
 		const val permissionValue = 29500
 	}
@@ -176,7 +237,6 @@ class MapsActivity : FragmentActivity() {
 			if (locationEnabled) {
 				Log.v("onMapReady", "Location tracking enabled")
 				launchLocationService()
-				//setupLocation()
 			} else {
 
 				// Setup the location popup dialog.
@@ -208,7 +268,7 @@ class MapsActivity : FragmentActivity() {
 		fun updateMarkerLocation(location: Location) {
 
 			if (locationMarker == null) {
-				locationMarker = map.addMarker {
+				locationMarker = googleMap.addMarker {
 					position(LatLng(location.latitude, location.longitude))
 					title(resources.getString(R.string.your_location))
 				}
