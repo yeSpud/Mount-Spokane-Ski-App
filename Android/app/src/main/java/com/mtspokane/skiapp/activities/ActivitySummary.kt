@@ -3,6 +3,7 @@ package com.mtspokane.skiapp.activities
 import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.AttributeSet
@@ -16,6 +17,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
 import androidx.annotation.MainThread
+import androidx.annotation.UiThread
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isNotEmpty
@@ -24,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.RoundCap
@@ -36,6 +39,7 @@ import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
+import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
@@ -241,54 +245,46 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
-		lifecycleScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
+		loadingToast.show()
 
-			loadingToast.show()
+		val mapMarkers: Array<MapMarker> = Array(activities.size) { getMapMarker(activities[it]) }
+		val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkers)
 
-			val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(activities,
-				map.startingChairliftTerminals, map.endingChairliftTerminals, map.easyRunsBounds,
-				map.moderateRunsBounds, map.difficultRunsBounds, map.otherBounds)
-			val activitySummaryEntries: Array<ActivitySummaryEntry> = parseMapMarkersForMap(mapMarkers)
+		lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
 
-			withContext(Dispatchers.Main) {
-
-				for (mapMarker in mapMarkers) {
-					map.locationMarkers.add(ActivitySummaryLocationMarkers(map.googleMap, mapMarker))
-				}
-
-				for (entry in activitySummaryEntries) {
-					val view: ActivityView = this@ActivitySummary.createActivityView(entry)
-					container.addView(view)
-				}
-
-				totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
-				totalRuns.visibility = View.VISIBLE
-
-				try {
-					maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
-					maxSpeed.visibility = View.VISIBLE
-				} catch (e: IllegalArgumentException) {
-					maxSpeed.visibility = View.INVISIBLE
-				}
-
-				try {
-					averageSpeed.text = getString(R.string.average_speed,
-							(averageSpeedSum/totalRunsNumber).roundToInt())
-					averageSpeed.visibility = View.VISIBLE
-				} catch (e: IllegalArgumentException) {
-					averageSpeed.visibility = View.INVISIBLE
-				}
-
-				loadingToast.cancel()
-				Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
-				map.addPolylineFromMarker()
+			for (mapMarker in mapMarkers) {
+				map.locationMarkers.add(ActivitySummaryLocationMarkers(map.googleMap, mapMarker))
 			}
-		}.start()
 
-		//loadingToast.show()
+			for (entry in activitySummaryEntries) {
+				val view: ActivityView = createActivityView(entry)
+				container.addView(view)
+			}
+
+			totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
+			totalRuns.visibility = View.VISIBLE
+
+			try {
+				maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
+				maxSpeed.visibility = View.VISIBLE
+			} catch (e: IllegalArgumentException) {
+				maxSpeed.visibility = View.INVISIBLE
+			}
+
+			try {
+				averageSpeed.text = getString(R.string.average_speed, (averageSpeedSum/totalRunsNumber).roundToInt())
+				averageSpeed.visibility = View.VISIBLE
+			} catch (e: IllegalArgumentException) {
+				averageSpeed.visibility = View.INVISIBLE
+			}
+
+			loadingToast.cancel()
+			Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
+			map.addPolylineFromMarker()
+		}.start()
 	}
 
-	@MainThread
+	@UiThread
 	private fun createActivityView(activitySummaryEntry: ActivitySummaryEntry): ActivityView {
 
 		val activityView = ActivityView(this)
@@ -298,7 +294,8 @@ class ActivitySummary : FragmentActivity() {
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_moderate ||
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_difficult)
 
-		activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, activitySummaryEntry.mapMarker.icon))
+		activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this,
+			activitySummaryEntry.mapMarker.icon))
 
 		activityView.title.text = activitySummaryEntry.mapMarker.name
 
@@ -342,11 +339,40 @@ class ActivitySummary : FragmentActivity() {
 		return activityView
 	}
 
+	@AnyThread
+	private fun getMapMarker(skiingActivity: SkiingActivity): MapMarker {
+
+		Locations.updateLocations(skiingActivity)
+
+		var marker: MapMarker? = Locations.checkIfIOnChairlift(map.startingChairliftTerminals,
+			map.endingChairliftTerminals)
+		if (marker != null) {
+			return marker
+		}
+
+		marker = Locations.checkIfOnOther(map.otherBounds)
+		if (marker != null) {
+			return marker
+		}
+
+		marker = Locations.checkIfOnRun(map.easyRunsBounds, map.moderateRunsBounds,
+			map.difficultRunsBounds)
+		if (marker != null) {
+			return marker
+		}
+
+		Log.w("getMapMarker", "Unable to determine location")
+		return MapMarker(UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
+			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
+	}
+
 	companion object {
 
 		const val JSON_MIME_TYPE = "application/json"
 
 		const val GEOJSON_MIME_TYPE = "application/geojson"
+
+		const val UNKNOWN_LOCATION = "Unknown Location"
 
 		fun parseMapMarkersForMap(mapMarkers: Array<MapMarker>): Array<ActivitySummaryEntry> {
 
@@ -355,7 +381,7 @@ class ActivitySummary : FragmentActivity() {
 
 			var startingIndexOffset = 0
 			for (i in 0..mapMarkers.size) {
-				if (mapMarkers[i].name != MapMarker.UNKNOWN_LOCATION) {
+				if (mapMarkers[i].name != UNKNOWN_LOCATION) {
 					startingIndexOffset = i
 					break
 				}
@@ -369,7 +395,7 @@ class ActivitySummary : FragmentActivity() {
 			for (i in startingIndexOffset until mapMarkers.size) {
 				val entry: MapMarker = mapMarkers[i]
 
-				if (entry.name != MapMarker.UNKNOWN_LOCATION) {
+				if (entry.name != UNKNOWN_LOCATION) {
 
 					if (entry.name != startingMapMarker.name) {
 
@@ -545,7 +571,7 @@ class ActivitySummary : FragmentActivity() {
 			return null
 		}
 
-		@MainThread
+		@UiThread
 		fun addPolylineFromMarker() {
 
 			polyline = googleMap.addPolyline {
@@ -698,37 +724,3 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 }
-
-class ActivityView : ConstraintLayout {
-
-	val icon: ImageView
-
-	val title: TextView
-
-	val maxSpeed: TextView
-
-	val averageSpeed: TextView
-
-	val startTime: TextView
-
-	val endTime: TextView
-
-	constructor(context: Context): this(context, null)
-
-	constructor(context: Context, attributeSet: AttributeSet?): this(context, attributeSet, 0)
-
-	constructor(context: Context, attributeSet: AttributeSet?, defStyleAttr: Int) : super(context,
-			attributeSet, defStyleAttr) {
-
-		inflate(context, R.layout.activity_view, this)
-
-		icon = findViewById(R.id.icon)
-		title = findViewById(R.id.title_view)
-		maxSpeed = findViewById(R.id.max_speed)
-		averageSpeed = findViewById(R.id.average_speed)
-		startTime = findViewById(R.id.start_time)
-		endTime = findViewById(R.id.end_time)
-	}
-}
-
-data class ActivitySummaryEntry(val mapMarker: MapMarker, val maxSpeed: Float, val averageSpeed: Float, val endTime: Long?)

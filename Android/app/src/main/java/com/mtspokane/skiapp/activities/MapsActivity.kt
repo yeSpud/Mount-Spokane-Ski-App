@@ -27,6 +27,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
@@ -40,8 +41,6 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	private lateinit var map: Map
 	private var isMapSetup = false
 
-	private var locationChangeCallback: InAppLocations.VisibleLocationUpdate? = null
-
 	private var skierLocationService: SkierLocationService? = null
 	private var bound = false
 
@@ -50,6 +49,23 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	private set
 
 	private lateinit var optionsView: DialogPlus
+
+	private val serviceConnection = object : ServiceConnection {
+
+		override fun onServiceConnected(name: ComponentName?, service: IBinder) {
+			val binder = service as SkierLocationService.LocalBinder
+			skierLocationService = binder.getService()
+			bound = true
+			skierLocationService!!.setCallbacks(this@MapsActivity)
+		}
+
+		override fun onServiceDisconnected(name: ComponentName?) {
+			skierLocationService!!.setCallbacks(null)
+			unbindService(this)
+			skierLocationService = null
+			bound = false
+		}
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -84,26 +100,11 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
 		mapFragment.getMapAsync(map)
-
-		locationChangeCallback = object : InAppLocations.VisibleLocationUpdate {
-			override fun updateLocation(locationString: String) {
-
-				if (InAppLocations.currentLocation == null) {
-					return
-				}
-
-				map.updateMarkerLocation(InAppLocations.currentLocation!!)
-			}
-		}
 	}
 
 	override fun onDestroy() {
 		Log.v("MapsActivity", "onDestroy has been called!")
 		super.onDestroy()
-
-		// Remove callback from locations.
-		InAppLocations.visibleLocationUpdates.remove(this.locationChangeCallback)
-		locationChangeCallback = null
 
 		if (bound) {
 			skierLocationService!!.setCallbacks(null)
@@ -112,23 +113,6 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		}
 
 		map.destroy()
-	}
-
-	private val serviceConnection = object : ServiceConnection {
-
-		override fun onServiceConnected(name: ComponentName?, service: IBinder) {
-			val binder = service as SkierLocationService.LocalBinder
-			skierLocationService = binder.getService()
-			bound = true
-			skierLocationService!!.setCallbacks(this@MapsActivity)
-		}
-
-		override fun onServiceDisconnected(name: ComponentName?) {
-			skierLocationService!!.setCallbacks(null)
-			unbindService(this)
-			skierLocationService = null
-			bound = false
-		}
 	}
 
 	override fun onResume() {
@@ -154,7 +138,6 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		}
 	}
 
-	@SuppressLint("MissingPermission")
 	fun launchLocationService() {
 
 		val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -174,13 +157,6 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 			bindService(serviceIntent, serviceConnection, Context.BIND_NOT_FOREGROUND)
 			startService(serviceIntent)
-
-			// Add listener for map for a location change.
-			if (this.locationChangeCallback != null) {
-				if (!InAppLocations.visibleLocationUpdates.contains(locationChangeCallback!!)) {
-					InAppLocations.visibleLocationUpdates.add(locationChangeCallback!!)
-				}
-			}
 		}
 	}
 
@@ -190,13 +166,13 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 	override fun getOnLocation(location: Location): MapMarker? {
 
-		var mapMarker = InAppLocations.checkIfIOnChairlift(map.startingChairliftTerminals,
+		var mapMarker = Locations.checkIfIOnChairlift(map.startingChairliftTerminals,
 			map.endingChairliftTerminals)
 		if (mapMarker != null) {
 			return mapMarker
 		}
 
-		mapMarker = InAppLocations.checkIfOnRun(map.easyRunsBounds, map.moderateRunsBounds,
+		mapMarker = Locations.checkIfOnRun(map.easyRunsBounds, map.moderateRunsBounds,
 			map.difficultRunsBounds)
 		if (mapMarker != null) {
 			return mapMarker
@@ -206,7 +182,13 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	}
 
 	override fun getInLocation(location: Location): MapMarker? {
-		return InAppLocations.checkIfOnOther(map.otherBounds)
+		return Locations.checkIfOnOther(map.otherBounds)
+	}
+
+	override fun updateMapMarker(locationString: String) {
+		if (Locations.currentLocation != null) {
+			map.updateMarkerLocation(Locations.currentLocation!!)
+		}
 	}
 
 	companion object {
@@ -254,7 +236,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 			super.destroy()
 		}
 
-		fun updateMarkerLocation(location: Location) {
+		fun updateMarkerLocation(location: SkiingActivity) {
 
 			if (locationMarker == null) {
 				locationMarker = googleMap.addMarker {

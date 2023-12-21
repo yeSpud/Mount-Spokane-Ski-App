@@ -29,7 +29,6 @@ import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databases.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
-import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.MapMarker
 import kotlin.reflect.KClass
 
@@ -109,8 +108,6 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onDestroy has been called!")
 		super.onDestroy()
 
-		InAppLocations.visibleLocationUpdates.clear()
-
 		locationManager.removeUpdates(this)
 		notificationManager.cancel(TRACKING_SERVICE_ID)
 
@@ -133,19 +130,18 @@ class SkierLocationService : Service(), LocationListener {
 			notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 		}
 
-		binder = null
+		binder = null // FIXME Binder leaks memory
 	}
 
 	override fun onLocationChanged(location: Location) {
 
-		InAppLocations.updateLocations(location)
+		Locations.updateLocations(SkiingActivity(location))
 
 		if (serviceCallbacks != null) {
 
 			// If we are not on the mountain stop the tracking.
 			if (!serviceCallbacks!!.isInBounds(location)) {
-				Toast.makeText(this, R.string.out_of_bounds,
-					Toast.LENGTH_LONG).show()
+				Toast.makeText(this, R.string.out_of_bounds, Toast.LENGTH_LONG).show()
 				stopSelf()
 				return
 			}
@@ -163,17 +159,12 @@ class SkierLocationService : Service(), LocationListener {
 			}
 		}
 
-		for (locationUpdate in InAppLocations.visibleLocationUpdates) {
-			locationUpdate.updateLocation(getString(R.string.app_name))
-		}
 		updateTrackingNotification(this.getString(R.string.tracking_notice), null)
 	}
 
 	private fun appendSkiingActivity(@StringRes textResource: Int, mapMarker: MapMarker, location: Location) {
 		val text: String = getString(textResource, mapMarker.name)
-		for (locationUpdate in InAppLocations.visibleLocationUpdates) {
-			locationUpdate.updateLocation(text)
-		}
+		serviceCallbacks!!.updateMapMarker(text)
 		updateTrackingNotification(text, mapMarker.icon)
 
 		SkiingActivityManager.InProgressActivities.add(SkiingActivity(location))
@@ -281,5 +272,7 @@ class SkierLocationService : Service(), LocationListener {
 		fun getOnLocation(location: Location): MapMarker?
 
 		fun getInLocation(location: Location): MapMarker?
+
+		fun updateMapMarker(locationString: String)
 	}
 }
