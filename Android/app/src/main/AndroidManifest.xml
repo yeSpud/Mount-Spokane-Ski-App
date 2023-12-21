@@ -52,7 +52,7 @@
         </activity>
 
         <activity
-            android:name="com.mtspokane.skiapp.activities.ActivitySummary"
+            android:name="com.mtspokane.skiapp.activities.activitysummary.ActivitySummary"
             android:exported="true"
             android:label="@string/activity_summary_title"
             android:screenOrientation="portrait"

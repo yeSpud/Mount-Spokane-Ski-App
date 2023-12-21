@@ -8,9 +8,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
-import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
-import com.mtspokane.skiapp.mapItem.MapMarker
 import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Before

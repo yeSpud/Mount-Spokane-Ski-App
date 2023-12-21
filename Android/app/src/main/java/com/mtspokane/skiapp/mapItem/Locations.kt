@@ -1,12 +1,9 @@
-package com.mtspokane.skiapp.activities
+package com.mtspokane.skiapp.mapItem
 
 import android.graphics.Color
 import android.util.Log
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.databases.SkiingActivity
-import com.mtspokane.skiapp.mapItem.MapItem
-import com.mtspokane.skiapp.mapItem.MapMarker
 
 object Locations {
 
@@ -93,7 +90,8 @@ object Locations {
 		}
 
 		if (isOnChairlift != null) {
-			return MapMarker(isOnChairlift!!, currentLocation!!, R.drawable.ic_chairlift,
+			return MapMarker(
+				isOnChairlift!!, currentLocation!!, R.drawable.ic_chairlift,
 				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 		}
 

@@ -7,6 +7,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import java.io.File
 import java.io.OutputStream
 import org.json.JSONArray

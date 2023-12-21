@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.activities
+package com.mtspokane.skiapp.activities.activitysummary
 
 import android.app.AlertDialog
 import android.app.NotificationManager
@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.util.AttributeSet
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -16,10 +15,8 @@ import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
-import androidx.annotation.MainThread
 import androidx.annotation.UiThread
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -31,20 +28,19 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.ktx.addPolyline
-import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activities.SkierLocationService
 import com.mtspokane.skiapp.databases.ActivityDatabase
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
-import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
-import com.mtspokane.skiapp.mapItem.MapItem
+import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
-import com.mtspokane.skiapp.maphandlers.ActivitySummaryLocationMarkers
 import com.orhanobut.dialogplus.DialogPlus
 import kotlinx.coroutines.*
 import java.io.File
@@ -70,14 +66,18 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var optionsView: DialogPlus
 
-	private val exportJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(ActivityResultContracts.CreateDocument(JSON_MIME_TYPE)) {
+	private val exportJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(ActivityResultContracts.CreateDocument(
+		JSON_MIME_TYPE
+	)) {
 		if (it != null) {
 			val json: JSONObject = getActivitySummaryJson()
 			SkiingActivityManager.writeToExportFile(contentResolver, it, json.toString(4))
 		}
 	}
 
-	private val exportGeoJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(ActivityResultContracts.CreateDocument(GEOJSON_MIME_TYPE)) {
+	private val exportGeoJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(ActivityResultContracts.CreateDocument(
+		GEOJSON_MIME_TYPE
+	)) {
 		if (it != null) {
 			val json: JSONObject = getActivitySummaryJson()
 			val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
@@ -362,7 +362,8 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		Log.w("getMapMarker", "Unable to determine location")
-		return MapMarker(UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
+		return MapMarker(
+			UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
 			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
 	}
 

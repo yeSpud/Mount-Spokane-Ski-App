@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp.activities
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.AlertDialog
 import android.app.NotificationManager
@@ -27,14 +26,15 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
+import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
 import com.orhanobut.dialogplus.DialogPlus
-import kotlinx.coroutines.*
 
 class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 

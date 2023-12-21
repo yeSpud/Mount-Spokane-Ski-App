@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.databases
+package com.mtspokane.skiapp.mapItem
 
 import android.location.Location
 import android.os.Build

@@ -25,10 +25,12 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databases.ActivityDatabase
-import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
 import com.mtspokane.skiapp.databases.TimeManager
+import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import kotlin.reflect.KClass
 
@@ -119,7 +121,8 @@ class SkierLocationService : Service(), LocationListener {
 			database.close()
 			SkiingActivityManager.InProgressActivities.clear()
 
-			val pendingIntent: PendingIntent = this.createPendingIntent(ActivitySummary::class,
+			val pendingIntent: PendingIntent = this.createPendingIntent(
+				ActivitySummary::class,
 				TimeManager.getTodaysDate())
 
 			val builder: NotificationCompat.Builder = this.getNotificationBuilder(ACTIVITY_SUMMARY_CHANNEL_ID,
