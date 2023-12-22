@@ -78,6 +78,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		// Clear the map if its not null.
 		Log.v("MapHandler", "Clearing map.")
 		googleMap.clear()
+
+		System.gc()
 	}
 
 	/**
@@ -132,6 +134,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 					R.drawable.ic_moderate)
 				difficultRunsPolylines = loadPolylines(R.raw.difficult, R.color.difficult, 1f,
 					R.drawable.ic_difficult)
+
+				System.gc()
 				Log.d(tag, "Finished loading polylines")
 			}
 
@@ -171,30 +175,42 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 					bounds.add(MapItem(name, polygonPoints, icon))
 				}
 				otherBounds = bounds
+
+				System.gc()
 				Log.d(tag, "Finished adding other bounds")
 
 				Log.d(tag, "Adding starting chairlift terminals...")
 				startingChairliftTerminals = loadMapItems(R.raw.starting_lift_polygons,
 					R.color.chairlift_polygon, R.drawable.ic_chairlift)
+
+				System.gc()
 				Log.d(tag, "Finished adding ending chairlift terminals")
 
 				Log.d(tag, "Adding ending chairlift terminals...")
 				endingChairliftTerminals = loadMapItems(R.raw.ending_lift_polygons,
 					R.color.chairlift_polygon, R.drawable.ic_chairlift)
+
+				System.gc()
 				Log.d(tag, "Finished adding ending chairlift terminals")
 
 				Log.d(tag, "Adding easy bounds...")
 				easyRunsBounds = loadMapItems(R.raw.easy_polygons, R.color.easy_polygon, R.drawable.ic_easy)
+
+				System.gc()
 				Log.d(tag, "Finished adding easy bounds")
 
 				Log.d(tag, "Adding moderate bounds...")
 				moderateRunsBounds = loadMapItems(R.raw.moderate_polygons, R.color.moderate_polygon,
 					R.drawable.ic_moderate)
+
+				System.gc()
 				Log.d(tag, "Finished adding moderate bounds")
 
 				Log.d(tag, "Adding difficult bounds...")
 				difficultRunsBounds = loadMapItems(R.raw.difficult_polygons, R.color.difficult_polygon,
 					R.drawable.ic_difficult)
+
+				System.gc()
 				Log.d(tag, "Finished adding difficult bounds")
 			}
 

@@ -24,11 +24,15 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.Circle
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.RoundCap
+import com.google.maps.android.ktx.addCircle
 import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
+import com.google.maps.android.ktx.model.circleOptions
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.SkierLocationService
 import com.mtspokane.skiapp.databases.ActivityDatabase
@@ -222,24 +226,13 @@ class ActivitySummary : FragmentActivity() {
 		averageSpeed.visibility = View.INVISIBLE
 
 		container.removeAllViews()
+		map.clearMap()
+		System.gc()
 	}
 
 	fun loadActivities(activities: Array<SkiingActivity>) {
 
 		clearScreen()
-
-		with(map) {
-
-			if (polyline != null) {
-				polyline!!.remove()
-				polyline = null
-			}
-
-			for (marker in circles) {
-				marker.destroy()
-			}
-			circles.clear()
-		}
 
 		if (activities.isEmpty()) {
 			return
@@ -248,51 +241,81 @@ class ActivitySummary : FragmentActivity() {
 		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
 		loadingToast.show()
 
-		lifecycleScope.launch(Dispatchers.Main, CoroutineStart.LAZY) {
+		lifecycleScope.launch(Dispatchers.IO) {
 
 			var mapMarkers: Array<MapMarker> = arrayOf()
 			var activitySummaryEntries: Array<ActivitySummaryEntry> = arrayOf()
-			val processingJob = async(Dispatchers.IO, CoroutineStart.LAZY) {
+			val processingJob = launch {
+				Log.d("loadActivities", "Started parsing activity from file")
 				mapMarkers = Array(activities.size) { getMapMarker(activities[it]) }
 				activitySummaryEntries = parseMapMarkersForMap(mapMarkers)
+				Log.d("loadActivities", "Finished parsing activities from file")
 			}
-			processingJob.start()
 			processingJob.join()
-
-			val uiJob = async(Dispatchers.Main, CoroutineStart.LAZY) {
-				for (mapMarker in mapMarkers) {
-					map.circles.add(ActivitySummaryCircles(map.googleMap, mapMarker))
-				}
-
-				for (entry in activitySummaryEntries) {
-					val view: ActivityView = createActivityView(entry)
-					container.addView(view)
-				}
-
-				totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
-				totalRuns.visibility = View.VISIBLE
-
-				try {
-					maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
-					maxSpeed.visibility = View.VISIBLE
-				} catch (e: IllegalArgumentException) {
-					maxSpeed.visibility = View.INVISIBLE
-				}
-
-				try {
-					averageSpeed.text = getString(R.string.average_speed, (averageSpeedSum/totalRunsNumber).roundToInt())
-					averageSpeed.visibility = View.VISIBLE
-				} catch (e: IllegalArgumentException) {
-					averageSpeed.visibility = View.INVISIBLE
-				}
-			}
-			uiJob.start()
-			uiJob.join()
+			
+			val addCirclesJob = launch { addCirclesToMap(mapMarkers) }
+			val fooJob = launch { foo(activitySummaryEntries) }
+			joinAll(addCirclesJob, fooJob)
 
 			loadingToast.cancel()
-			Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
-			map.addPolylineFromMarker()
-		}.start()
+			withContext(Dispatchers.Main) {
+				Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
+				Log.d("loadActivities", "Done! (Adding polyline)")
+				map.addPolylineFromMarker()
+			}
+		}
+	}
+
+	@AnyThread
+	private suspend fun addCirclesToMap(mapMarkers: Array<MapMarker>) = withContext(Dispatchers.IO) {
+		Log.d("loadActivities", "Started adding circles to map")
+		for (mapMarker in mapMarkers) {
+			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
+			val circle = withContext(Dispatchers.Main) {
+				map.googleMap.addCircle { // FIXME this is using too much RAM
+					center(location)
+					strokeColor(mapMarker.circleColor)
+					fillColor(mapMarker.circleColor)
+					clickable(true)
+					radius(3.0)
+					zIndex(50.0F)
+					visible(true)
+				}
+			}
+			withContext(Dispatchers.Main) { circle.tag = mapMarker }
+			map.circles.add(circle)
+		}
+
+		System.gc()
+		Log.d("loadActivities", "Finished adding circles to map")
+	}
+	@AnyThread
+	private suspend fun foo(activitySummaryEntries: Array<ActivitySummaryEntry>) = withContext(Dispatchers.Main) {
+		Log.d("loadActivities", "Started creating activities view")
+		for (entry in activitySummaryEntries) {
+			val view: ActivityView = createActivityView(entry)
+			container.addView(view)
+		}
+
+		totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
+		totalRuns.visibility = View.VISIBLE
+
+		try {
+			maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
+			maxSpeed.visibility = View.VISIBLE
+		} catch (e: IllegalArgumentException) {
+			maxSpeed.visibility = View.INVISIBLE
+		}
+
+		try {
+			averageSpeed.text = getString(R.string.average_speed, (averageSpeedSum/totalRunsNumber).roundToInt())
+			averageSpeed.visibility = View.VISIBLE
+		} catch (e: IllegalArgumentException) {
+			averageSpeed.visibility = View.INVISIBLE
+		}
+
+		System.gc()
+		Log.d("loadActivities", "Finished creating activities view")
 	}
 
 	@UiThread
@@ -482,7 +505,7 @@ class ActivitySummary : FragmentActivity() {
 
 	private inner class Map : MapHandler(this@ActivitySummary), GoogleMap.InfoWindowAdapter {
 
-		var circles: MutableList<ActivitySummaryCircles> = mutableListOf()
+		var circles: MutableList<Circle> = mutableListOf()
 
 		private var runMarker: Marker? = null
 
@@ -504,51 +527,47 @@ class ActivitySummary : FragmentActivity() {
 
 				googleMap.setInfoWindowAdapter(this)
 
-				if (it.tag is ActivitySummaryCircles) {
+				val mapMarker = it.tag as MapMarker
+				val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
 
-					val activitySummaryLocationMarker = it.tag as ActivitySummaryCircles
-
-					if (runMarker == null) {
-						runMarker = googleMap.addMarker {
-							position(activitySummaryLocationMarker.circle!!.center)
-							icon(activitySummaryLocationMarker.mapMarker.markerColor)
-							title(activitySummaryLocationMarker.mapMarker.name)
-							zIndex(99.0F)
-							visible(true)
-						}
-					} else {
-						runMarker!!.position = activitySummaryLocationMarker.circle!!.center
-						runMarker!!.setIcon(activitySummaryLocationMarker.mapMarker.markerColor)
-						runMarker!!.title = activitySummaryLocationMarker.mapMarker.name
-						runMarker!!.isVisible = true
+				if (runMarker == null) {
+					runMarker = googleMap.addMarker {
+						position(location)
+						icon(mapMarker.markerColor)
+						title(mapMarker.name)
+						zIndex(99.0F)
+						visible(true)
 					}
-
+				} else {
+					runMarker!!.position = location
+					runMarker!!.setIcon(mapMarker.markerColor)
+					runMarker!!.title = mapMarker.name
 					runMarker!!.isVisible = true
-					runMarker!!.tag = activitySummaryLocationMarker.mapMarker
-					runMarker!!.showInfoWindow()
 				}
+
+				runMarker!!.isVisible = true
+				runMarker!!.tag = mapMarker
+				runMarker!!.showInfoWindow()
 			}
 
 			googleMap.setOnInfoWindowCloseListener { it.isVisible = false }
 		}
 
 		override fun destroy() {
+			super.destroy()
+			clearMap()
+		}
 
-			if (circles.isNotEmpty()) {
-
-				Log.v("ActivitySummaryMap", "Removing location markers")
-				for (marker in circles) {
-					marker.destroy()
-				}
-				circles.clear()
+		fun clearMap() {
+			for (circle in circles) {
+				circle.remove()
 			}
+			circles.clear()
 
 			if (polyline != null) {
 				polyline!!.remove()
 				polyline = null
 			}
-
-			super.destroy()
 		}
 
 		override fun getInfoContents(marker: Marker): View? {
@@ -603,10 +622,8 @@ class ActivitySummary : FragmentActivity() {
 
 			polyline = googleMap.addPolyline {
 
-				for (marker in circles) {
-					if (marker.circle != null) {
-						add(marker.circle!!.center)
-					}
+				for (circle in circles) {
+					add(circle.center)
 				}
 
 				color(getARGB(R.color.yellow))
