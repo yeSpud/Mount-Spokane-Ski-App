@@ -32,7 +32,6 @@ import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.ktx.addCircle
 import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
-import com.google.maps.android.ktx.model.circleOptions
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.SkierLocationService
 import com.mtspokane.skiapp.databases.ActivityDatabase
@@ -241,7 +240,7 @@ class ActivitySummary : FragmentActivity() {
 		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
 		loadingToast.show()
 
-		lifecycleScope.launch(Dispatchers.IO) {
+		lifecycleScope.launch(Dispatchers.Default) {
 
 			var mapMarkers: Array<MapMarker> = arrayOf()
 			var activitySummaryEntries: Array<ActivitySummaryEntry> = arrayOf()
@@ -252,10 +251,10 @@ class ActivitySummary : FragmentActivity() {
 				Log.d("loadActivities", "Finished parsing activities from file")
 			}
 			processingJob.join()
-			
+
 			val addCirclesJob = launch { addCirclesToMap(mapMarkers) }
-			val fooJob = launch { foo(activitySummaryEntries) }
-			joinAll(addCirclesJob, fooJob)
+			val addActivitiesJob = launch { addActivity(activitySummaryEntries) }
+			joinAll(addCirclesJob, addActivitiesJob)
 
 			loadingToast.cancel()
 			withContext(Dispatchers.Main) {
@@ -267,7 +266,7 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	@AnyThread
-	private suspend fun addCirclesToMap(mapMarkers: Array<MapMarker>) = withContext(Dispatchers.IO) {
+	private suspend fun addCirclesToMap(mapMarkers: Array<MapMarker>) = withContext(Dispatchers.Default) {
 		Log.d("loadActivities", "Started adding circles to map")
 		for (mapMarker in mapMarkers) {
 			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
@@ -290,7 +289,7 @@ class ActivitySummary : FragmentActivity() {
 		Log.d("loadActivities", "Finished adding circles to map")
 	}
 	@AnyThread
-	private suspend fun foo(activitySummaryEntries: Array<ActivitySummaryEntry>) = withContext(Dispatchers.Main) {
+	private suspend fun addActivity(activitySummaryEntries: Array<ActivitySummaryEntry>) = withContext(Dispatchers.Main) {
 		Log.d("loadActivities", "Started creating activities view")
 		for (entry in activitySummaryEntries) {
 			val view: ActivityView = createActivityView(entry)
