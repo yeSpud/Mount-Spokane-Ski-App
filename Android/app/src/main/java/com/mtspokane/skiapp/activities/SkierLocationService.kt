@@ -37,6 +37,7 @@ import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
 
+	// FIXME Binder leaks memory
 	private var binder: IBinder? = LocalBinder()
 
 	private var serviceCallbacks: ServiceCallbacks? = null
@@ -133,7 +134,7 @@ class SkierLocationService : Service(), LocationListener {
 			notificationManager.notify(ACTIVITY_SUMMARY_ID, notification)
 		}
 
-		binder = null // FIXME Binder leaks memory
+		binder = null
 	}
 
 	override fun onLocationChanged(location: Location) {
@@ -190,7 +191,6 @@ class SkierLocationService : Service(), LocationListener {
 
 		val notificationIntent = Intent(this, activityToLaunch.java)
 		if (date != null && TimeManager.isValidDateFormat(date)) {
-
 			notificationIntent.putExtra(ACTIVITY_SUMMARY_LAUNCH_DATE, date)
 		}
 
@@ -203,9 +203,9 @@ class SkierLocationService : Service(), LocationListener {
 
 	private fun createPersistentNotification(title: String, iconBitmap: Bitmap?): Notification {
 
-		val pendingIntent: PendingIntent = this.createPendingIntent(MapsActivity::class, null)
+		val pendingIntent: PendingIntent = createPendingIntent(MapsActivity::class, null)
 
-		val builder: NotificationCompat.Builder = this.getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
+		val builder: NotificationCompat.Builder = getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
 			false, R.string.tracking_notice, pendingIntent)
 		builder.setContentText(title)
 

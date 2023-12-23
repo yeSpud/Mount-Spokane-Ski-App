@@ -7,7 +7,8 @@ import com.mtspokane.skiapp.R
 
 object Locations {
 
-	private var previousLocation: SkiingActivity? = null
+	var previousLocation: SkiingActivity? = null
+		private set
 	var currentLocation: SkiingActivity? = null
 		private set
 

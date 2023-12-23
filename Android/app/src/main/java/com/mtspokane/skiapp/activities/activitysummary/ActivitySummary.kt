@@ -394,6 +394,10 @@ class ActivitySummary : FragmentActivity() {
 			return marker
 		}
 
+		if (Locations.previousLocation != null) {
+			return getMapMarker(Locations.previousLocation!!)
+		}
+
 		Log.w("getMapMarker", "Unable to determine location")
 		return MapMarker(UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
 			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
