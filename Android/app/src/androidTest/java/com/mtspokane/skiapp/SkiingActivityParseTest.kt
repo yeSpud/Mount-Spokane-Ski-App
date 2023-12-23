@@ -8,9 +8,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
-import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databases.SkiingActivityManager
-import com.mtspokane.skiapp.mapItem.MapMarker
 import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Before
@@ -90,7 +89,7 @@ class SkiingActivityParseTest {
 
 		//MtSpokaneMapItems.checkoutObject(this::class)
 
-		val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(skiingActivities)
+		// val mapMarkers: Array<MapMarker> = MapMarker.loadFromSkiingActivityArray(skiingActivities)
 		//val unprocessedSummaries: Array<ActivitySummaryEntry> = ActivitySummaryEntry.loadAllFromMapMarkers(mapMarkers)
 		//val processedSummaries: Array<ActivitySummaryEntry> = ActivitySummaryEntry.crushDownActivities(unprocessedSummaries)
 		//Assert.assertNotEquals(unprocessedSummaries.size, processedSummaries.size)

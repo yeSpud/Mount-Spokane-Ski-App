@@ -1,17 +1,18 @@
 package com.mtspokane.skiapp.activities
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.AlertDialog
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
-import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.os.Process
 import android.util.Log
 import android.view.View
@@ -25,26 +26,46 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
+import com.mtspokane.skiapp.mapItem.Locations
+import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
 import com.orhanobut.dialogplus.DialogPlus
-import kotlinx.coroutines.*
 
-class MapsActivity : FragmentActivity() {
+class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 	private lateinit var map: Map
-
 	private var isMapSetup = false
 
-	private var locationChangeCallback: InAppLocations.VisibleLocationUpdate? = null
+	private var skierLocationService: SkierLocationService? = null
+	private var bound = false
 
 	// Boolean used to determine if the user's precise location is enabled (and therefore accessible).
 	var locationEnabled = false
 	private set
 
 	private lateinit var optionsView: DialogPlus
+
+	private val serviceConnection = object : ServiceConnection {
+
+		override fun onServiceConnected(name: ComponentName?, service: IBinder) {
+			val binder = service as SkierLocationService.LocalBinder
+			skierLocationService = binder.getService()
+			bound = true
+			skierLocationService!!.setCallbacks(this@MapsActivity)
+		}
+
+		override fun onServiceDisconnected(name: ComponentName?) {
+			skierLocationService!!.setCallbacks(null)
+			unbindService(this)
+			skierLocationService = null
+			bound = false
+		}
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -79,26 +100,17 @@ class MapsActivity : FragmentActivity() {
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
 		mapFragment.getMapAsync(map)
-
-		locationChangeCallback = object : InAppLocations.VisibleLocationUpdate {
-			override fun updateLocation(locationString: String) {
-
-				if (InAppLocations.currentLocation == null) {
-					return
-				}
-
-				map.updateMarkerLocation(InAppLocations.currentLocation!!)
-			}
-		}
 	}
 
 	override fun onDestroy() {
 		Log.v("MapsActivity", "onDestroy has been called!")
 		super.onDestroy()
 
-		// Remove callback from locations.
-		InAppLocations.visibleLocationUpdates.remove(this.locationChangeCallback)
-		locationChangeCallback = null
+		if (bound) {
+			skierLocationService!!.setCallbacks(null)
+			unbindService(serviceConnection)
+			bound = false
+		}
 
 		map.destroy()
 	}
@@ -126,7 +138,6 @@ class MapsActivity : FragmentActivity() {
 		}
 	}
 
-	@SuppressLint("MissingPermission")
 	fun launchLocationService() {
 
 		val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -144,18 +155,39 @@ class MapsActivity : FragmentActivity() {
 				}
 			}
 
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				startForegroundService(serviceIntent)
-			} else {
-				startService(serviceIntent)
-			}
+			bindService(serviceIntent, serviceConnection, Context.BIND_NOT_FOREGROUND)
+			startService(serviceIntent)
+		}
+	}
 
-			// Add listener for map for a location change.
-			if (this.locationChangeCallback != null) {
-				if (!InAppLocations.visibleLocationUpdates.contains(locationChangeCallback!!)) {
-					InAppLocations.visibleLocationUpdates.add(locationChangeCallback!!)
-				}
-			}
+	override fun isInBounds(location: Location): Boolean {
+		return map.skiAreaBounds.locationInsidePoints(location)
+	}
+
+	override fun getOnLocation(location: Location): MapMarker? {
+
+		var mapMarker = Locations.checkIfIOnChairlift(map.startingChairliftTerminals,
+			map.endingChairliftTerminals)
+		if (mapMarker != null) {
+			return mapMarker
+		}
+
+		mapMarker = Locations.checkIfOnRun(map.easyRunsBounds, map.moderateRunsBounds,
+			map.difficultRunsBounds)
+		if (mapMarker != null) {
+			return mapMarker
+		}
+
+		return null
+	}
+
+	override fun getInLocation(location: Location): MapMarker? {
+		return Locations.checkIfOnOther(map.otherBounds)
+	}
+
+	override fun updateMapMarker(locationString: String) {
+		if (Locations.currentLocation != null) {
+			map.updateMarkerLocation(Locations.currentLocation!!)
 		}
 	}
 
@@ -176,7 +208,6 @@ class MapsActivity : FragmentActivity() {
 			if (locationEnabled) {
 				Log.v("onMapReady", "Location tracking enabled")
 				launchLocationService()
-				//setupLocation()
 			} else {
 
 				// Setup the location popup dialog.
@@ -205,17 +236,17 @@ class MapsActivity : FragmentActivity() {
 			super.destroy()
 		}
 
-		fun updateMarkerLocation(location: Location) {
+		fun updateMarkerLocation(location: SkiingActivity) {
 
 			if (locationMarker == null) {
-				locationMarker = map.addMarker {
+				locationMarker = googleMap.addMarker {
 					position(LatLng(location.latitude, location.longitude))
 					title(resources.getString(R.string.your_location))
 				}
 			} else {
 
 				// Otherwise just update the LatLng location.
-				this.locationMarker!!.position = LatLng(location.latitude, location.longitude)
+				locationMarker!!.position = LatLng(location.latitude, location.longitude)
 			}
 		}
 	}

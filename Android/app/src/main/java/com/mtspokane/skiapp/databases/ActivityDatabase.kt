@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import androidx.core.database.getFloatOrNull
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import java.io.File
 import java.io.FileInputStream
 import org.json.JSONObject
@@ -92,7 +93,7 @@ class ActivityDatabase(val context: Context): SQLiteOpenHelper(context, this.DAT
 		}
 
 		fun writeSkiingActivitiesToDatabase(skiingActivities: Array<SkiingActivity>, database: SQLiteDatabase,
-		                                    date: String = TimeManager.getTodaysDate()) {
+                                            date: String = TimeManager.getTodaysDate()) {
 
 			// Create table if it doest exist.
 			if (!this.getTables(database).contains(date)) {
