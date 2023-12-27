@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import androidx.core.database.getFloatOrNull
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import java.io.File
 import java.io.FileInputStream
 import org.json.JSONObject
@@ -92,7 +93,7 @@ class ActivityDatabase(val context: Context): SQLiteOpenHelper(context, this.DAT
 		}
 
 		fun writeSkiingActivitiesToDatabase(skiingActivities: Array<SkiingActivity>, database: SQLiteDatabase,
-		                                    date: String = TimeManager.getTodaysDate()) {
+                                            date: String = TimeManager.getTodaysDate()) {
 
 			// Create table if it doest exist.
 			if (!this.getTables(database).contains(date)) {
@@ -157,7 +158,7 @@ class ActivityDatabase(val context: Context): SQLiteOpenHelper(context, this.DAT
 				return emptyArray()
 			}
 
-			if (!this.getTables(database).contains(date)) {
+			if (!getTables(database).contains(date)) {
 				Log.i(tag, "No entry for $date")
 				return emptyArray()
 			}
@@ -174,25 +175,25 @@ class ActivityDatabase(val context: Context): SQLiteOpenHelper(context, this.DAT
 			val skiingActivitiesList = mutableListOf<SkiingActivity>()
 			with(result) {
 
-				val accuracyColumn: Int = this.getColumnIndex(ActivityDatabaseTable.ACCURACY_COLUMN)
-				val altitudeColumn: Int = this.getColumnIndex(ActivityDatabaseTable.ALTITUDE_COLUMN)
-				val altitudeAccuracyColumn: Int = this.getColumnIndex(ActivityDatabaseTable.ALTITUDE_ACCURACY_COLUMN)
-				val latitudeColumn: Int = this.getColumnIndex(ActivityDatabaseTable.LATITUDE_COLUMN)
-				val longitudeColumn: Int = this.getColumnIndex(ActivityDatabaseTable.LONGITUDE_COLUMN)
-				val speedColumn: Int = this.getColumnIndex(ActivityDatabaseTable.SPEED_COLUMN)
-				val speedAccuracyColumn: Int = this.getColumnIndex(ActivityDatabaseTable.SPEED_ACCURACY_COLUMN)
-				val timeColumn: Int = this.getColumnIndex(ActivityDatabaseTable.TIME_COLUMN)
+				val accuracyColumn: Int = getColumnIndex(ActivityDatabaseTable.ACCURACY_COLUMN)
+				val altitudeColumn: Int = getColumnIndex(ActivityDatabaseTable.ALTITUDE_COLUMN)
+				val altitudeAccuracyColumn: Int = getColumnIndex(ActivityDatabaseTable.ALTITUDE_ACCURACY_COLUMN)
+				val latitudeColumn: Int = getColumnIndex(ActivityDatabaseTable.LATITUDE_COLUMN)
+				val longitudeColumn: Int = getColumnIndex(ActivityDatabaseTable.LONGITUDE_COLUMN)
+				val speedColumn: Int = getColumnIndex(ActivityDatabaseTable.SPEED_COLUMN)
+				val speedAccuracyColumn: Int = getColumnIndex(ActivityDatabaseTable.SPEED_ACCURACY_COLUMN)
+				val timeColumn: Int = getColumnIndex(ActivityDatabaseTable.TIME_COLUMN)
 
-				while (this.moveToNext()) {
+				while (moveToNext()) {
 
-					val accuracy: Float = this.getFloat(accuracyColumn)
-					val altitude: Double = this.getDouble(altitudeColumn)
-					val altitudeAccuracy: Float? = this.getFloatOrNull(altitudeAccuracyColumn)
-					val latitude: Double = this.getDouble(latitudeColumn)
-					val longitude: Double = this.getDouble(longitudeColumn)
-					val speed: Float = this.getFloat(speedColumn)
-					val speedAccuracy: Float? = this.getFloatOrNull(speedAccuracyColumn)
-					val time: Long = this.getLong(timeColumn)
+					val accuracy: Float = getFloat(accuracyColumn)
+					val altitude: Double = getDouble(altitudeColumn)
+					val altitudeAccuracy: Float? = getFloatOrNull(altitudeAccuracyColumn)
+					val latitude: Double = getDouble(latitudeColumn)
+					val longitude: Double = getDouble(longitudeColumn)
+					val speed: Float = getFloat(speedColumn)
+					val speedAccuracy: Float? = getFloatOrNull(speedAccuracyColumn)
+					val time: Long = getLong(timeColumn)
 
 					val skiingActivity = SkiingActivity(accuracy, altitude, altitudeAccuracy, latitude,
 						longitude, speed, speedAccuracy, time)

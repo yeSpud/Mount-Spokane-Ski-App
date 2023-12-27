@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--deprecated: use sepreate width and height-->
+    <dimen name="menu_image_size">75dp</dimen>
+    <dimen name="menu_edge_margin">30dp</dimen>
+    <dimen name="menu_image_top_margin">20dp</dimen>
+</resources>

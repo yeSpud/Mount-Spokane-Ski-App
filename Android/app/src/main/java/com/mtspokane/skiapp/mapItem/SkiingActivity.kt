@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.databases
+package com.mtspokane.skiapp.mapItem
 
 import android.location.Location
 import android.os.Build
@@ -29,26 +29,26 @@ class SkiingActivity : Parcelable {
 
 	constructor(location: Location) {
 
-		this.accuracy = location.accuracy
-		this.altitude = location.altitude
+		accuracy = location.accuracy
+		altitude = location.altitude
 
-		this.altitudeAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+		altitudeAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			location.verticalAccuracyMeters
 		} else {
 			null
 		}
 
-		this.latitude = location.latitude
-		this.longitude = location.longitude
-		this.speed = location.speed
+		latitude = location.latitude
+		longitude = location.longitude
+		speed = location.speed
 
-		this.speedAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+		speedAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			location.speedAccuracyMetersPerSecond
 		} else {
 			null
 		}
 
-		this.time = location.time
+		time = location.time
 	}
 
 	constructor(accuracy: Float, altitude: Double, altitudeAccuracy: Float?, latitude: Double,
@@ -63,6 +63,8 @@ class SkiingActivity : Parcelable {
 		this.speedAccuracy = speedAccuracy
 		this.time = time
 	}
+
+	// TODO Make custom equals operator to tell if the location is the same. Its fine if all else are different.
 
 	override fun writeToParcel(parcel: Parcel, flags: Int) {
 		parcel.writeFloat(this.accuracy)
