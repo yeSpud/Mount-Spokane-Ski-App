@@ -147,6 +147,11 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 			// Check if the service has already been started and is running...
 			val activityManager: ActivityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
+			// As of Build.VERSION_CODES.O, this method is no longer available to third party applications.
+			// For backwards compatibility, it will still return the caller's own service.
+			// Which is exactly what we want.
+			@Suppress("DEPRECATION")
 			for (runningServices in activityManager.getRunningServices(Int.MAX_VALUE)) {
 				if (SkierLocationService::class.java.name == runningServices.service.className) {
 					if (runningServices.foreground) {
@@ -161,7 +166,10 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	}
 
 	override fun isInBounds(location: Location): Boolean {
-		return map.skiAreaBounds.locationInsidePoints(location)
+		if (map.skiAreaBounds != null) {
+			return map.skiAreaBounds!!.locationInsidePoints(location)
+		}
+		return false
 	}
 
 	override fun getOnLocation(location: Location): MapMarker? {
