@@ -43,8 +43,7 @@ import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.maphandlers.MapHandler
-import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
-import com.mtspokane.skiapp.maphandlers.CustomDialogOnClickListener
+import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 import kotlinx.coroutines.*
 import java.io.File
@@ -132,7 +131,8 @@ class ActivitySummary : FragmentActivity() {
 		// Setup the map handler.
 		map = Map()
 
-		optionsView = DialogPlus.newDialog(this).setAdapter(OptionsDialog()).setExpanded(false).create()
+		optionsView = DialogPlus.newDialog(this).setAdapter(MapOptionsDialog(layoutInflater,
+			R.layout.activity_map_options, map)).setExpanded(false).create()
 
 		binding.optionsButton.setOnClickListener {
 			optionsView.show()
@@ -654,105 +654,6 @@ class ActivitySummary : FragmentActivity() {
 			val notificationManager: NotificationManager = this.activity.getSystemService(Context.NOTIFICATION_SERVICE)
 					as NotificationManager
 			notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
-		}
-	}
-
-	private inner class OptionsDialog : BaseAdapter() {
-
-		private var showChairliftImage: CustomDialogEntry? = null
-
-		private var showEasyRunsImage: CustomDialogEntry? = null
-
-		private var showModerateRunsImage: CustomDialogEntry? = null
-
-		private var showDifficultRunsImage: CustomDialogEntry? = null
-
-		private var showNightRunsImage: CustomDialogEntry? = null
-
-		override fun getCount(): Int {
-			return 1
-		}
-
-		override fun getItem(position: Int): Any {
-			return position // Todo properly implement me?
-		}
-
-		override fun getItemId(position: Int): Long {
-			return position.toLong() // Todo properly implement me?
-		}
-
-		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-
-			val view: View = convertView ?: layoutInflater.inflate(R.layout.activity_map_options, parent, false)
-
-			if (showChairliftImage == null) {
-				val chairliftImage: CustomDialogEntry = view.findViewById(R.id.show_chairlift)
-				chairliftImage.setOnClickListener(CustomDialogOnClickListener(map.chairliftPolylines,
-					map))
-				chairliftImage.setGlowing(map.chairliftPolylines[0].polylines[0].isVisible)
-				showChairliftImage = chairliftImage
-			}
-
-			if (showEasyRunsImage == null) {
-				val easyRunImage: CustomDialogEntry = view.findViewById(R.id.show_easy_runs)
-				easyRunImage.setOnClickListener(CustomDialogOnClickListener(map.easyRunsPolylines, map))
-				easyRunImage.setGlowing(map.easyRunsPolylines[0].polylines[0].isVisible)
-				showEasyRunsImage = easyRunImage
-			}
-
-			if (showModerateRunsImage == null) {
-				val moderateRunImage: CustomDialogEntry = view.findViewById(R.id.show_moderate_runs)
-				moderateRunImage.setOnClickListener(CustomDialogOnClickListener(map.moderateRunsPolylines, map))
-				moderateRunImage.setGlowing(map.moderateRunsPolylines[0].polylines[0].isVisible)
-				showModerateRunsImage = moderateRunImage
-			}
-
-			if (showDifficultRunsImage == null) {
-				val difficultRunImage: CustomDialogEntry = view.findViewById(R.id.show_difficult_runs)
-				difficultRunImage.setOnClickListener(CustomDialogOnClickListener(map.difficultRunsPolylines, map))
-				difficultRunImage.setGlowing(map.difficultRunsPolylines[0].polylines[0].isVisible)
-				showDifficultRunsImage = difficultRunImage
-			}
-
-			if (showNightRunsImage == null) {
-				val nightRunImage: CustomDialogEntry = view.findViewById(R.id.show_night_runs)
-				nightRunImage.setOnClickListener {
-					if (it == null || it !is CustomDialogEntry) {
-						return@setOnClickListener
-					}
-
-					with(map) {
-
-						isNightOnly = !isNightOnly
-
-						for (chairliftPolyline in chairliftPolylines) {
-							chairliftPolyline.togglePolyLineVisibility(chairliftPolyline.defaultVisibility,
-									isNightOnly)
-						}
-
-						for (easyRunPolyline in easyRunsPolylines) {
-							easyRunPolyline.togglePolyLineVisibility(easyRunPolyline.defaultVisibility,
-									isNightOnly)
-						}
-
-						for (moderateRunPolyline in moderateRunsPolylines) {
-							moderateRunPolyline.togglePolyLineVisibility(moderateRunPolyline.defaultVisibility,
-									isNightOnly)
-						}
-
-						for (difficultRunPolyline in difficultRunsPolylines) {
-							difficultRunPolyline.togglePolyLineVisibility(difficultRunPolyline.defaultVisibility,
-									isNightOnly)
-						}
-
-						it.setGlowing(isNightOnly)
-					}
-				}
-				nightRunImage.setGlowing(map.isNightOnly)
-				showNightRunsImage = nightRunImage
-			}
-
-			return view
 		}
 	}
 }

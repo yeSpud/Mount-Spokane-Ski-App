@@ -76,6 +76,7 @@ class SkierLocationService : Service(), LocationListener {
 		// If we don't have permission to track user location somehow at this spot just return early.
 		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
 			!= PackageManager.PERMISSION_GRANTED) {
+			Log.w("SkierLocationService", "Service started before permissions granted!")
 			return
 		}
 

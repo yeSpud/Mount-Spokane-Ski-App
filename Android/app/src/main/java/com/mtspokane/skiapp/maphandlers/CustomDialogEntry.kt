@@ -2,10 +2,16 @@ package com.mtspokane.skiapp.maphandlers
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.IdRes
+import androidx.annotation.LayoutRes
 import androidx.appcompat.content.res.AppCompatResources
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
@@ -26,8 +32,8 @@ class CustomDialogEntry: LinearLayout {
 
 		inflate(context, R.layout.menu_dialog_entry, this)
 
-		this.menuEntryIcon = findViewById(R.id.menu_entry_icon)
-		this.menuEntryText = findViewById(R.id.menu_entry_text)
+		menuEntryIcon = findViewById(R.id.menu_entry_icon)
+		menuEntryText = findViewById(R.id.menu_entry_text)
 
 		context.theme.obtainStyledAttributes(attributeSet, R.styleable.CustomDialogEntry, 0, 0).apply {
 
@@ -69,5 +75,115 @@ class CustomDialogOnClickListener(private val polylineMapItems: List<PolylineMap
 		}
 
 		v.setGlowing(polylineMapItems[0].polylines[0].isVisible)
+	}
+}
+
+open class MapOptionsDialog(private val layoutInflater: LayoutInflater, @LayoutRes private val menu: Int,
+							private val map: MapHandler) : BaseAdapter() {
+
+	private var showChairliftImage: CustomDialogEntry? = null
+
+	private var showEasyRunsImage: CustomDialogEntry? = null
+
+	private var showModerateRunsImage: CustomDialogEntry? = null
+
+	private var showDifficultRunsImage: CustomDialogEntry? = null
+
+	private var showNightRunsImage: CustomDialogEntry? = null
+
+	override fun getCount(): Int {
+		return 1
+	}
+
+	override fun getItem(position: Int): Any {
+		return position // Todo properly implement me?
+	}
+
+	override fun getItemId(position: Int): Long {
+		return position.toLong() // Todo properly implement me?
+	}
+
+	override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+
+		val view: View = convertView ?: layoutInflater.inflate(menu, parent, false)
+
+		if (showChairliftImage == null) {
+			showChairliftImage = getRunOption(view, R.id.show_chairlift, map.chairliftPolylines, map)
+		}
+
+		if (showEasyRunsImage == null) {
+			showEasyRunsImage = getRunOption(view, R.id.show_easy_runs, map.easyRunsPolylines, map)
+
+		}
+
+		if (showModerateRunsImage == null) {
+			showModerateRunsImage = getRunOption(view, R.id.show_moderate_runs, map.moderateRunsPolylines,
+				map)
+		}
+
+		if (showDifficultRunsImage == null) {
+			showDifficultRunsImage = getRunOption(view, R.id.show_difficult_runs, map.difficultRunsPolylines,
+				map)
+		}
+
+		if (showNightRunsImage == null) {
+			val nightRunImage: CustomDialogEntry? = view.findViewById(R.id.show_night_runs)
+			if (nightRunImage == null) {
+				Log.w("getView", "Unable to find night run option")
+				return view
+			}
+
+			nightRunImage.setOnClickListener {
+				if (it == null || it !is CustomDialogEntry) {
+					return@setOnClickListener
+				}
+
+				with(map) {
+
+					isNightOnly = !isNightOnly
+
+					for (chairliftPolyline in chairliftPolylines) {
+						chairliftPolyline.togglePolyLineVisibility(chairliftPolyline.defaultVisibility,
+							isNightOnly)
+					}
+
+					for (easyRunPolyline in easyRunsPolylines) {
+						easyRunPolyline.togglePolyLineVisibility(easyRunPolyline.defaultVisibility,
+							isNightOnly)
+					}
+
+					for (moderateRunPolyline in moderateRunsPolylines) {
+						moderateRunPolyline.togglePolyLineVisibility(moderateRunPolyline.defaultVisibility,
+							isNightOnly)
+					}
+
+					for (difficultRunPolyline in difficultRunsPolylines) {
+						difficultRunPolyline.togglePolyLineVisibility(difficultRunPolyline.defaultVisibility,
+							isNightOnly)
+					}
+
+					it.setGlowing(isNightOnly)
+				}
+			}
+			nightRunImage.setGlowing(map.isNightOnly)
+			showNightRunsImage = nightRunImage
+		}
+
+		return view
+	}
+
+	companion object {
+		private fun getRunOption(view: View, @IdRes resId: Int, runs: List<PolylineMapItem>,
+								 map: MapHandler): CustomDialogEntry? {
+			val optionsView: CustomDialogEntry? = view.findViewById(resId)
+			if (optionsView == null) {
+				Log.w("getRunObject", "Unable to find that option!")
+				return null
+			}
+
+			optionsView.setOnClickListener(CustomDialogOnClickListener(runs, map))
+			optionsView.setGlowing(runs[0].polylines[0].isVisible)
+			return optionsView
+		}
 	}
 }

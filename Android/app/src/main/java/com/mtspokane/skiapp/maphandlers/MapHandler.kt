@@ -129,8 +129,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		googleMap.setMinZoomPreference(MINIMUM_ZOOM)
 		googleMap.setMaxZoomPreference(MAXIMUM_ZOOM)
 
-		googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 		googleMap.setIndoorEnabled(false)
+		googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
 		// Load the various polylines onto the map.
 		activity.lifecycleScope.launch(Dispatchers.Default) {
