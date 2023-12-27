@@ -31,9 +31,9 @@ import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+import com.mtspokane.skiapp.maphandlers.CustomDialogOnClickListener
 import com.orhanobut.dialogplus.DialogPlus
 
 class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
@@ -286,33 +286,36 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 
-			val view: View = convertView
-					?: layoutInflater.inflate(R.layout.main_options, parent, false)
+			val view: View = convertView ?: layoutInflater.inflate(R.layout.main_options, parent, false)
 
 			if (showChairliftImage == null) {
 				val chairliftImage: CustomDialogEntry = view.findViewById(R.id.show_chairlift)
-				chairliftImage.setOnClickListener(CustomOnClickListener(map.chairliftPolylines))
+				chairliftImage.setOnClickListener(CustomDialogOnClickListener(map.chairliftPolylines,
+					map))
 				chairliftImage.setGlowing(map.chairliftPolylines[0].polylines[0].isVisible)
 				showChairliftImage = chairliftImage
 			}
 
 			if (showEasyRunsImage == null) {
 				val easyRunImage: CustomDialogEntry = view.findViewById(R.id.show_easy_runs)
-				easyRunImage.setOnClickListener(CustomOnClickListener(map.easyRunsPolylines))
+				easyRunImage.setOnClickListener(CustomDialogOnClickListener(map.easyRunsPolylines,
+					map))
 				easyRunImage.setGlowing(map.easyRunsPolylines[0].polylines[0].isVisible)
 				showEasyRunsImage = easyRunImage
 			}
 
 			if (showModerateRunsImage == null) {
 				val moderateRunImage: CustomDialogEntry = view.findViewById(R.id.show_moderate_runs)
-				moderateRunImage.setOnClickListener(CustomOnClickListener(map.moderateRunsPolylines))
+				moderateRunImage.setOnClickListener(CustomDialogOnClickListener(map.moderateRunsPolylines,
+					map))
 				moderateRunImage.setGlowing(map.moderateRunsPolylines[0].polylines[0].isVisible)
 				showModerateRunsImage = moderateRunImage
 			}
 
 			if (showDifficultRunsImage == null) {
 				val difficultRunImage: CustomDialogEntry = view.findViewById(R.id.show_difficult_runs)
-				difficultRunImage.setOnClickListener(CustomOnClickListener(map.difficultRunsPolylines))
+				difficultRunImage.setOnClickListener(CustomDialogOnClickListener(map.difficultRunsPolylines,
+					map))
 				difficultRunImage.setGlowing(map.difficultRunsPolylines[0].polylines[0].isVisible)
 				showDifficultRunsImage = difficultRunImage
 			}
@@ -362,22 +365,6 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 			}
 
 			return view
-		}
-	}
-
-	private inner class CustomOnClickListener(val polylineMapItems: List<PolylineMapItem>): View.OnClickListener {
-
-		override fun onClick(v: View?) {
-
-			if (v == null || v !is CustomDialogEntry) {
-				return
-			}
-
-			for (polylineMapItem in polylineMapItems) {
-				polylineMapItem.togglePolyLineVisibility(!polylineMapItem.defaultVisibility, map.isNightOnly)
-			}
-
-			v.setGlowing(polylineMapItems[0].polylines[0].isVisible)
 		}
 	}
 }

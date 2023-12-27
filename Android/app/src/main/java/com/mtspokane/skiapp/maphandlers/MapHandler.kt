@@ -6,7 +6,6 @@ import androidx.annotation.AnyThread
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.RawRes
-import androidx.annotation.UiThread
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -30,10 +29,7 @@ import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -133,8 +129,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		googleMap.setMinZoomPreference(MINIMUM_ZOOM)
 		googleMap.setMaxZoomPreference(MAXIMUM_ZOOM)
 
-		// Set the map view type to satellite.
 		googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
+		googleMap.setIndoorEnabled(false)
 
 		// Load the various polylines onto the map.
 		activity.lifecycleScope.launch(Dispatchers.Default) {

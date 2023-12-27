@@ -1,9 +1,11 @@
 package com.mtspokane.skiapp.activities
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -22,6 +24,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import com.mtspokane.skiapp.R
@@ -66,10 +69,15 @@ class SkierLocationService : Service(), LocationListener {
 		return START_NOT_STICKY
 	}
 
-	@SuppressLint("MissingPermission")
 	override fun onCreate() {
 		Log.v("SkierLocationService", "onCreate called!")
 		super.onCreate()
+
+		// If we don't have permission to track user location somehow at this spot just return early.
+		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+			!= PackageManager.PERMISSION_GRANTED) {
+			return
+		}
 
 		val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
