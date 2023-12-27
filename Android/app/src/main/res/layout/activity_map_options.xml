@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/dark_blue">
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_chairlift"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -16,7 +16,7 @@
         app:menu_icon="@drawable/ic_chairlift"
         app:menu_title="@string/show_chairlifts" />
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_easy_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -27,7 +27,7 @@
         app:menu_icon="@drawable/ic_easy"
         app:menu_title="@string/show_beginner" />
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_moderate_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -38,7 +38,7 @@
         app:menu_icon="@drawable/ic_moderate"
         app:menu_title="@string/show_intermediate" />
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_difficult_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -49,7 +49,7 @@
         app:menu_icon="@drawable/ic_difficult"
         app:menu_title="@string/show_advanced" />
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_night_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"

@@ -16,11 +16,11 @@ import androidx.appcompat.content.res.AppCompatResources
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 
-class CustomDialogEntry: LinearLayout {
+class MapOptionItem: LinearLayout {
 
-	val menuEntryIcon: ImageView
+	private val menuEntryIcon: ImageView
 
-	val menuEntryText: TextView
+	private val menuEntryText: TextView
 
 	private var itemEnabled: Boolean
 
@@ -35,12 +35,12 @@ class CustomDialogEntry: LinearLayout {
 		menuEntryIcon = findViewById(R.id.menu_entry_icon)
 		menuEntryText = findViewById(R.id.menu_entry_text)
 
-		context.theme.obtainStyledAttributes(attributeSet, R.styleable.CustomDialogEntry, 0, 0).apply {
+		context.theme.obtainStyledAttributes(attributeSet, R.styleable.MapOptions, 0, 0).apply {
 
 			try {
-				this@CustomDialogEntry.menuEntryIcon.setImageDrawable(getDrawable(R.styleable.CustomDialogEntry_menu_icon))
-				this@CustomDialogEntry.menuEntryText.text = getText(R.styleable.CustomDialogEntry_menu_title)
-				this@CustomDialogEntry.itemEnabled = getBoolean(R.styleable.CustomDialogEntry_menu_enable_by_default, true)
+				this@MapOptionItem.menuEntryIcon.setImageDrawable(getDrawable(R.styleable.MapOptions_menu_icon))
+				this@MapOptionItem.menuEntryText.text = getText(R.styleable.MapOptions_menu_title)
+				this@MapOptionItem.itemEnabled = getBoolean(R.styleable.MapOptions_menu_enable_by_default, true)
 			} finally {
 				recycle()
 			}
@@ -58,15 +58,15 @@ class CustomDialogEntry: LinearLayout {
 
 	override fun setOnClickListener(l: OnClickListener?) {
 		super.setOnClickListener(l)
-		itemEnabled = !this.itemEnabled
+		itemEnabled = !itemEnabled
 	}
 }
 
-class CustomDialogOnClickListener(private val polylineMapItems: List<PolylineMapItem>, private val map: MapHandler): View.OnClickListener {
+class OnMapItemClicked(private val polylineMapItems: List<PolylineMapItem>, private val map: MapHandler): View.OnClickListener {
 
 	override fun onClick(v: View?) {
 
-		if (v == null || v !is CustomDialogEntry) {
+		if (v == null || v !is MapOptionItem) {
 			return
 		}
 
@@ -81,15 +81,15 @@ class CustomDialogOnClickListener(private val polylineMapItems: List<PolylineMap
 open class MapOptionsDialog(private val layoutInflater: LayoutInflater, @LayoutRes private val menu: Int,
 							private val map: MapHandler) : BaseAdapter() {
 
-	private var showChairliftImage: CustomDialogEntry? = null
+	private var showChairliftImage: MapOptionItem? = null
 
-	private var showEasyRunsImage: CustomDialogEntry? = null
+	private var showEasyRunsImage: MapOptionItem? = null
 
-	private var showModerateRunsImage: CustomDialogEntry? = null
+	private var showModerateRunsImage: MapOptionItem? = null
 
-	private var showDifficultRunsImage: CustomDialogEntry? = null
+	private var showDifficultRunsImage: MapOptionItem? = null
 
-	private var showNightRunsImage: CustomDialogEntry? = null
+	private var showNightRunsImage: MapOptionItem? = null
 
 	override fun getCount(): Int {
 		return 1
@@ -127,14 +127,14 @@ open class MapOptionsDialog(private val layoutInflater: LayoutInflater, @LayoutR
 		}
 
 		if (showNightRunsImage == null) {
-			val nightRunImage: CustomDialogEntry? = view.findViewById(R.id.show_night_runs)
+			val nightRunImage: MapOptionItem? = view.findViewById(R.id.show_night_runs)
 			if (nightRunImage == null) {
 				Log.w("getView", "Unable to find night run option")
 				return view
 			}
 
 			nightRunImage.setOnClickListener {
-				if (it == null || it !is CustomDialogEntry) {
+				if (it == null || it !is MapOptionItem) {
 					return@setOnClickListener
 				}
 
@@ -174,14 +174,14 @@ open class MapOptionsDialog(private val layoutInflater: LayoutInflater, @LayoutR
 
 	companion object {
 		private fun getRunOption(view: View, @IdRes resId: Int, runs: List<PolylineMapItem>,
-								 map: MapHandler): CustomDialogEntry? {
-			val optionsView: CustomDialogEntry? = view.findViewById(resId)
+								 map: MapHandler): MapOptionItem? {
+			val optionsView: MapOptionItem? = view.findViewById(resId)
 			if (optionsView == null) {
 				Log.w("getRunObject", "Unable to find that option!")
 				return null
 			}
 
-			optionsView.setOnClickListener(CustomDialogOnClickListener(runs, map))
+			optionsView.setOnClickListener(OnMapItemClicked(runs, map))
 			optionsView.setGlowing(runs[0].polylines[0].isVisible)
 			return optionsView
 		}

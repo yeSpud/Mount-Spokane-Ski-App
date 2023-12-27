@@ -31,7 +31,7 @@ import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.maphandlers.MapHandler
-import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+import com.mtspokane.skiapp.maphandlers.MapOptionItem
 import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 
@@ -260,7 +260,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 	private inner class OptionsDialog : MapOptionsDialog(layoutInflater, R.layout.main_options, map) {
 
-		private var launchActivitySummaryImage: CustomDialogEntry? = null
+		private var launchActivitySummaryImage: MapOptionItem? = null
 
 		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 			val view = super.getView(position, convertView, parent)
@@ -269,7 +269,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 				return view
 			}
 
-			val activitySummaryImage: CustomDialogEntry? = view.findViewById(R.id.launch_activity_summary)
+			val activitySummaryImage: MapOptionItem? = view.findViewById(R.id.launch_activity_summary)
 			if (activitySummaryImage == null) {
 				Log.w("getView", "Unable to find activity summary launcher")
 				return view
