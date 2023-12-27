@@ -78,9 +78,9 @@
         android:layout_marginEnd="@dimen/menu_edge_margin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/show_moderate_runs"
-        app:enabled_menu_icon="@drawable/ic_missing"
+        app:enabled_menu_icon="@drawable/summary_list"
         app:enabled_menu_title="@string/activity_summary"
-        app:disabled_menu_icon="@drawable/ic_missing"
+        app:disabled_menu_icon="@drawable/summary_list"
         app:disabled_menu_title="@string/activity_summary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
