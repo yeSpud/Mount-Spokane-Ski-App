@@ -1,6 +1,7 @@
 package com.mtspokane.skiapp.maphandlers
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,15 +13,21 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.annotation.UiThread
+import androidx.core.graphics.drawable.DrawableCompat
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 
 class MapOptionItem: LinearLayout {
 
-	private val menuEntryIcon: ImageView
+	private val icon: ImageView
+	private val text: TextView
 
-	private val menuEntryText: TextView
+	private val enabledDrawable: Drawable
+	private val disabledDrawable: Drawable
+
+	private val enabledText: CharSequence
+	private val disabledText: CharSequence
 
 	private var itemEnabled: Boolean
 
@@ -28,45 +35,54 @@ class MapOptionItem: LinearLayout {
 
 	constructor(context: Context, attributeSet: AttributeSet?): this(context, attributeSet, 0)
 
-	constructor(context: Context, attributeSet: AttributeSet?, defStyleAttr: Int) : super(context, attributeSet, defStyleAttr) {
+	constructor(context: Context, attributeSet: AttributeSet?, defStyleAttr: Int) : super(context,
+		attributeSet, defStyleAttr) {
 
 		inflate(context, R.layout.menu_dialog_entry, this)
 
-		menuEntryIcon = findViewById(R.id.menu_entry_icon)
-		menuEntryText = findViewById(R.id.menu_entry_text)
+		icon = findViewById(R.id.menu_entry_icon)
+		text = findViewById(R.id.menu_entry_text)
 
-		context.theme.obtainStyledAttributes(attributeSet, R.styleable.MapOptions, 0, 0).apply {
+		context.theme.obtainStyledAttributes(attributeSet, R.styleable.MapOptions, 0,
+			0).apply {
 
 			try {
-				this@MapOptionItem.menuEntryIcon.setImageDrawable(getDrawable(R.styleable.MapOptions_menu_icon))
-				this@MapOptionItem.menuEntryText.text = getText(R.styleable.MapOptions_menu_title)
-				this@MapOptionItem.itemEnabled = getBoolean(R.styleable.MapOptions_menu_enable_by_default, true)
+
+				enabledText = getText(R.styleable.MapOptions_enabled_menu_title)
+				disabledText = getText(R.styleable.MapOptions_disabled_menu_title)
+
+				enabledDrawable = getDrawable(R.styleable.MapOptions_enabled_menu_icon)!!
+				disabledDrawable = getDrawable(R.styleable.MapOptions_disabled_menu_icon)!!
+
+				itemEnabled = !getBoolean(R.styleable.MapOptions_menu_enable_by_default, true)
+				toggleOptionVisibility()
 			} finally {
 				recycle()
 			}
 		}
-
 	}
 
-	fun setGlowing(glow: Boolean) {
-		if (glow) {
-			menuEntryIcon.background = AppCompatResources.getDrawable(context, R.drawable.glowing)
+	@UiThread
+	fun toggleOptionVisibility() {
+
+		if (itemEnabled) {
+			text.text = disabledText
+			icon.setImageDrawable(DrawableCompat.wrap(disabledDrawable))
 		} else {
-			menuEntryIcon.background = null
+			text.text = enabledText
+			icon.setImageDrawable(DrawableCompat.wrap(enabledDrawable))
 		}
-	}
 
-	override fun setOnClickListener(l: OnClickListener?) {
-		super.setOnClickListener(l)
 		itemEnabled = !itemEnabled
+		invalidate()
 	}
 }
 
 class OnMapItemClicked(private val polylineMapItems: List<PolylineMapItem>, private val map: MapHandler): View.OnClickListener {
 
-	override fun onClick(v: View?) {
+	override fun onClick(mapOptionItem: View?) {
 
-		if (v == null || v !is MapOptionItem) {
+		if (mapOptionItem == null || mapOptionItem !is MapOptionItem) {
 			return
 		}
 
@@ -74,7 +90,7 @@ class OnMapItemClicked(private val polylineMapItems: List<PolylineMapItem>, priv
 			polylineMapItem.togglePolyLineVisibility(!polylineMapItem.defaultVisibility, map.isNightOnly)
 		}
 
-		v.setGlowing(polylineMapItems[0].polylines[0].isVisible)
+		mapOptionItem.toggleOptionVisibility()
 	}
 }
 
@@ -161,11 +177,10 @@ open class MapOptionsDialog(private val layoutInflater: LayoutInflater, @LayoutR
 						difficultRunPolyline.togglePolyLineVisibility(difficultRunPolyline.defaultVisibility,
 							isNightOnly)
 					}
-
-					it.setGlowing(isNightOnly)
 				}
+
+				it.toggleOptionVisibility()
 			}
-			nightRunImage.setGlowing(map.isNightOnly)
 			showNightRunsImage = nightRunImage
 		}
 
@@ -182,7 +197,6 @@ open class MapOptionsDialog(private val layoutInflater: LayoutInflater, @LayoutR
 			}
 
 			optionsView.setOnClickListener(OnMapItemClicked(runs, map))
-			optionsView.setGlowing(runs[0].polylines[0].isVisible)
 			return optionsView
 		}
 	}
