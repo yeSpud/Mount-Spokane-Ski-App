@@ -68,7 +68,7 @@
         app:layout_constraintTop_toBottomOf="@id/show_easy_runs"
         app:enabled_menu_icon="@drawable/night"
         app:enabled_menu_title="@string/night_runs"
-        app:disabled_menu_icon="@drawable/ic_missing"
+        app:disabled_menu_icon="@drawable/sun"
         app:disabled_menu_title="@string/all_runs" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
