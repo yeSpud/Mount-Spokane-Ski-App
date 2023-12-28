@@ -6,9 +6,11 @@
         <attr name="start_time" format="string" />
         <attr name="end_time" format="string" />
     </declare-styleable>
-    <declare-styleable name="CustomDialogEntry">
-        <attr name="menu_icon" format="reference"/>
-        <attr name="menu_title" format="reference"/>
+    <declare-styleable name="MapOptions">
+        <attr name="enabled_menu_icon" format="reference"/>
+        <attr name="enabled_menu_title" format="reference"/>
+        <attr name="disabled_menu_icon" format="reference"/>
+        <attr name="disabled_menu_title" format="reference"/>
         <attr name="menu_enable_by_default" format="boolean"/>
     </declare-styleable>
 </resources>

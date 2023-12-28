@@ -17,7 +17,6 @@ import android.os.Process
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -31,9 +30,9 @@ import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import com.mtspokane.skiapp.maphandlers.MapHandler
-import com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+import com.mtspokane.skiapp.maphandlers.MapOptionItem
+import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 
 class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
@@ -147,6 +146,11 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 			// Check if the service has already been started and is running...
 			val activityManager: ActivityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
+			// As of Build.VERSION_CODES.O, this method is no longer available to third party applications.
+			// For backwards compatibility, it will still return the caller's own service.
+			// Which is exactly what we want.
+			@Suppress("DEPRECATION")
 			for (runningServices in activityManager.getRunningServices(Int.MAX_VALUE)) {
 				if (SkierLocationService::class.java.name == runningServices.service.className) {
 					if (runningServices.foreground) {
@@ -161,7 +165,10 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	}
 
 	override fun isInBounds(location: Location): Boolean {
-		return map.skiAreaBounds.locationInsidePoints(location)
+		if (map.skiAreaBounds != null) {
+			return map.skiAreaBounds!!.locationInsidePoints(location)
+		}
+		return false
 	}
 
 	override fun getOnLocation(location: Location): MapMarker? {
@@ -251,125 +258,30 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		}
 	}
 
-	private inner class OptionsDialog : BaseAdapter() {
+	private inner class OptionsDialog : MapOptionsDialog(layoutInflater, R.layout.main_options, map) {
 
-		private var showChairliftImage: CustomDialogEntry? = null
-
-		private var showEasyRunsImage: CustomDialogEntry? = null
-
-		private var showModerateRunsImage: CustomDialogEntry? = null
-
-		private var showDifficultRunsImage: CustomDialogEntry? = null
-
-		private var showNightRunsImage: CustomDialogEntry? = null
-
-		private var launchActivitySummaryImage: CustomDialogEntry? = null
-		override fun getCount(): Int {
-			return 1
-		}
-
-		override fun getItem(position: Int): Any {
-			return position // Todo properly implement me?
-		}
-
-		override fun getItemId(position: Int): Long {
-			return position.toLong() // Todo properly implement me?
-		}
+		private var launchActivitySummaryImage: MapOptionItem? = null
 
 		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+			val view = super.getView(position, convertView, parent)
 
-			val view: View = convertView
-					?: layoutInflater.inflate(R.layout.main_options, parent, false)
-
-			if (showChairliftImage == null) {
-				val chairliftImage: CustomDialogEntry = view.findViewById(R.id.show_chairlift)
-				chairliftImage.setOnClickListener(CustomOnClickListener(map.chairliftPolylines))
-				chairliftImage.setGlowing(map.chairliftPolylines[0].polylines[0].isVisible)
-				showChairliftImage = chairliftImage
+			if (launchActivitySummaryImage != null) {
+				return view
 			}
 
-			if (showEasyRunsImage == null) {
-				val easyRunImage: CustomDialogEntry = view.findViewById(R.id.show_easy_runs)
-				easyRunImage.setOnClickListener(CustomOnClickListener(map.easyRunsPolylines))
-				easyRunImage.setGlowing(map.easyRunsPolylines[0].polylines[0].isVisible)
-				showEasyRunsImage = easyRunImage
+			val activitySummaryImage: MapOptionItem? = view.findViewById(R.id.launch_activity_summary)
+			if (activitySummaryImage == null) {
+				Log.w("getView", "Unable to find activity summary launcher")
+				return view
 			}
 
-			if (showModerateRunsImage == null) {
-				val moderateRunImage: CustomDialogEntry = view.findViewById(R.id.show_moderate_runs)
-				moderateRunImage.setOnClickListener(CustomOnClickListener(map.moderateRunsPolylines))
-				moderateRunImage.setGlowing(map.moderateRunsPolylines[0].polylines[0].isVisible)
-				showModerateRunsImage = moderateRunImage
+			activitySummaryImage.setOnClickListener {
+				optionsView.dismiss()
+				startActivity(Intent(this@MapsActivity, ActivitySummary::class.java))
 			}
-
-			if (showDifficultRunsImage == null) {
-				val difficultRunImage: CustomDialogEntry = view.findViewById(R.id.show_difficult_runs)
-				difficultRunImage.setOnClickListener(CustomOnClickListener(map.difficultRunsPolylines))
-				difficultRunImage.setGlowing(map.difficultRunsPolylines[0].polylines[0].isVisible)
-				showDifficultRunsImage = difficultRunImage
-			}
-
-			if (showNightRunsImage == null) {
-				val nightRunImage: CustomDialogEntry = view.findViewById(R.id.show_night_runs)
-				nightRunImage.setOnClickListener {
-					if (it == null || it !is CustomDialogEntry) {
-						return@setOnClickListener
-					}
-
-					with(map) {
-
-						isNightOnly = !isNightOnly
-
-						for (chairliftPolyline in chairliftPolylines) {
-							chairliftPolyline.togglePolyLineVisibility(chairliftPolyline.defaultVisibility, isNightOnly)
-						}
-
-						for (easyRunPolyline in easyRunsPolylines) {
-							easyRunPolyline.togglePolyLineVisibility(easyRunPolyline.defaultVisibility, isNightOnly)
-						}
-
-						for (moderateRunPolyline in moderateRunsPolylines) {
-							moderateRunPolyline.togglePolyLineVisibility(moderateRunPolyline.defaultVisibility, isNightOnly)
-						}
-
-						for (difficultRunPolyline in difficultRunsPolylines) {
-							difficultRunPolyline.togglePolyLineVisibility(difficultRunPolyline.defaultVisibility, isNightOnly)
-						}
-
-						it.setGlowing(isNightOnly)
-					}
-				}
-
-				nightRunImage.setGlowing(map.isNightOnly)
-				showNightRunsImage = nightRunImage
-			}
-
-			if (launchActivitySummaryImage == null) {
-				val activitySummaryImage: CustomDialogEntry = view.findViewById(R.id.launch_activity_summary)
-				activitySummaryImage.setOnClickListener {
-					optionsView.dismiss()
-					startActivity(Intent(this@MapsActivity, ActivitySummary::class.java))
-				}
-				launchActivitySummaryImage = activitySummaryImage
-			}
+			launchActivitySummaryImage = activitySummaryImage
 
 			return view
-		}
-	}
-
-	private inner class CustomOnClickListener(val polylineMapItems: List<PolylineMapItem>): View.OnClickListener {
-
-		override fun onClick(v: View?) {
-
-			if (v == null || v !is CustomDialogEntry) {
-				return
-			}
-
-			for (polylineMapItem in polylineMapItems) {
-				polylineMapItem.togglePolyLineVisibility(!polylineMapItem.defaultVisibility, map.isNightOnly)
-			}
-
-			v.setGlowing(polylineMapItems[0].polylines[0].isVisible)
 		}
 	}
 }

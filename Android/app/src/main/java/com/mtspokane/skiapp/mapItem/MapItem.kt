@@ -57,11 +57,11 @@ class PolylineMapItem(name: String, val polylines: MutableList<Polyline>, @Drawa
 	 *        1	                 1	         1	        1
 	 */
 	fun togglePolyLineVisibility(visible: Boolean, nightRunsOnly: Boolean) {
-		this.defaultVisibility = visible
-		this.nightOnlyVisibility = nightRunsOnly
+		defaultVisibility = visible
+		nightOnlyVisibility = nightRunsOnly
 
 		for (polyline in polylines) {
-			polyline.isVisible = this.defaultVisibility && (this.isNightRun >= this.nightOnlyVisibility)
+			polyline.isVisible = defaultVisibility && (isNightRun >= nightOnlyVisibility)
 		}
 	}
 }

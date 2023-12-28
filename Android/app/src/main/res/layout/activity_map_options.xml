@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/dark_blue">
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_chairlift"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -13,10 +13,12 @@
         android:layout_marginTop="@dimen/menu_image_top_margin"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:menu_icon="@drawable/ic_chairlift"
-        app:menu_title="@string/show_chairlifts" />
+        app:enabled_menu_icon="@drawable/ic_chairlift"
+        app:enabled_menu_title="@string/show_chairlifts"
+        app:disabled_menu_icon="@drawable/chairlift_disabled"
+        app:disabled_menu_title="@string/hide_chairlifts" />
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_easy_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -24,10 +26,12 @@
         app:layout_constraintLeft_toRightOf="@id/show_chairlift"
         app:layout_constraintRight_toLeftOf="@id/show_moderate_runs"
         app:layout_constraintTop_toTopOf="parent"
-        app:menu_icon="@drawable/ic_easy"
-        app:menu_title="@string/show_beginner" />
+        app:enabled_menu_icon="@drawable/ic_easy"
+        app:enabled_menu_title="@string/show_beginner"
+        app:disabled_menu_icon="@drawable/easy_disabled"
+        app:disabled_menu_title="@string/hide_beginner" />
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_moderate_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -35,10 +39,12 @@
         android:layout_marginEnd="@dimen/menu_edge_margin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:menu_icon="@drawable/ic_moderate"
-        app:menu_title="@string/show_intermediate" />
+        app:enabled_menu_icon="@drawable/ic_moderate"
+        app:enabled_menu_title="@string/show_intermediate"
+        app:disabled_menu_icon="@drawable/moderate_disabled"
+        app:disabled_menu_title="@string/hide_intermediate" />
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_difficult_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -46,10 +52,12 @@
         android:layout_marginTop="@dimen/menu_image_top_margin"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/show_chairlift"
-        app:menu_icon="@drawable/ic_difficult"
-        app:menu_title="@string/show_advanced" />
+        app:enabled_menu_icon="@drawable/ic_difficult"
+        app:enabled_menu_title="@string/show_advanced"
+        app:disabled_menu_icon="@drawable/difficult_disabled"
+        app:disabled_menu_title="@string/hide_advanced" />
 
-    <com.mtspokane.skiapp.maphandlers.CustomDialogEntry
+    <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/show_night_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -58,7 +66,9 @@
         app:layout_constraintLeft_toRightOf="@id/show_difficult_runs"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/show_easy_runs"
-        app:menu_icon="@drawable/night"
-        app:menu_title="@string/night_runs" />
+        app:enabled_menu_icon="@drawable/night"
+        app:enabled_menu_title="@string/night_runs"
+        app:disabled_menu_icon="@drawable/sun"
+        app:disabled_menu_title="@string/all_runs" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

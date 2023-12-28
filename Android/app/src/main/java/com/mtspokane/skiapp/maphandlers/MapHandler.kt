@@ -6,7 +6,6 @@ import androidx.annotation.AnyThread
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.RawRes
-import androidx.annotation.UiThread
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -30,10 +29,7 @@ import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,19 +42,30 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 
 	abstract val additionalCallback: OnMapReadyCallback
 
-	lateinit var chairliftPolylines: List<PolylineMapItem>
-	lateinit var easyRunsPolylines: List<PolylineMapItem>
-	lateinit var moderateRunsPolylines: List<PolylineMapItem>
-	lateinit var difficultRunsPolylines: List<PolylineMapItem>
+	var chairliftPolylines: List<PolylineMapItem> = emptyList()
+		private set
+	var easyRunsPolylines: List<PolylineMapItem> = emptyList()
+		private set
+	var moderateRunsPolylines: List<PolylineMapItem> = emptyList()
+		private set
+	var difficultRunsPolylines: List<PolylineMapItem> = emptyList()
+		private set
 
-	lateinit var skiAreaBounds: MapItem
-	lateinit var otherBounds: List<MapItem> // Should be 9
-	lateinit var startingChairliftTerminals: List<MapItem> // Should be size 6
-	lateinit var endingChairliftTerminals: List<MapItem> // Should be size 6
+	var skiAreaBounds: MapItem? = null
+		private set
+	var otherBounds: List<MapItem> = emptyList() // Should be 9
+		private set
+	var startingChairliftTerminals: List<MapItem> = emptyList() // Should be size 6
+		private set
+	var endingChairliftTerminals: List<MapItem> = emptyList() // Should be size 6
+		private set
 
-	lateinit var easyRunsBounds: List<MapItem> // Should be size 25
-	lateinit var moderateRunsBounds: List<MapItem> // Should be size 26
-	lateinit var difficultRunsBounds: List<MapItem> // Should be size 33
+	var easyRunsBounds: List<MapItem> = emptyList() // Should be size 25
+		private set
+	var moderateRunsBounds: List<MapItem> = emptyList() // Should be size 26
+		private set
+	var difficultRunsBounds: List<MapItem> = emptyList() // Should be size 33
+		private set
 
 	open fun destroy() {
 
@@ -122,7 +129,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		googleMap.setMinZoomPreference(MINIMUM_ZOOM)
 		googleMap.setMaxZoomPreference(MAXIMUM_ZOOM)
 
-		// Set the map view type to satellite.
+		googleMap.setIndoorEnabled(false)
 		googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
 		// Load the various polylines onto the map.

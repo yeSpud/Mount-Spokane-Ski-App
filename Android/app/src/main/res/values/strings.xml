@@ -26,10 +26,15 @@
     <!-- Menu text -->
     <string name="options_menu">☰</string>
     <string name="show_chairlifts">Show Chairlifts</string>
+    <string name="hide_chairlifts">Hide Chairlifts</string>
     <string name="show_beginner">Show Beginner Runs</string>
+    <string name="hide_beginner">Hide Beginner Runs</string>
     <string name="show_intermediate">Show Intermediate Runs</string>
+    <string name="hide_intermediate">Hide Intermediate Runs</string>
     <string name="show_advanced">Show Advanced Runs</string>
+    <string name="hide_advanced">Hide Advanced Runs</string>
     <string name="night_runs">Only Show Night Runs</string>
+    <string name="all_runs">Show All Runs</string>
     <string name="activity_summary">View activity summary</string>
 
     <!-- Activity summary -->
