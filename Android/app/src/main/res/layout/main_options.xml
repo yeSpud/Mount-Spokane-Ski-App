@@ -15,7 +15,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:enabled_menu_icon="@drawable/ic_chairlift"
         app:enabled_menu_title="@string/show_chairlifts"
-        app:disabled_menu_icon="@drawable/ic_missing"
+        app:disabled_menu_icon="@drawable/chairlift_disabled"
         app:disabled_menu_title="@string/hide_chairlifts" />
 
     <com.mtspokane.skiapp.maphandlers.MapOptionItem
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:enabled_menu_icon="@drawable/ic_easy"
         app:enabled_menu_title="@string/show_beginner"
-        app:disabled_menu_icon="@drawable/ic_missing"
+        app:disabled_menu_icon="@drawable/easy_disabled"
         app:disabled_menu_title="@string/hide_beginner" />
 
     <com.mtspokane.skiapp.maphandlers.MapOptionItem
@@ -41,7 +41,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:enabled_menu_icon="@drawable/ic_moderate"
         app:enabled_menu_title="@string/show_intermediate"
-        app:disabled_menu_icon="@drawable/ic_missing"
+        app:disabled_menu_icon="@drawable/moderate_disabled"
         app:disabled_menu_title="@string/hide_intermediate" />
 
     <com.mtspokane.skiapp.maphandlers.MapOptionItem
@@ -54,7 +54,7 @@
         app:layout_constraintTop_toBottomOf="@id/show_chairlift"
         app:enabled_menu_icon="@drawable/ic_difficult"
         app:enabled_menu_title="@string/show_advanced"
-        app:disabled_menu_icon="@drawable/ic_missing"
+        app:disabled_menu_icon="@drawable/difficult_disabled"
         app:disabled_menu_title="@string/hide_advanced" />
 
     <com.mtspokane.skiapp.maphandlers.MapOptionItem
