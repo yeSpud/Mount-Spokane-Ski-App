@@ -249,8 +249,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 						"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
 						"Lodge 1 Parking Lot" -> R.drawable.ic_parking
 						"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-						"Tubing Area" -> R.drawable.ic_missing // todo Tubing area icon
-						"Ski School" -> R.drawable.ic_missing // todo Ski school icon
+						"Tubing Area" -> R.drawable.ic_missing // Todo Tubing area icon
+						"Ski School" -> R.drawable.ic_missing // Todo Ski school icon
 						else -> {
 							Log.w(tag, "$name does not have an icon")
 							null
@@ -358,7 +358,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 	private suspend fun loadPolygons(@RawRes fileRes: Int, @ColorRes color: Int):
 			HashMap<String, List<Polygon>> = withContext(Dispatchers.Default) {
 
-		val hashMap: HashMap<String, List<Polygon>> = HashMap() // todo Consider making this a set or regular map..
+		val hashMap: HashMap<String, List<Polygon>> = HashMap()
 
 		// Load the polygons file.
 		for (placemark in parseKmlFile(fileRes)) {
