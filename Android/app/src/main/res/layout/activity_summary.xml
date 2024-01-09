@@ -9,7 +9,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
         android:background="?attr/colorPrimaryVariant"
         android:orientation="horizontal"><!-- FIXME Change this to visible once trail tracking has been fixed -->
 
