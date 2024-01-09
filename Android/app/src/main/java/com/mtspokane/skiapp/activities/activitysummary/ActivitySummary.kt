@@ -328,21 +328,11 @@ class ActivitySummary : FragmentActivity() {
 
 		if (isRun) {
 
-			//try {
 			val maxSpeed = (activitySummaryEntry.maxSpeed / conversion)
 			activityView.maxSpeed.text = getString(R.string.max_speed, maxSpeed.roundToInt())
-			//} catch (e: IllegalArgumentException) {
-				//activityView.maxSpeed.text = getString(R.string.max_speed, 0)
-				//activityView.maxSpeed.visibility = View.INVISIBLE
-			//}
 
-			//try {
 			val averageSpeed = (activitySummaryEntry.averageSpeed / conversion)
 			activityView.averageSpeed.text = getString(R.string.average_speed, averageSpeed.roundToInt())
-			//} catch (e: IllegalArgumentException) {
-			//	activityView.averageSpeed.text = getString(R.string.average_speed, 0)
-			//	activityView.averageSpeed.visibility = View.INVISIBLE
-			//}
 
 			if (activitySummaryEntry.mapMarker.icon != R.drawable.ic_chairlift) {
 				if (maxSpeed > absoluteMaxSpeed) {

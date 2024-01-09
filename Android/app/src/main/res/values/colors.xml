@@ -9,9 +9,13 @@
 
     <!-- Trail and chairlift colors -->
     <color name="easy">#5CD111</color>
+    <color name="easy_opaque">#4D5CD111</color>
     <color name="moderate">#0176FE</color>
+    <color name="moderate_opaque">#4D0176FE</color>
     <color name="difficult">#000000</color>
+    <color name="difficult_opaque">#4D000000</color>
     <color name="chairlift">#DA262D</color>
+    <color name="chairlift_opaque">#4DDA262D</color>
 
     <!-- Polygon colors -->
     <color name="easy_polygon">#335CD111</color>
