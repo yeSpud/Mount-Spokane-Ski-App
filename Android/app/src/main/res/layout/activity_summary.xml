@@ -9,9 +9,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
         android:background="?attr/colorPrimaryVariant"
-        android:orientation="horizontal"><!-- FIXME Change this to visible once trail tracking has been fixed -->
+        android:orientation="horizontal">
 
         <TextView
             android:id="@+id/total_runs"
@@ -68,7 +67,7 @@
             android:layout_marginEnd="10dp"
             android:text="@string/options_menu"/>
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/activity_map"
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"

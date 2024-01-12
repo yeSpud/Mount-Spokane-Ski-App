@@ -27,6 +27,7 @@ import com.google.maps.android.ktx.addPolyline
 import com.google.maps.android.ktx.utils.kml.kmlLayer
 import com.mtspokane.skiapp.BuildConfig
 import com.mtspokane.skiapp.R
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.mapItem.MapItem
 import com.mtspokane.skiapp.mapItem.PolylineMapItem
 import kotlinx.coroutines.Dispatchers
@@ -135,29 +136,51 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 		// Load the various polylines onto the map.
 		activity.lifecycleScope.launch(Dispatchers.Default) {
 
+			val isActivitySummary = activity is ActivitySummary
+
 			val chairliftPolylineJob = launch {
 				Log.d(tag, "Loading chairlift polyline")
-				chairliftPolylines = loadPolylines(R.raw.lifts, R.color.chairlift, 4f,
+				val chairliftColor = if (isActivitySummary) {
+					R.color.chairlift_opaque
+				} else {
+					R.color.chairlift
+				}
+				chairliftPolylines = loadPolylines(R.raw.lifts, chairliftColor, 4f,
 					R.drawable.ic_chairlift)
 				Log.d(tag, "Finished loading chairlift polyline")
 			}
 
 			val easyRunsPolylineJob = launch {
 				Log.d(tag, "Loading easy run polylines")
-				easyRunsPolylines = loadPolylines(R.raw.easy, R.color.easy, 3f, R.drawable.ic_easy)
+				val easyColor = if (isActivitySummary) {
+					R.color.easy_opaque
+				} else {
+					R.color.easy
+				}
+				easyRunsPolylines = loadPolylines(R.raw.easy, easyColor, 3f, R.drawable.ic_easy)
 				Log.d(tag, "Finished loading easy run polylines")
 			}
 
 			val moderateRunsPolylineJob = launch {
 				Log.d(tag, "Loading moderate run polylines")
-				moderateRunsPolylines = loadPolylines(R.raw.moderate, R.color.moderate, 2f,
+				val moderateColor = if (isActivitySummary) {
+					R.color.moderate_opaque
+				} else {
+					R.color.moderate
+				}
+				moderateRunsPolylines = loadPolylines(R.raw.moderate, moderateColor, 2f,
 					R.drawable.ic_moderate)
 				Log.d(tag, "Finished loading moderate run polylines")
 			}
 
 			val difficultRunsPolylineJob = launch {
 				Log.d(tag, "Loading difficult run polylines")
-				difficultRunsPolylines = loadPolylines(R.raw.difficult, R.color.difficult, 1f,
+				val difficultColor = if (isActivitySummary) {
+					R.color.difficult_opaque
+				} else {
+					R.color.difficult
+				}
+				difficultRunsPolylines = loadPolylines(R.raw.difficult, difficultColor, 1f,
 					R.drawable.ic_difficult)
 				Log.d(tag, "Finished loading difficult run polylines")
 			}
@@ -226,8 +249,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 						"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
 						"Lodge 1 Parking Lot" -> R.drawable.ic_parking
 						"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-						"Tubing Area" -> R.drawable.ic_missing // todo Tubing area icon
-						"Ski School" -> R.drawable.ic_missing // todo Ski school icon
+						"Tubing Area" -> R.drawable.ic_missing // Todo Tubing area icon
+						"Ski School" -> R.drawable.ic_missing // Todo Ski school icon
 						else -> {
 							Log.w(tag, "$name does not have an icon")
 							null
@@ -335,7 +358,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 	private suspend fun loadPolygons(@RawRes fileRes: Int, @ColorRes color: Int):
 			HashMap<String, List<Polygon>> = withContext(Dispatchers.Default) {
 
-		val hashMap: HashMap<String, List<Polygon>> = HashMap() // todo Consider making this a set or regular map..
+		val hashMap: HashMap<String, List<Polygon>> = HashMap()
 
 		// Load the polygons file.
 		for (placemark in parseKmlFile(fileRes)) {

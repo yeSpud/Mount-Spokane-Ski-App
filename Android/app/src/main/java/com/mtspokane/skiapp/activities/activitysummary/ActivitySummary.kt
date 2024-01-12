@@ -53,12 +53,9 @@ import org.json.JSONObject
 
 class ActivitySummary : FragmentActivity() {
 
-	private lateinit var totalRuns: TextView
+	private lateinit var binding: ActivitySummaryBinding
 	private var totalRunsNumber = 0
-	private lateinit var maxSpeed: TextView
 	private var absoluteMaxSpeed = 0F
-
-	private lateinit var averageSpeed: TextView
 	private var averageSpeedSum = 0F
 
 	private lateinit var container: LinearLayout
@@ -69,18 +66,16 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var optionsView: DialogPlus
 
-	private val exportJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(ActivityResultContracts.CreateDocument(
-		JSON_MIME_TYPE
-	)) {
+	private val exportJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(
+		ActivityResultContracts.CreateDocument(JSON_MIME_TYPE)) {
 		if (it != null) {
 			val json: JSONObject = getActivitySummaryJson()
 			SkiingActivityManager.writeToExportFile(contentResolver, it, json.toString(4))
 		}
 	}
 
-	private val exportGeoJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(ActivityResultContracts.CreateDocument(
-		GEOJSON_MIME_TYPE
-	)) {
+	private val exportGeoJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(
+		ActivityResultContracts.CreateDocument(GEOJSON_MIME_TYPE)) {
 		if (it != null) {
 			val json: JSONObject = getActivitySummaryJson()
 			val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
@@ -88,7 +83,8 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private val importCallback: ActivityResultLauncher<Array<String>> = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+	private val importCallback: ActivityResultLauncher<Array<String>> = registerForActivityResult(
+		ActivityResultContracts.OpenDocument()) { uri: Uri? ->
 
 		if (uri == null) {
 			return@registerForActivityResult
@@ -113,12 +109,9 @@ class ActivitySummary : FragmentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		val binding: ActivitySummaryBinding = ActivitySummaryBinding.inflate(layoutInflater)
+		binding = ActivitySummaryBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
-		totalRuns = binding.totalRuns
-		maxSpeed = binding.maxSpeed
-		averageSpeed = binding.averageSpeed
 		container = binding.container
 
 		fileSelectionDialog = FileSelectionDialog()
@@ -134,9 +127,7 @@ class ActivitySummary : FragmentActivity() {
 		optionsView = DialogPlus.newDialog(this).setAdapter(MapOptionsDialog(layoutInflater,
 			R.layout.activity_map_options, map)).setExpanded(false).create()
 
-		binding.optionsButton.setOnClickListener {
-			optionsView.show()
-		}
+		binding.optionsButton.setOnClickListener { optionsView.show() }
 
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
@@ -216,13 +207,13 @@ class ActivitySummary : FragmentActivity() {
 	private fun clearScreen() {
 
 		totalRunsNumber = 0
-		totalRuns.visibility = View.INVISIBLE
+		binding.totalRuns.visibility = View.GONE
 
 		absoluteMaxSpeed = 0F
-		maxSpeed.visibility = View.INVISIBLE
+		binding.maxSpeed.visibility = View.GONE
 
 		averageSpeedSum = 0F
-		averageSpeed.visibility = View.INVISIBLE
+		binding.averageSpeed.visibility = View.GONE
 
 		container.removeAllViews()
 		map.clearMap()
@@ -296,21 +287,21 @@ class ActivitySummary : FragmentActivity() {
 			container.addView(view)
 		}
 
-		totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
-		totalRuns.visibility = View.VISIBLE
+		binding.totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
+		binding.totalRuns.visibility = View.VISIBLE
 
 		try {
-			maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
-			maxSpeed.visibility = View.VISIBLE
+			binding.maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
+			binding.maxSpeed.visibility = View.VISIBLE
 		} catch (e: IllegalArgumentException) {
-			maxSpeed.visibility = View.INVISIBLE
+			binding.maxSpeed.visibility = View.GONE
 		}
 
 		try {
-			averageSpeed.text = getString(R.string.average_speed, (averageSpeedSum/totalRunsNumber).roundToInt())
-			averageSpeed.visibility = View.VISIBLE
+			binding.averageSpeed.text = getString(R.string.average_speed, (averageSpeedSum/totalRunsNumber).roundToInt())
+			binding.averageSpeed.visibility = View.VISIBLE
 		} catch (e: IllegalArgumentException) {
-			averageSpeed.visibility = View.INVISIBLE
+			binding.averageSpeed.visibility = View.GONE
 		}
 
 		System.gc()
@@ -322,7 +313,7 @@ class ActivitySummary : FragmentActivity() {
 
 		val activityView = ActivityView(this)
 
-		val isNotRun = !(activitySummaryEntry.mapMarker.icon == R.drawable.ic_chairlift ||
+		val isRun = (activitySummaryEntry.mapMarker.icon == R.drawable.ic_chairlift ||
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_easy ||
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_moderate ||
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_difficult)
@@ -335,29 +326,22 @@ class ActivitySummary : FragmentActivity() {
 		// Convert from meters per second to miles per hour.
 		val conversion = 0.44704f
 
-		if (!isNotRun) {
+		if (isRun) {
 
-			totalRunsNumber++
+			val maxSpeed = (activitySummaryEntry.maxSpeed / conversion)
+			activityView.maxSpeed.text = getString(R.string.max_speed, maxSpeed.roundToInt())
 
-			try {
-				val maxSpeed = (activitySummaryEntry.maxSpeed / conversion)
+			val averageSpeed = (activitySummaryEntry.averageSpeed / conversion)
+			activityView.averageSpeed.text = getString(R.string.average_speed, averageSpeed.roundToInt())
+
+			if (activitySummaryEntry.mapMarker.icon != R.drawable.ic_chairlift) {
 				if (maxSpeed > absoluteMaxSpeed) {
 					absoluteMaxSpeed = maxSpeed
 				}
-				activityView.maxSpeed.text = this.getString(R.string.max_speed, maxSpeed.roundToInt())
-			} catch (e: IllegalArgumentException) {
-				activityView.maxSpeed.text = this.getString(R.string.max_speed, 0)
-				activityView.maxSpeed.visibility = View.INVISIBLE
+				averageSpeedSum += averageSpeed
+				totalRunsNumber++
 			}
 
-			try {
-				val averageSpeed = (activitySummaryEntry.averageSpeed / conversion)
-				averageSpeedSum += averageSpeed
-				activityView.averageSpeed.text = this.getString(R.string.average_speed, averageSpeed.roundToInt())
-			} catch (e: IllegalArgumentException) {
-				activityView.averageSpeed.text = this.getString(R.string.average_speed, 0)
-				activityView.averageSpeed.visibility = View.INVISIBLE
-			}
 		} else {
 			activityView.maxSpeed.visibility = View.INVISIBLE
 			activityView.averageSpeed.visibility = View.INVISIBLE
