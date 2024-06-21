@@ -57,6 +57,7 @@
     <string name="share_geojson">Share current activity as GeoJSON</string>
     <string name="share_description">Share file using</string>
     <string name="import_activity">Import activity</string>
+    <string name="privacy_policy">View Privacy Policy</string>
 
     <!-- File selection -->
     <string name="select_file">Select a date</string>
