@@ -21,7 +21,7 @@ android {
         versionName "$versionNameDate"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        targetSdk 34
+        targetSdk 35
         minSdkVersion 21
     }
 
@@ -54,12 +54,13 @@ android {
         viewBinding true
         buildConfig true
     }
-    compileSdk 34
+    compileSdk 35
     dependenciesInfo {
         includeInBundle true
         includeInApk true
     }
     namespace 'com.mtspokane.skiapp'
+    buildToolsVersion '35.0.0'
 }
 
 dependencies {
@@ -72,18 +73,18 @@ dependencies {
     implementation 'com.google.android.material:material:1.12.0'
 
     // Google Maps stuff
-    implementation 'com.google.android.gms:play-services-maps:18.2.0'
+    implementation 'com.google.android.gms:play-services-maps:19.0.0'
     implementation 'com.google.maps.android:android-maps-utils:3.8.2'
-    implementation 'com.google.maps.android:maps-ktx:5.0.0'
-    implementation 'com.google.maps.android:maps-utils-ktx:5.0.0'
+    implementation 'com.google.maps.android:maps-ktx:5.1.1'
+    implementation 'com.google.maps.android:maps-utils-ktx:5.1.1'
 
     // Kotlin activity
-    implementation 'androidx.activity:activity-ktx:1.9.0'
+    implementation 'androidx.activity:activity-ktx:1.9.1'
 
     // Unit testing
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
 
     // Kotlin

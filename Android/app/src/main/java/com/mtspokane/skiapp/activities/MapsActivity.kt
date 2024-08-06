@@ -9,6 +9,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Paint.ANTI_ALIAS_FLAG
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
@@ -17,24 +22,26 @@ import android.os.Process
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.GroundOverlayOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
+import com.mtspokane.skiapp.mapItem.SkiingActivity
 import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.MapOptionItem
 import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
+
 
 class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
@@ -224,14 +231,55 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 				alertDialogBuilder.setTitle(R.string.alert_title)
 				alertDialogBuilder.setMessage(R.string.alert_message)
 				alertDialogBuilder.setPositiveButton(R.string.alert_ok) { _, _ ->
-					ActivityCompat.requestPermissions(this@MapsActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), permissionValue)
+					ActivityCompat.requestPermissions(this@MapsActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+						permissionValue)
 				}
 
 				// Show the info popup about location.
 				alertDialogBuilder.create().show()
 			}
 
+			for (chairliftPolyline in chairliftPolylines) {
+				// Get center of polyline
+				var latSum = 0.0
+				var longSum = 0.0
+				for (point in chairliftPolyline.polylines[0].points) {
+					latSum += point.latitude
+					longSum += point.longitude
+				}
+
+				val latAvg = latSum / chairliftPolyline.polylines[0].points.size
+				val longAvg = longSum / chairliftPolyline.polylines[0].points.size
+
+				googleMap.addGroundOverlay(GroundOverlayOptions().position(LatLng(latAvg, longAvg),
+					chairliftPolyline.polylines[0].width + 20.0f)
+					.image(BitmapDescriptorFactory.fromAsset("ic_launcher.png")))
+					//.image(BitmapDescriptorFactory.defaultMarker()))
+					/*
+					.image(BitmapDescriptorFactory.fromBitmap(textAsBitmap(chairliftPolyline.name,
+						20f, Color.WHITE))))*/
+			}
+
 			isMapSetup = true
+		}
+
+		fun textAsBitmap(text: String?, textSize: Float, textColor: Int): Bitmap {
+			// adapted from https://stackoverflow.com/a/8799344/1476989
+			val paint = Paint(ANTI_ALIAS_FLAG)
+			paint.textSize = textSize
+			paint.color = textColor
+			paint.textAlign = Paint.Align.LEFT
+			val baseline = -paint.ascent() // ascent() is negative
+			var width = (paint.measureText(text) + 0.0f).toInt() // round
+			var height = (baseline + paint.descent() + 0.0f).toInt()
+
+			val trueWidth = width
+			if (width > height) height = width else width = height
+			val image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+			val canvas = Canvas(image)
+			canvas.drawText(text!!, (width / 2 - trueWidth / 2).toFloat(), baseline, paint)
+			return image
 		}
 
 		override fun destroy() {
