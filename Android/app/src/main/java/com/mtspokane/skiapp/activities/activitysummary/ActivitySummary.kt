@@ -1,8 +1,10 @@
 package com.mtspokane.skiapp.activities.activitysummary
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -156,21 +158,21 @@ class ActivitySummary : FragmentActivity() {
 			R.id.open -> fileSelectionDialog.showDialog()
 			R.id.export_json -> exportJsonCallback.launch("exported.json")
 			R.id.export_geojson -> exportGeoJsonCallback.launch("exported.geojson")
+			R.id.import_activity -> importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
 			R.id.share_json -> {
-
 				val json: JSONObject = getActivitySummaryJson()
-
 				writeToShareFile("My Skiing Activity.json", json, JSON_MIME_TYPE)
 			}
 			R.id.share_geojson -> {
-
 				val json: JSONObject = getActivitySummaryJson()
-
 				val geojson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
-
 				writeToShareFile("My Skiing Activity.geojson", geojson, GEOJSON_MIME_TYPE)
 			}
-			R.id.import_activity -> importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
+			R.id.privacy_policy -> {
+				val uri = Uri.parse("https://thespud.xyz/mount-spokane-ski-app/privacy/")
+				val intent = Intent(Intent.ACTION_VIEW, uri)
+				startActivity(intent)
+			}
 		}
 
 		return super.onOptionsItemSelected(item)
@@ -498,7 +500,8 @@ class ActivitySummary : FragmentActivity() {
 
 		var polyline: Polyline? = null
 
-		override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
+		@SuppressLint("PotentialBehaviorOverride")
+        override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
 
 			if (intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
 				loadFromIntent(intent.getStringExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE))
@@ -560,43 +563,41 @@ class ActivitySummary : FragmentActivity() {
 		override fun getInfoContents(marker: Marker): View? {
 			Log.v("CustomInfoWindow", "getInfoContents called")
 
-			if (marker.tag is MapMarker) {
-
-				val markerInfo: MapMarker = marker.tag as MapMarker
-
-				val markerView: View = layoutInflater.inflate(R.layout.info_window, null)
-
-				val name: TextView = markerView.findViewById(R.id.marker_name)
-				name.text = markerInfo.name
-
-				val altitude: TextView = markerView.findViewById(R.id.marker_altitude)
-
-				// Convert from meters to feet.
-				val altitudeConversion = 3.280839895f
-
-				try {
-					altitude.text = getString(R.string.marker_altitude,
-						(markerInfo.skiingActivity.altitude * altitudeConversion).roundToInt())
-				} catch (e: IllegalArgumentException) {
-					altitude.text = getString(R.string.marker_altitude, 0)
-				}
-
-				val speed: TextView = markerView.findViewById(R.id.marker_speed)
-
-				// Convert from meters per second to miles per hour.
-				val speedConversion = 0.44704f
-
-				try {
-					speed.text = getString(R.string.marker_speed,
-							(markerInfo.skiingActivity.speed / speedConversion).roundToInt())
-				} catch (e: IllegalArgumentException) {
-					speed.text = getString(R.string.marker_speed, 0)
-				}
-
-				return markerView
-			} else {
+			if (marker.tag !is MapMarker) {
 				return null
 			}
+
+			val markerView: View = layoutInflater.inflate(R.layout.info_window, null)
+			val name: TextView = markerView.findViewById(R.id.marker_name)
+
+			val markerInfo: MapMarker = marker.tag as MapMarker
+			name.text = markerInfo.name
+
+			val altitude: TextView = markerView.findViewById(R.id.marker_altitude)
+
+			// Convert from meters to feet.
+			val altitudeConversion = 3.280839895f
+
+			try {
+				altitude.text = getString(R.string.marker_altitude,
+					(markerInfo.skiingActivity.altitude * altitudeConversion).roundToInt())
+			} catch (e: IllegalArgumentException) {
+				altitude.text = getString(R.string.marker_altitude, 0)
+			}
+
+			val speed: TextView = markerView.findViewById(R.id.marker_speed)
+
+			// Convert from meters per second to miles per hour.
+			val speedConversion = 0.44704f
+
+			try {
+				speed.text = getString(R.string.marker_speed,
+						(markerInfo.skiingActivity.speed / speedConversion).roundToInt())
+			} catch (e: IllegalArgumentException) {
+				speed.text = getString(R.string.marker_speed, 0)
+			}
+
+			return markerView
 		}
 
 		override fun getInfoWindow(marker: Marker): View? {

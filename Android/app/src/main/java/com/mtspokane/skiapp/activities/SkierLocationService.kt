@@ -147,7 +147,7 @@ class SkierLocationService : Service(), LocationListener {
 	}
 
 	override fun onLocationChanged(location: Location) {
-
+		Log.v("SkierLocationService", "Location updated")
 		Locations.updateLocations(SkiingActivity(location))
 
 		if (serviceCallbacks != null) {
@@ -155,6 +155,7 @@ class SkierLocationService : Service(), LocationListener {
 			// If we are not on the mountain stop the tracking.
 			if (!serviceCallbacks!!.isInBounds(location)) {
 				Toast.makeText(this, R.string.out_of_bounds, Toast.LENGTH_LONG).show()
+				Log.d("SkierLocationService", "Stopping location tracking service")
 				stopSelf()
 				return
 			}

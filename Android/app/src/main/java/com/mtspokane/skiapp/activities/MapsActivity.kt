@@ -17,6 +17,7 @@ import android.os.Process
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -117,7 +118,8 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	override fun onResume() {
 		super.onResume()
 
-		if (isMapSetup) {
+		if (isMapSetup && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+			== PackageManager.PERMISSION_GRANTED) {
 			launchLocationService()
 		}
 	}
