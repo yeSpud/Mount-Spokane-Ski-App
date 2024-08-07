@@ -37,7 +37,6 @@ import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import kotlin.reflect.KClass
 
-
 class SkierLocationService : Service(), LocationListener {
 
 	// FIXME Binder leaks memory
@@ -148,37 +147,38 @@ class SkierLocationService : Service(), LocationListener {
 
 	override fun onLocationChanged(location: Location) {
 		Log.v("SkierLocationService", "Location updated")
+		val localServiceCallback = serviceCallbacks ?: return
+
 		Locations.updateLocations(SkiingActivity(location))
 
-		if (serviceCallbacks != null) {
+		// If we are not on the mountain stop the tracking.
+		if (!localServiceCallback.isInBounds(location)) {
+			Toast.makeText(this, R.string.out_of_bounds, Toast.LENGTH_LONG).show()
+			Log.d("SkierLocationService", "Stopping location tracking service")
+			stopSelf()
+			return
+		}
 
-			// If we are not on the mountain stop the tracking.
-			if (!serviceCallbacks!!.isInBounds(location)) {
-				Toast.makeText(this, R.string.out_of_bounds, Toast.LENGTH_LONG).show()
-				Log.d("SkierLocationService", "Stopping location tracking service")
-				stopSelf()
-				return
-			}
+		var mapMarker = localServiceCallback.getOnLocation(location)
+		if (mapMarker != null) {
+			appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
+			return
+		}
 
-			var mapMarker = serviceCallbacks!!.getOnLocation(location)
-			if (mapMarker != null) {
-				appendSkiingActivity(R.string.current_chairlift, mapMarker, location)
-				return
-			}
-
-			mapMarker = serviceCallbacks!!.getInLocation(location)
-			if (mapMarker != null) {
-				appendSkiingActivity(R.string.current_other, mapMarker, location)
-				return
-			}
+		mapMarker = localServiceCallback.getInLocation(location)
+		if (mapMarker != null) {
+			appendSkiingActivity(R.string.current_other, mapMarker, location)
+			return
 		}
 
 		updateTrackingNotification(this.getString(R.string.tracking_notice), null)
 	}
 
 	private fun appendSkiingActivity(@StringRes textResource: Int, mapMarker: MapMarker, location: Location) {
+		val localServiceCallback = serviceCallbacks ?: return
+
 		val text: String = getString(textResource, mapMarker.name)
-		serviceCallbacks!!.updateMapMarker(text)
+		localServiceCallback.updateMapMarker(text)
 		updateTrackingNotification(text, mapMarker.icon)
 
 		SkiingActivityManager.InProgressActivities.add(SkiingActivity(location))
