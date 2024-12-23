@@ -22,23 +22,23 @@ object Locations {
 	}
 
 	fun checkIfOnOther(otherBounds: List<MapItem>): MapMarker? {
-
-		if (currentLocation == null) {
+		val location = currentLocation
+		if (location == null) {
 			Log.w("checkIfOnOther", "Other map items have not been set up")
 			return null
 		}
 
 		for (other in otherBounds) {
-			if (other.locationInsidePoints(currentLocation!!)) {
+			if (other.locationInsidePoints(location)) {
 
 				return when (other.icon) {
-					R.drawable.ic_parking -> MapMarker(other.name, currentLocation!!, other.icon,
+					R.drawable.ic_parking -> MapMarker(other.name, location, other.icon,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 						Color.GRAY)
-					R.drawable.ic_ski_patrol_icon -> MapMarker(other.name, currentLocation!!, other.icon,
+					R.drawable.ic_ski_patrol_icon -> MapMarker(other.name, location, other.icon,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 						Color.WHITE)
-					else -> MapMarker(other.name, currentLocation!!, other.icon ?: R.drawable.ic_missing,
+					else -> MapMarker(other.name, location, other.icon ?: R.drawable.ic_missing,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 						Color.MAGENTA)
 				}
@@ -70,8 +70,8 @@ object Locations {
 
 	fun checkIfIOnChairlift(startingChairliftBounds: List<MapItem>,
 							endingChairliftBounds: List<MapItem>): MapMarker? {
-
-		if (currentLocation == null) {
+		val location = currentLocation
+		if (location == null) {
 			Log.w("checkIfIOnChairlift", "Chairlifts have not been set up")
 			return null
 		}
@@ -79,20 +79,19 @@ object Locations {
 		val startingTerminal = isInStartingTerminal(startingChairliftBounds)
 		if (startingTerminal != null) {
 			isOnChairlift = startingTerminal
-			return MapMarker(startingTerminal, currentLocation!!, R.drawable.ic_chairlift,
+			return MapMarker(startingTerminal, location, R.drawable.ic_chairlift,
 				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 		}
 
 		val endingTerminal = isInEndingTerminal(endingChairliftBounds)
 		if (endingTerminal != null) {
 			isOnChairlift = null
-			return MapMarker(endingTerminal, currentLocation!!, R.drawable.ic_chairlift,
+			return MapMarker(endingTerminal, location, R.drawable.ic_chairlift,
 				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 		}
 
 		if (isOnChairlift != null) {
-			return MapMarker(
-				isOnChairlift!!, currentLocation!!, R.drawable.ic_chairlift,
+			return MapMarker(isOnChairlift!!, location, R.drawable.ic_chairlift,
 				BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), Color.RED)
 		}
 
@@ -101,31 +100,31 @@ object Locations {
 
 	fun checkIfOnRun(easyRunsBounds: List<MapItem>, moderateRunsBounds: List<MapItem>,
 							  difficultRunsBounds: List<MapItem>): MapMarker? {
-
-		if (currentLocation == null) {
+		val location = currentLocation
+		if (location == null) {
 			Log.w("checkIfOnRun", "Ski runs have not been set up")
 			return null
 		}
 
 		for (easyRunBounds in easyRunsBounds) {
-			if (easyRunBounds.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(easyRunBounds.name, currentLocation!!, R.drawable.ic_easy,
+			if (easyRunBounds.locationInsidePoints(location)) {
+				return MapMarker(easyRunBounds.name, location, R.drawable.ic_easy,
 					BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
 					Color.GREEN)
 			}
 		}
 
 		for (moderateRunBounds in moderateRunsBounds) {
-			if (moderateRunBounds.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(moderateRunBounds.name, currentLocation!!, R.drawable.ic_moderate,
+			if (moderateRunBounds.locationInsidePoints(location)) {
+				return MapMarker(moderateRunBounds.name, location, R.drawable.ic_moderate,
 					BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
 					Color.BLUE)
 			}
 		}
 
 		for (difficultRunBounds in difficultRunsBounds) {
-			if (difficultRunBounds.locationInsidePoints(currentLocation!!)) {
-				return MapMarker(difficultRunBounds.name, currentLocation!!, R.drawable.ic_difficult,
+			if (difficultRunBounds.locationInsidePoints(location)) {
+				return MapMarker(difficultRunBounds.name, location, R.drawable.ic_difficult,
 					BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
 					Color.BLACK)
 			}

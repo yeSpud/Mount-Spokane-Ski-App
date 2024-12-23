@@ -57,7 +57,6 @@ class SkierLocationService : Service(), LocationListener {
 		super.onStartCommand(intent, flags, startId)
 
 		val notification: Notification = createPersistentNotification("", null)
-
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
 		} else {
@@ -85,7 +84,15 @@ class SkierLocationService : Service(), LocationListener {
 		SkiingActivityManager.resumeActivityTracking(this)
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			createNotificationChannels()
+			val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
+				getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
+
+			val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
+				getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+
+			val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+			notificationManager.createNotificationChannels(listOf(trackingNotificationChannel, progressNotificationChannel))
+			Log.v("onCreate", "Created new notification channel")
 		}
 
 		if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -99,20 +106,6 @@ class SkierLocationService : Service(), LocationListener {
 
 	fun setCallbacks(callbacks: ServiceCallbacks?) {
 		serviceCallbacks = callbacks
-	}
-
-	@RequiresApi(Build.VERSION_CODES.O)
-	private fun createNotificationChannels() {
-
-		val trackingNotificationChannel = NotificationChannel(TRACKING_SERVICE_CHANNEL_ID,
-			getString(R.string.tracking_notification_channel_name), NotificationManager.IMPORTANCE_LOW)
-
-		val progressNotificationChannel = NotificationChannel(ACTIVITY_SUMMARY_CHANNEL_ID,
-			getString(R.string.activity_summary_notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
-
-		val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		notificationManager.createNotificationChannels(listOf(trackingNotificationChannel, progressNotificationChannel))
-		Log.v("createNotificatnChnnls", "Created new notification channel")
 	}
 
 	override fun onDestroy() {
@@ -154,6 +147,7 @@ class SkierLocationService : Service(), LocationListener {
 		// If we are not on the mountain stop the tracking.
 		if (!localServiceCallback.isInBounds(location)) {
 			Toast.makeText(this, R.string.out_of_bounds, Toast.LENGTH_LONG).show()
+			notificationManager.cancel(TRACKING_SERVICE_ID)
 			Log.d("SkierLocationService", "Stopping location tracking service")
 			stopSelf()
 			return

@@ -14,7 +14,6 @@ android {
     defaultConfig {
         applicationId "com.mtspokane.skiapp"
         minSdk 21
-        targetSdk 34
 
         def versionNameDate = new Date().format('yyyy.MM.dd:HH.mm')
         versionCode 25
@@ -22,7 +21,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         targetSdk 35
-        minSdkVersion 21
+        minSdk 22
     }
 
     buildTypes {
@@ -50,6 +49,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    kotlin {
+        jvmToolchain(17)
+    }
     buildFeatures {
         viewBinding true
         buildConfig true
@@ -60,26 +62,25 @@ android {
         includeInApk true
     }
     namespace 'com.mtspokane.skiapp'
-    buildToolsVersion '35.0.0'
 }
 
 dependencies {
 
     // App layout stuff
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
 
     // Theming
     implementation 'com.google.android.material:material:1.12.0'
 
     // Google Maps stuff
     implementation 'com.google.android.gms:play-services-maps:19.0.0'
-    implementation 'com.google.maps.android:android-maps-utils:3.8.2'
+    implementation 'com.google.maps.android:android-maps-utils:3.9.0'
     implementation 'com.google.maps.android:maps-ktx:5.1.1'
     implementation 'com.google.maps.android:maps-utils-ktx:5.1.1'
 
     // Kotlin activity
-    implementation 'androidx.activity:activity-ktx:1.9.1'
+    implementation 'androidx.activity:activity-ktx:1.9.3'
 
     // Unit testing
     testImplementation 'junit:junit:4.13.2'
@@ -88,12 +89,12 @@ dependencies {
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
 
     // Kotlin
-    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.core:core-ktx:1.15.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // Kotlin coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1'
 
     // Room (elevation database)
     //implementation "androidx.room:room-runtime:2.4.1"
@@ -105,6 +106,6 @@ dependencies {
     // Leak canary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
 
-    // Custom info window
+    // Dialog Plus (for custom info windows)
     implementation 'com.orhanobut:dialogplus:1.11@aar'
 }
