@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+    id 'com.google.devtools.ksp' version '2.1.0-1.0.29'
 }
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
@@ -76,8 +77,8 @@ dependencies {
     // Google Maps stuff
     implementation 'com.google.android.gms:play-services-maps:19.0.0'
     implementation 'com.google.maps.android:android-maps-utils:3.9.0'
-    implementation 'com.google.maps.android:maps-ktx:5.1.1'
-    implementation 'com.google.maps.android:maps-utils-ktx:5.1.1'
+    implementation "com.google.maps.android:maps-ktx:$maps_ktx_version"
+    implementation "com.google.maps.android:maps-utils-ktx:$maps_ktx_version"
 
     // Kotlin activity
     implementation 'androidx.activity:activity-ktx:1.9.3'
@@ -93,14 +94,14 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // Kotlin coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine_version"
 
-    // Room (elevation database)
-    //implementation "androidx.room:room-runtime:2.4.1"
-    //kapt "androidx.room:room-compiler:2.4.1"
+    // Room (database library)
+    implementation "androidx.room:room-runtime:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
 
-    // Volley (elevation API)
+    // Volley (networking library)
     implementation 'com.android.volley:volley:1.2.1'
 
     // Leak canary

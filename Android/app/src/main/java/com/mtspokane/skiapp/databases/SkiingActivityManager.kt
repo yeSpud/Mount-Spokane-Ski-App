@@ -13,6 +13,7 @@ import java.io.OutputStream
 import org.json.JSONArray
 import org.json.JSONObject
 
+@Deprecated("To be removed")
 object SkiingActivityManager {
 
 	val InProgressActivities: MutableList<SkiingActivity> = mutableListOf()

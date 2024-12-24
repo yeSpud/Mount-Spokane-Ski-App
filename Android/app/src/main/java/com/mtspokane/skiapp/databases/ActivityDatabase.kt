@@ -12,6 +12,7 @@ import java.io.File
 import java.io.FileInputStream
 import org.json.JSONObject
 
+@Deprecated("To be removed")
 class ActivityDatabase(val context: Context): SQLiteOpenHelper(context, this.DATABASE_NAME, null,
 	this.DATABASE_VERSION) {
 

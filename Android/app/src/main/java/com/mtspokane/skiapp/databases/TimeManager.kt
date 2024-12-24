@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@Deprecated("To be removed")
 object TimeManager {
 
 	fun getTodaysDate(): String {

@@ -15,6 +15,12 @@ buildscript {
     }
 }
 
+ext {
+    maps_ktx_version = '5.1.1'
+    coroutine_version = '1.10.1'
+    room_version = '2.6.1'
+}
+
 tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }

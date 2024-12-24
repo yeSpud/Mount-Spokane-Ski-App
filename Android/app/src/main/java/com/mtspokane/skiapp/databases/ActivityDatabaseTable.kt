@@ -1,5 +1,6 @@
 package com.mtspokane.skiapp.databases
 
+@Deprecated("To be removed")
 class ActivityDatabaseTable(private val tableName: String) {
 
 	val SQL_CREATE_ENTRIES: String = "CREATE TABLE '${this.tableName}'(" +
