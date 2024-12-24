@@ -3,64 +3,75 @@
 	<name>Lifts</name>
 	<Placemark>
 		<name>Chair 1: Vista Cruiser</name>
-		<styleUrl>#failed335</styleUrl>
+		<styleUrl>#failed71</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0991608044635,47.91599220140442,0 -117.1126916762525,47.9229430818873,0 
+				-117.0991608044635,47.91599220140442,0 -117.1126916762525,47.9229430818873,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 2: Illuminator</name>
 		<description>night run</description>
-		<styleUrl>#failed537</styleUrl>
+		<styleUrl>#failed4</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0985671546197,47.92217163435538,0 -117.1123140398061,47.92513283757015,0 
+				-117.0985671546197,47.92217163435538,0 -117.1123140398061,47.92513283757015,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 3: Parkway Express</name>
 		<description>night run</description>
-		<styleUrl>#failed116</styleUrl>
+		<styleUrl>#failed66</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0964538705134,47.92277452090677,0 -117.1042038016809,47.9310408053557,0 
+				-117.0964538705134,47.92277452090677,0 -117.1042038016809,47.9310408053557,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 4: Hidden Treasure</name>
-		<styleUrl>#failed453</styleUrl>
+		<styleUrl>#failed78</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.1005310487995,47.94171127596789,0 -117.1069560876408,47.93207024317771,0 
+				-117.1005310487995,47.94171127596789,0 -117.1069560876408,47.93207024317771,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 5: Beginner&apos;s Luck</name>
 		<description>night run</description>
-		<styleUrl>#failed441</styleUrl>
+		<styleUrl>#failed34</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0953297262665,47.92170799092754,0 -117.0989537774478,47.92293042773588,0 
+				-117.0953297262665,47.92170799092754,0 -117.0989537774478,47.92293042773588,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 6: Northwood</name>
-		<styleUrl>#failed32</styleUrl>
+		<styleUrl>#failed54</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.1299695086659,47.92893685792158,0 -117.1129328481842,47.92338596568163,0 
+				-117.1299695086659,47.92893685792158,0 -117.1129328481842,47.92338596568163,0
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Half Hitch Handle Tow</name>
+		<description>night run</description>
+		<styleUrl>#failed57</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.0983157152338,47.9304924153463,0 -117.1035331738141,47.93115924964518,0
 			</coordinates>
 		</LineString>
 	</Placemark>
