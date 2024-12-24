@@ -42,8 +42,7 @@ import java.util.Locale
 import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
-
-	// FIXME Binder leaks memory
+	
 	private var binder: IBinder? = LocalBinder()
 
 	private var serviceCallbacks: ServiceCallbacks? = null
@@ -212,6 +211,17 @@ class SkierLocationService : Service(), LocationListener {
 		}
 
 		val notification: Notification = createPersistentNotification(title, bitmap)
+
+		// Make sure we arent setting the same notification
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			for (shownNotification in notificationManager.activeNotifications) {
+				val shownNotificationText = shownNotification.notification.extras.getString(Notification.EXTRA_TEXT)
+				val notificationText = notification.extras.getString(Notification.EXTRA_TEXT)
+				if (shownNotificationText == notificationText) {
+					return
+				}
+			}
+		}
 		notificationManager.notify(TRACKING_SERVICE_ID, notification)
 	}
 
