@@ -14,33 +14,27 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.Circle
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.Polyline
-import com.google.android.gms.maps.model.RoundCap
+import com.google.android.gms.maps.model.*
 import com.google.maps.android.ktx.addCircle
 import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.SkierLocationService
-import com.mtspokane.skiapp.databases.ActivityDatabase
+import com.mtspokane.skiapp.databases.Database
+import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.databases.SkiingActivityDao
+import com.mtspokane.skiapp.databases.SkiingDateWithActivities
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
-import com.mtspokane.skiapp.mapItem.SkiingActivity
-import com.mtspokane.skiapp.databases.SkiingActivityManager
-import com.mtspokane.skiapp.databases.TimeManager
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
@@ -48,10 +42,10 @@ import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 import kotlinx.coroutines.*
-import java.io.File
-import java.io.InputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
-import org.json.JSONObject
 
 class ActivitySummary : FragmentActivity() {
 
@@ -68,6 +62,9 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var optionsView: DialogPlus
 
+	private lateinit var databaseDao: SkiingActivityDao
+
+	/*
 	private val exportJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(
 		ActivityResultContracts.CreateDocument(JSON_MIME_TYPE)) {
 		if (it != null) {
@@ -107,6 +104,7 @@ class ActivitySummary : FragmentActivity() {
 		ActivityDatabase.importJsonToDatabase(json, database.writableDatabase)
 		database.close()
 	}
+	 */
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -115,6 +113,10 @@ class ActivitySummary : FragmentActivity() {
 		setContentView(binding.root)
 
 		container = binding.container
+
+		val database = Room.databaseBuilder(this, Database::class.java, Database.NAME)
+			.allowMainThreadQueries().build()
+		databaseDao = database.skiingActivityDao()
 
 		fileSelectionDialog = FileSelectionDialog()
 
@@ -156,6 +158,7 @@ class ActivitySummary : FragmentActivity() {
 
 		when (item.itemId) {
 			R.id.open -> fileSelectionDialog.showDialog()
+			/*
 			R.id.export_json -> exportJsonCallback.launch("exported.json")
 			R.id.export_geojson -> exportGeoJsonCallback.launch("exported.geojson")
 			R.id.import_activity -> importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
@@ -168,6 +171,7 @@ class ActivitySummary : FragmentActivity() {
 				val geojson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
 				writeToShareFile("My Skiing Activity.geojson", geojson, GEOJSON_MIME_TYPE)
 			}
+			 */
 			R.id.privacy_policy -> {
 				val uri = Uri.parse("https://thespud.xyz/mount-spokane-ski-app/privacy/")
 				val intent = Intent(Intent.ACTION_VIEW, uri)
@@ -178,6 +182,7 @@ class ActivitySummary : FragmentActivity() {
 		return super.onOptionsItemSelected(item)
 	}
 
+	/*
 	private fun writeToShareFile(filename: String, jsonToWrite: JSONObject, mime: String) {
 
 		val tmpFile = File(filesDir, filename)
@@ -199,11 +204,11 @@ class ActivitySummary : FragmentActivity() {
 			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.InProgressActivities.toTypedArray())
 		}
 	}
+	 */
 
 	override fun onDestroy() {
 		super.onDestroy()
 		map.destroy()
-		SkiingActivityManager.FinishedAndLoadedActivities = null
 	}
 
 	private fun clearScreen() {
@@ -222,7 +227,7 @@ class ActivitySummary : FragmentActivity() {
 		System.gc()
 	}
 
-	fun loadActivities(activities: Array<SkiingActivity>) {
+	fun loadActivities(activities: List<SkiingActivity>) {
 
 		clearScreen()
 
@@ -281,6 +286,7 @@ class ActivitySummary : FragmentActivity() {
 		System.gc()
 		Log.d("loadActivities", "Finished adding circles to map")
 	}
+
 	@AnyThread
 	private suspend fun addActivity(activitySummaryEntries: Array<ActivitySummaryEntry>) = withContext(Dispatchers.Main) {
 		Log.d("loadActivities", "Started creating activities view")
@@ -349,10 +355,10 @@ class ActivitySummary : FragmentActivity() {
 			activityView.averageSpeed.visibility = View.INVISIBLE
 		}
 
-		activityView.startTime.text = TimeManager.getTimeFromLong(activitySummaryEntry.mapMarker.skiingActivity.time)
+		activityView.startTime.text = getTimeFromLong(activitySummaryEntry.mapMarker.skiingActivity.time)
 
 		if (activitySummaryEntry.endTime != null) {
-			activityView.endTime.text = TimeManager.getTimeFromLong(activitySummaryEntry.endTime)
+			activityView.endTime.text = getTimeFromLong(activitySummaryEntry.endTime)
 		}
 
 		return activityView
@@ -396,6 +402,12 @@ class ActivitySummary : FragmentActivity() {
 		const val GEOJSON_MIME_TYPE = "application/geojson"
 
 		const val UNKNOWN_LOCATION = "Unknown Location"
+
+		fun getTimeFromLong(time: Long): String {
+			val timeFormatter = SimpleDateFormat("h:mm:ss", Locale.US)
+			val date = Date(time)
+			return timeFormatter.format(date)
+		}
 
 		fun parseMapMarkersForMap(mapMarkers: Array<MapMarker>): Array<ActivitySummaryEntry> {
 
@@ -460,28 +472,16 @@ class ActivitySummary : FragmentActivity() {
 
 			val dialog: AlertDialog = alertDialogBuilder.create()
 
-			val db = ActivityDatabase(this@ActivitySummary)
-			val dates: Array<String> = ActivityDatabase.getTables(db.readableDatabase)
-			db.close()
-
-			for (date in dates) {
+			val dates = databaseDao.getAllSkiingDatesWithActivities()
+			for (datesWithActivities: SkiingDateWithActivities in dates) {
 
 				val textView = TextView(this.context)
 				textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
 						ViewGroup.LayoutParams.WRAP_CONTENT)
-				textView.text = date
+				textView.text = datesWithActivities.skiingDate.longDate
 				textView.textSize = 25.0F
 				textView.setOnClickListener {
-
-					val database = ActivityDatabase(this@ActivitySummary)
-					SkiingActivityManager.FinishedAndLoadedActivities = ActivityDatabase
-							.readSkiingActivesFromDatabase(date, database.readableDatabase)
-					database.close()
-
-					if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
-						loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
-					}
-
+					loadActivities(datesWithActivities.skiingActivities)
 					dialog.dismiss()
 				}
 
@@ -503,14 +503,19 @@ class ActivitySummary : FragmentActivity() {
 		@SuppressLint("PotentialBehaviorOverride")
         override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
 
-			if (intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
-				loadFromIntent(intent.getStringExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE))
-			}
+			val skiingDateWithActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(Database.getTodaysDate())
+			if (skiingDateWithActivities != null) {
+				var skiingActivities = skiingDateWithActivities.skiingActivities
+				if (intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
+					val dateId = intent.getIntExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE, 0)
+					skiingActivities = databaseDao.getActivitiesByDateId(dateId)
 
-			if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
-				loadActivities(SkiingActivityManager.FinishedAndLoadedActivities!!)
-			} else {
-				loadActivities(SkiingActivityManager.InProgressActivities.toTypedArray())
+					val notificationManager: NotificationManager = activity.getSystemService(Context.NOTIFICATION_SERVICE)
+							as NotificationManager
+					notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
+				}
+
+				loadActivities(skiingActivities)
 			}
 
 			googleMap.setOnCircleClickListener {
@@ -623,22 +628,6 @@ class ActivitySummary : FragmentActivity() {
 				width(8.0F)
 				visible(true)
 			}
-		}
-
-		private fun loadFromIntent(date: String?) {
-
-			if (date == null) {
-				return
-			}
-
-			val database = ActivityDatabase(this.activity)
-			SkiingActivityManager.FinishedAndLoadedActivities = ActivityDatabase
-					.readSkiingActivesFromDatabase(date, database.readableDatabase)
-			database.close()
-
-			val notificationManager: NotificationManager = this.activity.getSystemService(Context.NOTIFICATION_SERVICE)
-					as NotificationManager
-			notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
 		}
 	}
 }
