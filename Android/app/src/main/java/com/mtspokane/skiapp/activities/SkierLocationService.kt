@@ -37,6 +37,7 @@ import com.mtspokane.skiapp.databases.SkiingDate
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import kotlin.reflect.KClass
 
@@ -110,15 +111,13 @@ class SkierLocationService : Service(), LocationListener {
 			.allowMainThreadQueries().build()
 		databaseDao = database.skiingActivityDao()
 
-		val todaysDate = Database.getTodaysDate()
+		val todaysDate: String = Database.getTodaysDate()
+		val longDateFormat = SimpleDateFormat("LLLL dd yyyy", Locale.US)
+		val longDate: String = longDateFormat.format(Date()).toString()
 
 		var skiingDateAndActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(todaysDate)
 		while (skiingDateAndActivities == null) {
-			databaseDao.addSkiingDate(LongAndShortDate(
-				longDate = SimpleDateFormat("LLLL dd yyyy", Locale.US).format(todaysDate).toString(),
-				shortDate = todaysDate
-			))
-
+			databaseDao.addSkiingDate(LongAndShortDate(longDate = longDate, shortDate = todaysDate))
 			skiingDateAndActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(todaysDate)
 		}
 		skiingDate = skiingDateAndActivities.skiingDate
