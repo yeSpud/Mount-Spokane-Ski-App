@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
-	<name>Lifts</name>
+	<name>Chairlifts Polylines</name>
 	<Placemark>
 		<name>Chair 1: Vista Cruiser</name>
-		<styleUrl>#failed71</styleUrl>
+		<styleUrl>#failed711</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -14,7 +14,7 @@
 	<Placemark>
 		<name>Chair 2: Illuminator</name>
 		<description>night run</description>
-		<styleUrl>#failed4</styleUrl>
+		<styleUrl>#failed411</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -25,7 +25,7 @@
 	<Placemark>
 		<name>Chair 3: Parkway Express</name>
 		<description>night run</description>
-		<styleUrl>#failed66</styleUrl>
+		<styleUrl>#failed660</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -35,7 +35,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Chair 4: Hidden Treasure</name>
-		<styleUrl>#failed78</styleUrl>
+		<styleUrl>#failed780</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -46,7 +46,7 @@
 	<Placemark>
 		<name>Chair 5: Beginner&apos;s Luck</name>
 		<description>night run</description>
-		<styleUrl>#failed34</styleUrl>
+		<styleUrl>#failed340</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -56,11 +56,22 @@
 	</Placemark>
 	<Placemark>
 		<name>Chair 6: Northwood</name>
-		<styleUrl>#failed54</styleUrl>
+		<styleUrl>#failed540</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
 				-117.1299695086659,47.92893685792158,0 -117.1129328481842,47.92338596568163,0
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Magic Carpet</name>
+		<description>night run</description>
+		<styleUrl>#failed570</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.0954822645925,47.92142667836896,0 -117.0959209117625,47.92139800283464,0
 			</coordinates>
 		</LineString>
 	</Placemark>
@@ -71,7 +82,7 @@
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0983157152338,47.9304924153463,0 -117.1035331738141,47.93115924964518,0
+				-117.1009797146749,47.93063522739622,0 -117.1035822023165,47.93108062792098,0
 			</coordinates>
 		</LineString>
 	</Placemark>

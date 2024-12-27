@@ -251,6 +251,7 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 						"Lodge 2 Parking Lot" -> R.drawable.ic_parking
 						"Tubing Area" -> R.drawable.ic_missing // Todo Tubing area icon
 						"Ski School" -> R.drawable.ic_ski_school
+						"Learning Area" -> R.drawable.ic_ski_school
 						else -> {
 							Log.w(tag, "$name does not have an icon")
 							null
