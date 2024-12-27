@@ -4,7 +4,7 @@ import android.graphics.Color
 import android.util.Log
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.databases.SkiingActivity
+import com.mtspokane.skiapp.SkiingActivity
 
 object Locations {
 

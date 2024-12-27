@@ -227,15 +227,11 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 					val values = other[name]!!
 					val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
 					for (value in values) {
-						withContext(Dispatchers.Main) {
-							polygonPoints.add(value.points)
-						}
+						withContext(Dispatchers.Main) { polygonPoints.add(value.points) }
 					}
 
 					if (name == "Ski Area Bounds") {
-						withContext(Dispatchers.Main) {
-							values[0].remove()
-						}
+						withContext(Dispatchers.Main) { values[0].remove() }
 						skiAreaBounds = MapItem(name, polygonPoints)
 						continue
 					}

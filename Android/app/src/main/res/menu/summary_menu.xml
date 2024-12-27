@@ -11,11 +11,10 @@
         android:title="@string/open_summary"
         android:visible="true" />
 
-    <!-- FIXME -->
     <item
         android:id="@+id/export"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="1"
         android:title="@string/export"
         android:visible="true">
@@ -39,11 +38,10 @@
         </menu>
     </item>
 
-    <!-- FIXME -->
     <item
         android:id="@+id/share"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="2"
         android:title="@string/share"
         android:visible="true">
@@ -66,11 +64,10 @@
         </menu>
     </item>
 
-    <!-- FIXME -->
     <item
         android:id="@+id/import_activity"
         android:checkable="false"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="3"
         android:title="@string/import_activity"
         android:visible="true" />

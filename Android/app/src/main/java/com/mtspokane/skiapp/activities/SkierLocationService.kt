@@ -29,16 +29,14 @@ import androidx.fragment.app.FragmentActivity
 import androidx.room.Room
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.databases.Database
-import com.mtspokane.skiapp.databases.LongAndShortDate
-import com.mtspokane.skiapp.databases.SkiingActivity
-import com.mtspokane.skiapp.databases.SkiingActivityDao
-import com.mtspokane.skiapp.databases.SkiingDate
+import com.mtspokane.skiapp.Database
+import com.mtspokane.skiapp.LongAndShortDate
+import com.mtspokane.skiapp.SkiingActivity
+import com.mtspokane.skiapp.SkiingActivityDao
+import com.mtspokane.skiapp.SkiingDate
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 import kotlin.reflect.KClass
 
 class SkierLocationService : Service(), LocationListener {
@@ -111,12 +109,11 @@ class SkierLocationService : Service(), LocationListener {
 		databaseDao = database.skiingActivityDao()
 
 		val todaysDate: String = Database.getTodaysDate()
-		val longDateFormat = SimpleDateFormat("LLLL dd yyyy", Locale.US)
-		val longDate: String = longDateFormat.format(Date()).toString()
+		val longDate: String = Database.getDateFromLong(Date().time)
 
 		var skiingDateAndActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(todaysDate)
 		while (skiingDateAndActivities == null) {
-			databaseDao.addSkiingDate(LongAndShortDate(longDate = longDate, shortDate = todaysDate))
+			databaseDao.addSkiingDate(LongAndShortDate(longDate, todaysDate))
 			skiingDateAndActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(todaysDate)
 		}
 		skiingDate = skiingDateAndActivities.skiingDate

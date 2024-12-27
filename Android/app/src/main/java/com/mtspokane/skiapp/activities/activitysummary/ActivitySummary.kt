@@ -15,9 +15,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isNotEmpty
@@ -33,10 +36,11 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.addPolyline
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.SkierLocationService
-import com.mtspokane.skiapp.databases.Database
-import com.mtspokane.skiapp.databases.SkiingActivity
-import com.mtspokane.skiapp.databases.SkiingActivityDao
-import com.mtspokane.skiapp.databases.SkiingDateWithActivities
+import com.mtspokane.skiapp.Database
+import com.mtspokane.skiapp.LongAndShortDate
+import com.mtspokane.skiapp.SkiingActivity
+import com.mtspokane.skiapp.SkiingActivityDao
+import com.mtspokane.skiapp.SkiingDateWithActivities
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.Locations
@@ -45,6 +49,11 @@ import com.mtspokane.skiapp.maphandlers.MapHandler
 import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 import kotlinx.coroutines.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -67,34 +76,35 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var databaseDao: SkiingActivityDao
 
-	/*
+	private var loadedSkiingActivities: List<SkiingActivity> = emptyList()
+
 	private val exportJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(
 		ActivityResultContracts.CreateDocument(JSON_MIME_TYPE)) {
 		if (it != null) {
-			val json: JSONObject = getActivitySummaryJson()
-			SkiingActivityManager.writeToExportFile(contentResolver, it, json.toString(4))
+			val json: JSONObject = convertSkiingActivitiesToJson()
+			writeToExportFile(it, json.toString(4))
 		}
 	}
 
 	private val exportGeoJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(
 		ActivityResultContracts.CreateDocument(GEOJSON_MIME_TYPE)) {
 		if (it != null) {
-			val json: JSONObject = getActivitySummaryJson()
-			val geoJson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
-			SkiingActivityManager.writeToExportFile(contentResolver, it, geoJson.toString(4))
+			val json: JSONObject = convertSkiingActivitiesToJson()
+			val geoJson: JSONObject = convertJsonToGeoJson(json)
+			writeToExportFile(it, geoJson.toString(4))
 		}
 	}
 
 	private val importCallback: ActivityResultLauncher<Array<String>> = registerForActivityResult(
 		ActivityResultContracts.OpenDocument()) { uri: Uri? ->
 
-		if (uri == null) {
-			return@registerForActivityResult
-		}
+		if (uri == null) { return@registerForActivityResult }
+
+		val tag = "importCallback"
 
 		val inputStream: InputStream? = contentResolver.openInputStream(uri)
 		if (inputStream == null) {
-			Log.w("importCallback", "Unable to open a file input stream for the imported file.")
+			Log.w(tag, "Unable to open a file input stream for the imported file")
 			return@registerForActivityResult
 		}
 
@@ -103,11 +113,57 @@ class ActivitySummary : FragmentActivity() {
 
 		val json = JSONObject(string)
 
-		val database = ActivityDatabase(this)
-		ActivityDatabase.importJsonToDatabase(json, database.writableDatabase)
-		database.close()
+		val skiingDates = databaseDao.getAllSkiingDatesWithActivities()
+		val importedShortName: String = json.keys().next()
+		if (!importedShortName.matches("\\d{4}-\\d{1,2}-\\d{1,2}".toRegex())) {
+			val msg = "Unable to import skiing activity"
+			Toast.makeText(this, msg, Toast.LENGTH_SHORT)
+			Log.w(tag, msg)
+			return@registerForActivityResult
+		}
+
+		val shortName = "${importedShortName}-imported"
+		if (skiingDates.find { it.skiingDate.shortDate == shortName } != null) {
+			val msg = "Unable to import skiing activity - name already in use"
+			Toast.makeText(this, msg, Toast.LENGTH_LONG)
+			Log.w(tag, msg)
+			return@registerForActivityResult
+		}
+
+		val skiingActivities = json.getJSONArray(importedShortName)
+		if (skiingActivities.length() == 0) {
+			return@registerForActivityResult
+		}
+
+		val longTime = skiingActivities.getJSONObject(0).getLong(TIME)
+		databaseDao.addSkiingDate(LongAndShortDate("${Database.getDateFromLong(longTime)} (Imported)", shortName))
+
+		val skiingDate = databaseDao.getSkiingDateWithActivitiesByShortDate(shortName)
+		if (skiingDate == null) {
+			val msg = "Unable to import skiing activity"
+			Toast.makeText(this, msg, Toast.LENGTH_SHORT)
+			Log.w(tag, msg)
+			return@registerForActivityResult
+		}
+
+		for (i in 0 until skiingActivities.length()) {
+			val skiingActivity: JSONObject = skiingActivities.getJSONObject(i)
+
+			databaseDao.addSkiingActivity(
+				SkiingActivity(
+					skiingActivity.getDouble(ACCURACY).toFloat(),
+					skiingActivity.getDouble(ALTITUDE),
+					skiingActivity.opt(ALTITUDE_ACCURACY) as Float?,
+					skiingActivity.getDouble(LATITUDE),
+					skiingActivity.getDouble(LONGITUDE),
+					skiingActivity.getDouble(SPEED).toFloat(),
+					skiingActivity.opt(SPEED_ACCURACY) as Float?,
+					skiingActivity.getLong(TIME),
+					skiingDate.skiingDate.id
+				)
+			)
+		}
 	}
-	 */
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -176,23 +232,20 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
 		when (item.itemId) {
 			R.id.open -> fileSelectionDialog.showDialog()
-			/*
-			R.id.export_json -> exportJsonCallback.launch("exported.json")
-			R.id.export_geojson -> exportGeoJsonCallback.launch("exported.geojson")
+			R.id.export_json -> exportJsonCallback.launch("exported.json") // TODO Change my name
+			R.id.export_geojson -> exportGeoJsonCallback.launch("exported.geojson") // TODO Change my name
 			R.id.import_activity -> importCallback.launch(arrayOf(JSON_MIME_TYPE, GEOJSON_MIME_TYPE))
 			R.id.share_json -> {
-				val json: JSONObject = getActivitySummaryJson()
-				writeToShareFile("My Skiing Activity.json", json, JSON_MIME_TYPE)
+				val json: JSONObject = convertSkiingActivitiesToJson()
+				writeToShareFile("My Skiing Activity.json", json, JSON_MIME_TYPE) // TODO Change my name
 			}
 			R.id.share_geojson -> {
-				val json: JSONObject = getActivitySummaryJson()
-				val geojson: JSONObject = SkiingActivityManager.convertJsonToGeoJson(json)
-				writeToShareFile("My Skiing Activity.geojson", geojson, GEOJSON_MIME_TYPE)
+				val json: JSONObject = convertSkiingActivitiesToJson()
+				val geojson: JSONObject = convertJsonToGeoJson(json)
+				writeToShareFile("My Skiing Activity.geojson", geojson, GEOJSON_MIME_TYPE) // TODO Change my name
 			}
-			 */
 			R.id.privacy_policy -> {
 				val uri = Uri.parse("https://thespud.xyz/mount-spokane-ski-app/privacy/")
 				val intent = Intent(Intent.ACTION_VIEW, uri)
@@ -203,7 +256,11 @@ class ActivitySummary : FragmentActivity() {
 		return super.onOptionsItemSelected(item)
 	}
 
-	/*
+	private fun writeToExportFile(uri: Uri, outText: String) {
+		val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
+		outputStream?.use { it.write(outText.toByteArray()) }
+	}
+
 	private fun writeToShareFile(filename: String, jsonToWrite: JSONObject, mime: String) {
 
 		val tmpFile = File(filesDir, filename)
@@ -215,17 +272,48 @@ class ActivitySummary : FragmentActivity() {
 			it.write(jsonToWrite.toString(4).toByteArray())
 		}
 
-		SkiingActivityManager.shareFile(this, tmpFile, mime)
+		val providerString = "${packageName}.provider"
+		Log.v("shareFIle", "Provider string: $providerString")
+		val fileUri: Uri = FileProvider.getUriForFile(this, providerString, tmpFile)
+
+		val sharingIntent = Intent(Intent.ACTION_SEND)
+		sharingIntent.type = mime
+		sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
+
+		val chooserIntent = Intent.createChooser(sharingIntent, getText(R.string.share_description))
+		startActivity(chooserIntent)
 	}
 
-	private fun getActivitySummaryJson(): JSONObject {
-		return if (SkiingActivityManager.FinishedAndLoadedActivities != null) {
-			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.FinishedAndLoadedActivities!!)
-		} else {
-			SkiingActivityManager.convertSkiingActivitiesToJson(SkiingActivityManager.InProgressActivities.toTypedArray())
+	private fun convertSkiingActivitiesToJson(): JSONObject {
+
+		if (loadedSkiingActivities.isEmpty()) {
+			val emptyObject = JSONObject()
+			emptyObject.put(Database.getTodaysDate(), JSONArray())
+			return emptyObject
 		}
+
+		val date = Database.getDateFromLong(loadedSkiingActivities[0].time)
+
+		val jsonArray = JSONArray()
+		for (skiingActivity in loadedSkiingActivities) {
+
+			val activityObject = JSONObject()
+			activityObject.put(ACCURACY, skiingActivity.accuracy)
+			activityObject.put(ALTITUDE, skiingActivity.altitude)
+			activityObject.put(ALTITUDE_ACCURACY, skiingActivity.altitudeAccuracy)
+			activityObject.put(LATITUDE, skiingActivity.latitude)
+			activityObject.put(LONGITUDE, skiingActivity.longitude)
+			activityObject.put(SPEED, skiingActivity.speed)
+			activityObject.put(SPEED_ACCURACY, skiingActivity.speedAccuracy)
+			activityObject.put(TIME, skiingActivity.time)
+
+			jsonArray.put(activityObject)
+		}
+
+		val jsonObject = JSONObject()
+		jsonObject.put(date, jsonArray)
+		return jsonObject
 	}
-	 */
 
 	override fun onDestroy() {
 		super.onDestroy()
@@ -248,13 +336,10 @@ class ActivitySummary : FragmentActivity() {
 		System.gc()
 	}
 
-	fun loadActivities(activities: List<SkiingActivity>) {
+	fun drawLoadedSkiingActivities()  {
 
 		clearScreen()
-
-		if (activities.isEmpty()) {
-			return
-		}
+		if (loadedSkiingActivities.isEmpty()) { return }
 
 		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
 		loadingToast.show()
@@ -265,7 +350,7 @@ class ActivitySummary : FragmentActivity() {
 			var activitySummaryEntries: Array<ActivitySummaryEntry> = arrayOf()
 			val processingJob = launch {
 				Log.d("loadActivities", "Started parsing activity from file")
-				mapMarkers = Array(activities.size) { getMapMarker(activities[it]) }
+				mapMarkers = Array(loadedSkiingActivities.size) { getMapMarker(loadedSkiingActivities[it]) }
 				activitySummaryEntries = parseMapMarkersForMap(mapMarkers)
 				Log.d("loadActivities", "Finished parsing activities from file")
 			}
@@ -424,6 +509,15 @@ class ActivitySummary : FragmentActivity() {
 
 		const val UNKNOWN_LOCATION = "Unknown Location"
 
+		private const val ACCURACY = "acc"
+		private const val ALTITUDE = "alt"
+		private const val ALTITUDE_ACCURACY = "altacc"
+		private const val LATITUDE = "lat"
+		private const val LONGITUDE = "lng"
+		private const val SPEED = "speed"
+		private const val SPEED_ACCURACY = "speedacc"
+		private const val TIME = "time"
+
 		fun getTimeFromLong(time: Long): String {
 			val timeFormatter = SimpleDateFormat("h:mm:ss", Locale.US)
 			val date = Date(time)
@@ -479,6 +573,44 @@ class ActivitySummary : FragmentActivity() {
 
 			return arraySummaryEntries.toTypedArray()
 		}
+
+		fun convertJsonToGeoJson(json: JSONObject): JSONObject {
+
+			val geoJson = JSONObject()
+			geoJson.put("type", "FeatureCollection")
+
+			val key: String = json.keys().next()
+			val jsonArray: JSONArray = json.getJSONArray(key)
+
+			val featureArray = JSONArray()
+			for (i in 0 until jsonArray.length()) {
+
+				val featureEntry = JSONObject()
+				featureEntry.put("type", "Feature")
+
+				val geometryJson = JSONObject()
+				geometryJson.put("type", "Point")
+
+				val coordinateJson = JSONArray()
+				val jsonEntry: JSONObject = jsonArray.getJSONObject(i)
+				coordinateJson.put(0, jsonEntry.getDouble(LONGITUDE))
+				coordinateJson.put(1, jsonEntry.getDouble(LATITUDE))
+				coordinateJson.put(2, jsonEntry.getDouble(ALTITUDE))
+				geometryJson.put("coordinates", coordinateJson)
+				featureEntry.put("geometry", geometryJson)
+
+				val propertiesJson = JSONObject()
+				for (properties in listOf(ACCURACY, ALTITUDE_ACCURACY, SPEED, SPEED_ACCURACY, TIME)) {
+					propertiesJson.put(properties, jsonEntry.opt(properties))
+				}
+				featureEntry.put("properties", propertiesJson)
+
+				featureArray.put(featureEntry)
+			}
+
+			geoJson.put("features", featureArray)
+			return geoJson
+		}
 	}
 
 	private inner class FileSelectionDialog: AlertDialog(this) {
@@ -507,7 +639,8 @@ class ActivitySummary : FragmentActivity() {
 				textView.text = datesWithActivities.skiingDate.longDate
 				textView.textSize = 25.0F
 				textView.setOnClickListener {
-					loadActivities(datesWithActivities.skiingActivities)
+					loadedSkiingActivities = datesWithActivities.skiingActivities
+					drawLoadedSkiingActivities()
 					dialog.dismiss()
 				}
 
@@ -529,19 +662,20 @@ class ActivitySummary : FragmentActivity() {
 		@SuppressLint("PotentialBehaviorOverride")
         override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
 
-			val skiingDateWithActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(Database.getTodaysDate())
+			val skiingDateWithActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(
+				Database.getTodaysDate())
 			if (skiingDateWithActivities != null) {
-				var skiingActivities = skiingDateWithActivities.skiingActivities
+				loadedSkiingActivities = skiingDateWithActivities.skiingActivities
 				if (intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
 					val dateId = intent.getIntExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE, 0)
-					skiingActivities = databaseDao.getActivitiesByDateId(dateId)
+					loadedSkiingActivities = databaseDao.getActivitiesByDateId(dateId)
 
 					val notificationManager: NotificationManager = activity.getSystemService(Context.NOTIFICATION_SERVICE)
 							as NotificationManager
 					notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
 				}
 
-				loadActivities(skiingActivities)
+				drawLoadedSkiingActivities()
 			}
 
 			googleMap.setOnCircleClickListener {

@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.databases
+package com.mtspokane.skiapp
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
@@ -12,6 +12,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.RoomDatabase
+import androidx.room.Transaction
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -58,9 +59,11 @@ interface SkiingActivityDao {
 	@Insert(onConflict = OnConflictStrategy.ABORT, entity = SkiingDate::class)
 	fun addSkiingDate(skiingDate: LongAndShortDate)
 
+	@Transaction
 	@Query("SELECT * FROM SkiingDate ORDER BY shortDate")
 	fun getAllSkiingDatesWithActivities(): List<SkiingDateWithActivities>
 
+	@Transaction
 	@Query("SELECT * FROM SkiingDate WHERE shortDate IS :shortDate ORDER BY shortDate")
 	fun getSkiingDateWithActivitiesByShortDate(shortDate: String): SkiingDateWithActivities?
 }
@@ -77,7 +80,9 @@ abstract class Database : RoomDatabase() {
 			return dateFormat.format(Date())
 		}
 
-		// TODO Get long date from short date
-
+		fun getDateFromLong(date: Long): String {
+			val dateFormat = SimpleDateFormat("LLLL dd yyyy", Locale.US)
+			return dateFormat.format(date)
+		}
 	}
 }
