@@ -23,6 +23,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         targetSdk 35
         minSdk 22
+
+        ksp {
+            arg('room.schemaLocation', "$projectDir/schemas")
+        }
     }
 
     buildTypes {
