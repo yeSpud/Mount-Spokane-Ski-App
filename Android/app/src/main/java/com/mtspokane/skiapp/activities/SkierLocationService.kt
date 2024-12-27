@@ -109,7 +109,7 @@ class SkierLocationService : Service(), LocationListener {
 		databaseDao = database.skiingActivityDao()
 
 		val todaysDate: String = Database.getTodaysDate()
-		val longDate: String = Database.getDateFromLong(Date().time)
+		val longDate: String = Database.getLongDateFromLong(Date().time)
 
 		var skiingDateAndActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(todaysDate)
 		while (skiingDateAndActivities == null) {

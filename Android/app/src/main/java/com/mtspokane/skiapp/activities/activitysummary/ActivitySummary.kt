@@ -112,17 +112,23 @@ class ActivitySummary : FragmentActivity() {
 		inputStream.close()
 
 		val json = JSONObject(string)
+		val importedLongName: String = json.keys().next()
 
-		val skiingDates = databaseDao.getAllSkiingDatesWithActivities()
-		val importedShortName: String = json.keys().next()
-		if (!importedShortName.matches("\\d{4}-\\d{1,2}-\\d{1,2}".toRegex())) {
+		val skiingActivities = json.getJSONArray(importedLongName)
+		if (skiingActivities.length() == 0) {
+			return@registerForActivityResult
+		}
+
+		val shortDate = Database.getShortDateFromLong(skiingActivities.getJSONObject(0).getLong(TIME))
+		if (!shortDate.matches("\\d{4}-\\d{1,2}-\\d{1,2}".toRegex())) {
 			val msg = "Unable to import skiing activity"
 			Toast.makeText(this, msg, Toast.LENGTH_SHORT)
 			Log.w(tag, msg)
 			return@registerForActivityResult
 		}
 
-		val shortName = "${importedShortName}-imported"
+		val shortName = "${shortDate}-imported"
+		val skiingDates = databaseDao.getAllSkiingDatesWithActivities()
 		if (skiingDates.find { it.skiingDate.shortDate == shortName } != null) {
 			val msg = "Unable to import skiing activity - name already in use"
 			Toast.makeText(this, msg, Toast.LENGTH_LONG)
@@ -130,13 +136,7 @@ class ActivitySummary : FragmentActivity() {
 			return@registerForActivityResult
 		}
 
-		val skiingActivities = json.getJSONArray(importedShortName)
-		if (skiingActivities.length() == 0) {
-			return@registerForActivityResult
-		}
-
-		val longTime = skiingActivities.getJSONObject(0).getLong(TIME)
-		databaseDao.addSkiingDate(LongAndShortDate("${Database.getDateFromLong(longTime)} (Imported)", shortName))
+		databaseDao.addSkiingDate(LongAndShortDate("$importedLongName (Imported)", shortName))
 
 		val skiingDate = databaseDao.getSkiingDateWithActivitiesByShortDate(shortName)
 		if (skiingDate == null) {
@@ -153,11 +153,11 @@ class ActivitySummary : FragmentActivity() {
 				SkiingActivity(
 					skiingActivity.getDouble(ACCURACY).toFloat(),
 					skiingActivity.getDouble(ALTITUDE),
-					skiingActivity.opt(ALTITUDE_ACCURACY) as Float?,
+					skiingActivity.optDouble(ALTITUDE_ACCURACY).toFloat(),
 					skiingActivity.getDouble(LATITUDE),
 					skiingActivity.getDouble(LONGITUDE),
 					skiingActivity.getDouble(SPEED).toFloat(),
-					skiingActivity.opt(SPEED_ACCURACY) as Float?,
+					skiingActivity.optDouble(SPEED_ACCURACY).toFloat(),
 					skiingActivity.getLong(TIME),
 					skiingDate.skiingDate.id
 				)
@@ -292,7 +292,7 @@ class ActivitySummary : FragmentActivity() {
 			return emptyObject
 		}
 
-		val date = Database.getDateFromLong(loadedSkiingActivities[0].time)
+		val date = Database.getLongDateFromLong(loadedSkiingActivities[0].time)
 
 		val jsonArray = JSONArray()
 		for (skiingActivity in loadedSkiingActivities) {

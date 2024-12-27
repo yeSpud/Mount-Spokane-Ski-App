@@ -80,7 +80,12 @@ abstract class Database : RoomDatabase() {
 			return dateFormat.format(Date())
 		}
 
-		fun getDateFromLong(date: Long): String {
+		fun getShortDateFromLong(date: Long): String {
+			val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+			return dateFormat.format(date)
+		}
+
+		fun getLongDateFromLong(date: Long): String {
 			val dateFormat = SimpleDateFormat("LLLL dd yyyy", Locale.US)
 			return dateFormat.format(date)
 		}
