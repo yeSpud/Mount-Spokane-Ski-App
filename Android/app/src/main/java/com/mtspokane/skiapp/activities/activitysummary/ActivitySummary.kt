@@ -475,6 +475,11 @@ class ActivitySummary : FragmentActivity() {
 			val dates = databaseDao.getAllSkiingDatesWithActivities()
 			for (datesWithActivities: SkiingDateWithActivities in dates) {
 
+				// If there are no activities for the date simply don't show it
+				if (datesWithActivities.skiingActivities.isEmpty()) {
+					continue
+				}
+
 				val textView = TextView(this.context)
 				textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
 						ViewGroup.LayoutParams.WRAP_CONTENT)
