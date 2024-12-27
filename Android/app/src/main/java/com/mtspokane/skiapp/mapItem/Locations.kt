@@ -39,6 +39,9 @@ object Locations {
 					R.drawable.ic_ski_patrol_icon -> MapMarker(other.name, location, other.icon,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 						Color.WHITE)
+					R.drawable.ic_ski_school -> MapMarker(other.name, location, other.icon,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+						Color.GRAY)
 					else -> MapMarker(other.name, location, other.icon ?: R.drawable.ic_missing,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 						Color.MAGENTA)
