@@ -22,6 +22,5 @@
         <item name="android:popupMenuStyle">@style/Theme.MtSpokaneSkiApp.MenuTheme</item>
         <item name="android:windowActionBar">true</item>
         <item name="android:windowNoTitle">false</item>
-        <item name="android:fitsSystemWindows">true</item>
     </style>
 </resources>

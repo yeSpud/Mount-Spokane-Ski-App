@@ -45,6 +45,7 @@
         <activity
             android:name=".activities.MapsActivity"
             android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -54,6 +55,7 @@
 
         <activity
             android:name="com.mtspokane.skiapp.activities.activitysummary.ActivitySummary"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true"
             android:label="@string/activity_summary_title" />
 

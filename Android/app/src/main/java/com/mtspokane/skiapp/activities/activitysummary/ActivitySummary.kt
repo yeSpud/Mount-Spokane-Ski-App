@@ -14,9 +14,12 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -109,8 +112,23 @@ class ActivitySummary : FragmentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
+		enableEdgeToEdge()
+
 		binding = ActivitySummaryBinding.inflate(layoutInflater)
 		setContentView(binding.root)
+
+		// Fix edge to edge behavior
+		var lpad = 0
+		var rpad = 0
+		var bpad = 0
+		ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+			lpad = systemBars.left
+			rpad = systemBars.right
+			bpad = systemBars.bottom
+			v.setPadding(lpad, systemBars.top, rpad, bpad)
+			insets
+		}
 
 		container = binding.container
 
@@ -131,7 +149,10 @@ class ActivitySummary : FragmentActivity() {
 		optionsView = DialogPlus.newDialog(this).setAdapter(MapOptionsDialog(layoutInflater,
 			R.layout.activity_map_options, map)).setExpanded(false).create()
 
-		binding.optionsButton.setOnClickListener { optionsView.show() }
+		binding.optionsButton.setOnClickListener {
+			optionsView.holderView.setPadding(lpad, 0, rpad, bpad)
+			optionsView.show()
+		}
 
 		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
 		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
