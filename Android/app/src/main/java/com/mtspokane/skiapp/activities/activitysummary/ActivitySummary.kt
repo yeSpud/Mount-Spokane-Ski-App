@@ -72,6 +72,8 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var map: Map
 
+	private var showDots = true
+
 	private lateinit var optionsView: DialogPlus
 
 	private lateinit var databaseDao: SkiingActivityDao
@@ -364,7 +366,7 @@ class ActivitySummary : FragmentActivity() {
 			withContext(Dispatchers.Main) {
 				Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
 				Log.d("loadActivities", "Done! (Adding polyline)")
-				map.addPolylineFromMarker()
+				// map.addPolylineFromMarker()
 			}
 		}
 	}
@@ -372,6 +374,7 @@ class ActivitySummary : FragmentActivity() {
 	@AnyThread
 	private suspend fun addCirclesToMap(mapMarkers: Array<MapMarker>) = withContext(Dispatchers.Default) {
 		Log.d("loadActivities", "Started adding circles to map")
+		var previousCircle: Circle? = null
 		for (mapMarker in mapMarkers) {
 			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
 			val circle = withContext(Dispatchers.Main) {
@@ -382,11 +385,29 @@ class ActivitySummary : FragmentActivity() {
 					clickable(true)
 					radius(3.0)
 					zIndex(50.0F)
-					visible(true)
+					visible(showDots)
 				}
 			}
 			withContext(Dispatchers.Main) { circle.tag = mapMarker }
 			map.circles.add(circle)
+
+			if (previousCircle != null) {
+				withContext(Dispatchers.Main) {
+					map.googleMap.addPolyline {
+						add(previousCircle!!.center, circle.center)
+						color(previousCircle!!.fillColor)
+						zIndex(10.0F)
+						geodesic(true)
+						startCap(RoundCap())
+						endCap(RoundCap())
+						clickable(false)
+						width(8.0F)
+						visible(true)
+					}
+				}
+			}
+
+			previousCircle = circle
 		}
 
 		System.gc()
@@ -770,6 +791,7 @@ class ActivitySummary : FragmentActivity() {
 			return null
 		}
 
+		/*
 		@UiThread
 		fun addPolylineFromMarker() {
 
@@ -789,5 +811,6 @@ class ActivitySummary : FragmentActivity() {
 				visible(true)
 			}
 		}
+		 */
 	}
 }
