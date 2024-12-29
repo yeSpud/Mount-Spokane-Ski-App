@@ -17,8 +17,10 @@ import android.os.Process
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.core.app.ActivityCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
@@ -27,7 +29,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
 import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
-import com.mtspokane.skiapp.mapItem.SkiingActivity
+import com.mtspokane.skiapp.SkiingActivity
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
@@ -70,9 +72,24 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
+		enableEdgeToEdge()
+
 		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
 		setContentView(binding.root)
+
+		// Fix edge to edge behavior
+		var lpad = 0
+		var rpad = 0
+		var bpad = 0
+		ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+			lpad = systemBars.left
+			rpad = systemBars.right
+			bpad = systemBars.bottom
+			v.setPadding(lpad, systemBars.top, rpad, bpad)
+			insets
+		}
 
 		val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE)
 				as NotificationManager
@@ -91,9 +108,13 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		// Setup the map handler.
 		map = Map()
 
-		optionsView = DialogPlus.newDialog(this).setAdapter(OptionsDialog()).setExpanded(false).create()
+		optionsView = DialogPlus.newDialog(this)
+			.setAdapter(OptionsDialog())
+			.setExpanded(false)
+			.create()
 
 		binding.optionsButton.setOnClickListener {
+			optionsView.holderView.setPadding(lpad, 0, rpad, bpad)
 			optionsView.show()
 		}
 

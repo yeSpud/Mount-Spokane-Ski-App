@@ -1,66 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
-	<name>Lifts</name>
+	<name>Chairlifts Polylines</name>
 	<Placemark>
 		<name>Chair 1: Vista Cruiser</name>
-		<styleUrl>#failed335</styleUrl>
+		<styleUrl>#failed711</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0991608044635,47.91599220140442,0 -117.1126916762525,47.9229430818873,0 
+				-117.0991608044635,47.91599220140442,0 -117.1126916762525,47.9229430818873,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 2: Illuminator</name>
 		<description>night run</description>
-		<styleUrl>#failed537</styleUrl>
+		<styleUrl>#failed411</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0985671546197,47.92217163435538,0 -117.1123140398061,47.92513283757015,0 
+				-117.0985671546197,47.92217163435538,0 -117.1123140398061,47.92513283757015,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 3: Parkway Express</name>
 		<description>night run</description>
-		<styleUrl>#failed116</styleUrl>
+		<styleUrl>#failed660</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0964538705134,47.92277452090677,0 -117.1042038016809,47.9310408053557,0 
+				-117.0964538705134,47.92277452090677,0 -117.1042038016809,47.9310408053557,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 4: Hidden Treasure</name>
-		<styleUrl>#failed453</styleUrl>
+		<styleUrl>#failed780</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.1005310487995,47.94171127596789,0 -117.1069560876408,47.93207024317771,0 
+				-117.1005310487995,47.94171127596789,0 -117.1069560876408,47.93207024317771,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 5: Beginner&apos;s Luck</name>
 		<description>night run</description>
-		<styleUrl>#failed441</styleUrl>
+		<styleUrl>#failed340</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.0953297262665,47.92170799092754,0 -117.0989537774478,47.92293042773588,0 
+				-117.0953297262665,47.92170799092754,0 -117.0989537774478,47.92293042773588,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Chair 6: Northwood</name>
-		<styleUrl>#failed32</styleUrl>
+		<styleUrl>#failed540</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.1299695086659,47.92893685792158,0 -117.1129328481842,47.92338596568163,0 
+				-117.1299695086659,47.92893685792158,0 -117.1129328481842,47.92338596568163,0
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Magic Carpet</name>
+		<description>night run</description>
+		<styleUrl>#failed570</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.0954822645925,47.92142667836896,0 -117.0959209117625,47.92139800283464,0
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark>
+		<name>Half Hitch Handle Tow</name>
+		<description>night run</description>
+		<styleUrl>#failed57</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-117.1009797146749,47.93063522739622,0 -117.1035822023165,47.93108062792098,0
 			</coordinates>
 		</LineString>
 	</Placemark>

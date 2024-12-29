@@ -227,15 +227,11 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 					val values = other[name]!!
 					val polygonPoints: MutableList<List<LatLng>> = mutableListOf()
 					for (value in values) {
-						withContext(Dispatchers.Main) {
-							polygonPoints.add(value.points)
-						}
+						withContext(Dispatchers.Main) { polygonPoints.add(value.points) }
 					}
 
 					if (name == "Ski Area Bounds") {
-						withContext(Dispatchers.Main) {
-							values[0].remove()
-						}
+						withContext(Dispatchers.Main) { values[0].remove() }
 						skiAreaBounds = MapItem(name, polygonPoints)
 						continue
 					}
@@ -250,7 +246,8 @@ abstract class MapHandler(internal val activity: FragmentActivity) : OnMapReadyC
 						"Lodge 1 Parking Lot" -> R.drawable.ic_parking
 						"Lodge 2 Parking Lot" -> R.drawable.ic_parking
 						"Tubing Area" -> R.drawable.ic_missing // Todo Tubing area icon
-						"Ski School" -> R.drawable.ic_missing // Todo Ski school icon
+						"Ski School" -> R.drawable.ic_ski_school
+						"Learning Area" -> R.drawable.ic_ski_school
 						else -> {
 							Log.w(tag, "$name does not have an icon")
 							null

@@ -6,6 +6,7 @@ import androidx.annotation.DrawableRes
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
 import com.google.maps.android.PolyUtil
+import com.mtspokane.skiapp.SkiingActivity
 
 open class MapItem(val name: String, val points: List<List<LatLng>>, @DrawableRes val icon: Int? = null) {
 
