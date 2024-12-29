@@ -46,6 +46,7 @@ import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.maphandlers.MapHandler
+import com.mtspokane.skiapp.maphandlers.MapOptionItem
 import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 import kotlinx.coroutines.*
@@ -204,8 +205,10 @@ class ActivitySummary : FragmentActivity() {
 		// Setup the map handler.
 		map = Map()
 
-		optionsView = DialogPlus.newDialog(this).setAdapter(MapOptionsDialog(layoutInflater,
-			R.layout.activity_map_options, map)).setExpanded(false).create()
+		optionsView = DialogPlus.newDialog(this)
+			.setAdapter(OptionsDialog())
+			.setExpanded(false)
+			.create()
 
 		binding.optionsButton.setOnClickListener {
 			optionsView.holderView.setPadding(lpad, 0, rpad, bpad)
@@ -366,7 +369,6 @@ class ActivitySummary : FragmentActivity() {
 			withContext(Dispatchers.Main) {
 				Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
 				Log.d("loadActivities", "Done! (Adding polyline)")
-				// map.addPolylineFromMarker()
 			}
 		}
 	}
@@ -514,7 +516,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		if (Locations.previousLocation != null) {
-			return getMapMarker(Locations.previousLocation!!)
+			return getMapMarker(Locations.previousLocation!!) // TODO Make me a while loop instead?
 		}
 
 		Log.w("getMapMarker", "Unable to determine location")
@@ -790,27 +792,33 @@ class ActivitySummary : FragmentActivity() {
 			Log.v("CustomInfoWindow", "getInfoWindow called")
 			return null
 		}
+	}
 
-		/*
-		@UiThread
-		fun addPolylineFromMarker() {
+	private inner class OptionsDialog : MapOptionsDialog(layoutInflater, R.layout.activity_map_options, map) {
 
-			polyline = googleMap.addPolyline {
+		private var showDotsImage: MapOptionItem? = null
 
-				for (circle in circles) {
-					add(circle.center)
-				}
+		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+			val view = super.getView(position, convertView, parent)
 
-				color(getARGB(R.color.yellow))
-				zIndex(10.0F)
-				geodesic(true)
-				startCap(RoundCap())
-				endCap(RoundCap())
-				clickable(false)
-				width(8.0F)
-				visible(true)
+			if (showDotsImage != null) {
+				return view
 			}
+
+			val showDotsButton: MapOptionItem? = view.findViewById(R.id.show_circles)
+			if (showDotsButton == null) {
+				Log.w("getView", "Unable to find show dots button")
+				return view
+			}
+
+			showDotsButton.setOnClickListener {
+				showDots = !showDots
+				map.circles.forEach { it.isVisible = showDots }
+				showDotsButton.toggleOptionVisibility()
+			}
+			showDotsImage = showDotsButton
+
+			return view
 		}
-		 */
 	}
 }
