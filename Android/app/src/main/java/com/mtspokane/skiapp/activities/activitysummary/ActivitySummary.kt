@@ -432,6 +432,7 @@ class ActivitySummary : FragmentActivity() {
 
 		for (mapMarker in loadedMapMarkers) {
 			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
+			polylinePoints.add(location)
 
 			if (previousMapMarker != null) {
 				if (previousMapMarker.circleColor != mapMarker.circleColor) {
@@ -455,7 +456,6 @@ class ActivitySummary : FragmentActivity() {
 			}
 
 			previousMapMarker = mapMarker
-			polylinePoints.add(location)
 		}
 
 		System.gc()
