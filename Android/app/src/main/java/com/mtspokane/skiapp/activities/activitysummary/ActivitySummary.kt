@@ -73,7 +73,7 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var map: Map
 
-	private var showDots = true
+	private var showDots = false
 
 	private lateinit var optionsView: DialogPlus
 
@@ -373,43 +373,43 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	@AnyThread
-	private suspend fun addCirclesToMap(mapMarkers: Array<MapMarker>) = withContext(Dispatchers.Default) {
+	@UiThread
+	private suspend fun addCirclesToMap(mapMarkers: Array<MapMarker>) = withContext(Dispatchers.Main) {
 		Log.d("loadActivities", "Started adding circles to map")
-		var previousCircle: Circle? = null
+		var previousMapMarker: MapMarker? = null
+		var previousLocation: LatLng? = null
 		for (mapMarker in mapMarkers) {
 			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
-			val circle = withContext(Dispatchers.Main) {
-				map.googleMap.addCircle { // FIXME this is using too much RAM
-					center(location)
-					strokeColor(mapMarker.circleColor)
-					fillColor(mapMarker.circleColor)
-					clickable(true)
-					radius(3.0)
-					zIndex(50.0F)
-					visible(showDots)
-				}
+
+			val circle = map.googleMap.addCircle { // FIXME this is using too much RAM & causes too much lag
+				center(location)
+				strokeColor(mapMarker.circleColor)
+				fillColor(mapMarker.circleColor)
+				clickable(true)
+				radius(3.0)
+				zIndex(50.0F)
+				visible(showDots)
 			}
-			withContext(Dispatchers.Main) { circle.tag = mapMarker }
+			circle.tag = mapMarker
 			map.circles.add(circle)
 
-			if (previousCircle != null) {
-				withContext(Dispatchers.Main) {
-					map.googleMap.addPolyline {
-						add(previousCircle!!.center, circle.center)
-						color(previousCircle!!.fillColor)
-						zIndex(10.0F)
-						geodesic(true)
-						startCap(RoundCap())
-						endCap(RoundCap())
-						clickable(false)
-						width(8.0F)
-						visible(true)
-					}
+			if (previousMapMarker != null) {
+				val polyline = map.googleMap.addPolyline { // FIXME Causes too much lag
+					add(previousLocation!!, location)
+					color(previousMapMarker!!.circleColor)
+					zIndex(10.0F)
+					geodesic(true)
+					startCap(RoundCap())
+					endCap(RoundCap())
+					clickable(false)
+					width(8.0F)
+					visible(true)
 				}
+				map.polylines.add(polyline)
 			}
 
-			previousCircle = circle
+			previousMapMarker = mapMarker
+			previousLocation = location
 		}
 
 		System.gc()
@@ -678,9 +678,9 @@ class ActivitySummary : FragmentActivity() {
 
 		var circles: MutableList<Circle> = mutableListOf()
 
-		private var runMarker: Marker? = null
+		var polylines: MutableList<Polyline> = mutableListOf()
 
-		var polyline: Polyline? = null
+		private var runMarker: Marker? = null
 
 		@SuppressLint("PotentialBehaviorOverride")
         override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
@@ -742,10 +742,10 @@ class ActivitySummary : FragmentActivity() {
 			}
 			circles.clear()
 
-			if (polyline != null) {
-				polyline!!.remove()
-				polyline = null
+			for (polyline in polylines) {
+				polyline.remove()
 			}
+			polylines.clear()
 		}
 
 		override fun getInfoContents(marker: Marker): View? {
