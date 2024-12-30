@@ -435,12 +435,12 @@ class ActivitySummary : FragmentActivity() {
 			polylinePoints.add(location)
 
 			if (previousMapMarker != null) {
-				if (previousMapMarker.circleColor != mapMarker.circleColor) {
+				if (previousMapMarker.color != mapMarker.color) {
 
 					val polyline = withContext(Dispatchers.Main) {
 						map.googleMap.addPolyline {
 							addAll(polylinePoints)
-							color(previousMapMarker!!.circleColor)
+							color(previousMapMarker!!.color)
 							zIndex(10.0F)
 							geodesic(true)
 							startCap(RoundCap())
@@ -473,8 +473,8 @@ class ActivitySummary : FragmentActivity() {
 
 			val circle = map.googleMap.addCircle { // FIXME this is using too much RAM & causes too much lag
 				center(location)
-				strokeColor(mapMarker.circleColor)
-				fillColor(mapMarker.circleColor)
+				strokeColor(mapMarker.color)
+				fillColor(mapMarker.color)
 				clickable(true)
 				radius(3.0)
 				zIndex(50.0F)
@@ -587,8 +587,17 @@ class ActivitySummary : FragmentActivity() {
 			return marker
 		}
 
-		if (Locations.previousLocation != null) {
-			return getMapMarker(Locations.previousLocation!!) // TODO Make me a while loop instead?
+		val previousLocation = Locations.previousLocation
+		if (previousLocation != null) {
+			Log.v("getMapMarker", "Unknown location at ${skiingActivity.latitude}, " +
+					"${skiingActivity.longitude} - falling back to ${previousLocation.latitude}, " +
+					"${previousLocation.longitude}")
+			val previousMapMarker = getMapMarker(previousLocation)
+
+			Log.d("getMapMarker", "Determined ${skiingActivity.latitude}, " +
+					"${skiingActivity.longitude} to be ${previousMapMarker.name}")
+			return MapMarker(previousMapMarker.name, skiingActivity, previousMapMarker.icon,
+				previousMapMarker.markerColor, previousMapMarker.color)
 		}
 
 		Log.w("getMapMarker", "Unable to determine location")
