@@ -17,8 +17,10 @@ import android.os.Process
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.core.app.ActivityCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
@@ -118,6 +120,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		optionsView = DialogPlus.newDialog(this)
 			.setAdapter(OptionsDialog())
 			.setExpanded(false)
+			.setContentBackgroundResource(R.color.dark_blue)
 			.create()
 
 		binding.optionsButton.setOnClickListener {

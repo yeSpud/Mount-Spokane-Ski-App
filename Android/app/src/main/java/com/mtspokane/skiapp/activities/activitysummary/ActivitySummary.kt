@@ -15,7 +15,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
@@ -177,7 +176,6 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
-		enableEdgeToEdge()
 		super.onCreate(savedInstanceState)
 
 		binding = ActivitySummaryBinding.inflate(layoutInflater)
@@ -244,6 +242,7 @@ class ActivitySummary : FragmentActivity() {
 		optionsView = DialogPlus.newDialog(this)
 			.setAdapter(OptionsDialog())
 			.setExpanded(false)
+			.setContentBackgroundResource(R.color.dark_blue)
 			.create()
 
 		binding.optionsButton.setOnClickListener {
