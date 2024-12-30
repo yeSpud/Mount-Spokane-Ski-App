@@ -67,6 +67,7 @@ class SkierLocationService : Service(), LocationListener {
 		} else {
 			startForeground(TRACKING_SERVICE_ID, notification)
 		}
+		serviceCallbacks?.setIsTracking(true)
 
 		Log.d("SkierLocationService", "Started foreground service")
 		return START_NOT_STICKY
@@ -129,6 +130,7 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onDestroy has been called!")
 		super.onDestroy()
 
+		serviceCallbacks?.setIsTracking(false)
 		locationManager.removeUpdates(this)
 		notificationManager.cancel(TRACKING_SERVICE_ID)
 
@@ -308,5 +310,7 @@ class SkierLocationService : Service(), LocationListener {
 		fun getInLocation(location: Location): MapMarker?
 
 		fun updateMapMarker(locationString: String)
+
+		fun setIsTracking(isTracking: Boolean)
 	}
 }

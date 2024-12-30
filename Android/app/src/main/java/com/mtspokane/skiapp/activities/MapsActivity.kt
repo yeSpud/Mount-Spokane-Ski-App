@@ -17,10 +17,8 @@ import android.os.Process
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.core.app.ActivityCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
@@ -57,6 +55,9 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	var locationEnabled = false
 	private set
 
+	private var isTrackingLocation = false
+	private var locationTrackingButton: MapOptionItem? = null
+
 	private lateinit var optionsView: DialogPlus
 
 	private val serviceConnection = object : ServiceConnection {
@@ -66,12 +67,14 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 			skierLocationService = binder.getService()
 			bound = true
 			skierLocationService!!.setCallbacks(this@MapsActivity)
+			setIsTracking(true)
 		}
 
 		override fun onServiceDisconnected(name: ComponentName?) {
 			skierLocationService!!.setCallbacks(null)
 			unbindService(this)
 			skierLocationService = null
+			setIsTracking(false)
 			bound = false
 		}
 	}
@@ -140,6 +143,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		if (bound) {
 			skierLocationService!!.setCallbacks(null)
 			unbindService(serviceConnection)
+			skierLocationService = null
 			bound = false
 		}
 
@@ -149,8 +153,8 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	override fun onResume() {
 		super.onResume()
 
-		if (isMapSetup && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-			== PackageManager.PERMISSION_GRANTED) {
+		if (isMapSetup && !isTrackingLocation && ActivityCompat.checkSelfPermission(this,
+				Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 			launchLocationService()
 		}
 	}
@@ -231,6 +235,15 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		}
 	}
 
+	override fun setIsTracking(isTracking: Boolean) {
+		isTrackingLocation = isTracking
+
+		val button = locationTrackingButton ?: return
+		if (button.itemEnabled != isTracking) {
+			button.toggleOptionVisibility()
+		}
+	}
+
 	companion object {
 		const val permissionValue = 29500
 	}
@@ -299,21 +312,35 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 			val view = super.getView(position, convertView, parent)
 
-			if (launchActivitySummaryImage != null) {
-				return view
+			if (locationTrackingButton == null) {
+				val toggleLocationTracking: MapOptionItem = view.findViewById(R.id.toggle_location_tracking)
+				toggleLocationTracking.setOnClickListener {
+					if (isTrackingLocation) {
+						if (skierLocationService != null) {
+							skierLocationService!!.stopSelf()
+						} else {
+							Log.w("onClick", "Unable to stop location tracking")
+						}
+					} else {
+						launchLocationService()
+					}
+				}
+
+				if (toggleLocationTracking.itemEnabled != isTrackingLocation) {
+					toggleLocationTracking.toggleOptionVisibility()
+				}
+
+				locationTrackingButton = toggleLocationTracking
 			}
 
-			val activitySummaryImage: MapOptionItem? = view.findViewById(R.id.launch_activity_summary)
-			if (activitySummaryImage == null) {
-				Log.w("getView", "Unable to find activity summary launcher")
-				return view
+			if (launchActivitySummaryImage == null) {
+				val activitySummaryImage: MapOptionItem = view.findViewById(R.id.launch_activity_summary)
+				activitySummaryImage.setOnClickListener {
+					optionsView.dismiss()
+					startActivity(Intent(this@MapsActivity, ActivitySummary::class.java))
+				}
+				launchActivitySummaryImage = activitySummaryImage
 			}
-
-			activitySummaryImage.setOnClickListener {
-				optionsView.dismiss()
-				startActivity(Intent(this@MapsActivity, ActivitySummary::class.java))
-			}
-			launchActivitySummaryImage = activitySummaryImage
 
 			return view
 		}

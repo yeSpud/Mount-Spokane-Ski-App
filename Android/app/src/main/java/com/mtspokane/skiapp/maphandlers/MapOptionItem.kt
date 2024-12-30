@@ -29,7 +29,8 @@ class MapOptionItem: LinearLayout {
 	private val enabledText: CharSequence
 	private val disabledText: CharSequence
 
-	private var itemEnabled: Boolean
+	var itemEnabled: Boolean
+	private set
 
 	constructor(context: Context): this(context, null)
 
