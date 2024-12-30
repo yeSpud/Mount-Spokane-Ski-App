@@ -25,6 +25,7 @@
 
     <!-- Menu text -->
     <string name="options_menu">☰</string>
+    <string name="menu_description">Menu</string>
     <string name="show_chairlifts">Show Chairlifts</string>
     <string name="hide_chairlifts">Hide Chairlifts</string>
     <string name="show_beginner">Show Beginner Runs</string>

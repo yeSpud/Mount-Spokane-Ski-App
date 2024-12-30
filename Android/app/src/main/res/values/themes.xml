@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
-    <style name="Theme.MtSpokaneSkiApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.MtSpokaneSkiApp" parent="Theme.Material3.DayNight">
 
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/light_blue</item>

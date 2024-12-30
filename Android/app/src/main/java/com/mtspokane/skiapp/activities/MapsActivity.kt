@@ -28,8 +28,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.ktx.addMarker
 import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.SkiingActivity
+import com.mtspokane.skiapp.activities.activitysummary.ActivitySummary
 import com.mtspokane.skiapp.databinding.ActivityMapsBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
@@ -39,6 +39,11 @@ import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 
 class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
+
+	private var lpad = 0
+	private var tpad = 0
+	private var rpad = 0
+	private var bpad = 0
 
 	private lateinit var map: Map
 	private var isMapSetup = false
@@ -70,24 +75,26 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
-
 		enableEdgeToEdge()
+		super.onCreate(savedInstanceState)
 
 		// Setup data binding.
 		val binding = ActivityMapsBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
 		// Fix edge to edge behavior
-		var lpad = 0
-		var rpad = 0
-		var bpad = 0
 		ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
 			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 			lpad = systemBars.left
+			tpad = systemBars.top
 			rpad = systemBars.right
 			bpad = systemBars.bottom
-			v.setPadding(lpad, systemBars.top, rpad, bpad)
+
+			val params: ViewGroup.MarginLayoutParams = binding.optionsButton.getLayoutParams() as ViewGroup.MarginLayoutParams
+			params.setMargins(params.leftMargin + lpad, params.topMargin + tpad,
+				params.rightMargin + rpad, params.bottomMargin + bpad)
+			binding.optionsButton.layoutParams = params
+
 			insets
 		}
 
@@ -252,6 +259,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 				alertDialogBuilder.create().show()
 			}
 
+			googleMap.setPadding(lpad, tpad, rpad, bpad)
 			isMapSetup = true
 		}
 

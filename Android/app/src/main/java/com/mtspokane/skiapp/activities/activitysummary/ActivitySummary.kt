@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -27,6 +28,7 @@ import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
@@ -63,6 +65,12 @@ import kotlin.math.roundToInt
 class ActivitySummary : FragmentActivity() {
 
 	private lateinit var binding: ActivitySummaryBinding
+
+	private var lpad = 0
+	private var tpad = 0
+	private var rpad = 0
+	private var bpad = 0
+
 	private var totalRunsNumber = 0
 	private var absoluteMaxSpeed = 0F
 	private var averageSpeedSum = 0F
@@ -170,23 +178,29 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
-
 		enableEdgeToEdge()
+		super.onCreate(savedInstanceState)
 
 		binding = ActivitySummaryBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
 		// Fix edge to edge behavior
-		var lpad = 0
-		var rpad = 0
-		var bpad = 0
 		ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
 			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 			lpad = systemBars.left
+			tpad = systemBars.top
 			rpad = systemBars.right
 			bpad = systemBars.bottom
-			v.setPadding(lpad, systemBars.top, rpad, bpad)
+
+			val params: ViewGroup.MarginLayoutParams = binding.optionsButton.layoutParams as ViewGroup.MarginLayoutParams
+			if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+				tpad = 0
+			}
+			Log.d("onCreate", "${params.topMargin + tpad}")
+			params.setMargins(params.leftMargin + lpad, params.topMargin + tpad,
+				params.rightMargin + rpad, params.bottomMargin + bpad)
+			binding.optionsButton.layoutParams = params
+
 			insets
 		}
 
@@ -758,6 +772,8 @@ class ActivitySummary : FragmentActivity() {
 			}
 
 			googleMap.setOnInfoWindowCloseListener { it.isVisible = false }
+
+			googleMap.setPadding(lpad, 0, rpad, bpad)
 		}
 
 		override fun destroy() {
