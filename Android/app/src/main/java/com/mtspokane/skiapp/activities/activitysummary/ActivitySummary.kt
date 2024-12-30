@@ -28,7 +28,6 @@ import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
-import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
@@ -192,14 +191,36 @@ class ActivitySummary : FragmentActivity() {
 			rpad = systemBars.right
 			bpad = systemBars.bottom
 
-			val params: ViewGroup.MarginLayoutParams = binding.optionsButton.layoutParams as ViewGroup.MarginLayoutParams
+			val summaryParams: ViewGroup.MarginLayoutParams = binding.activitySummary.layoutParams as ViewGroup.MarginLayoutParams
 			if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-				tpad = 0
+				summaryParams.setMargins(
+					summaryParams.leftMargin + lpad,
+					summaryParams.topMargin + tpad, summaryParams.rightMargin + rpad,
+					summaryParams.bottomMargin
+				)
+			} else {
+				summaryParams.setMargins(
+					summaryParams.leftMargin + lpad,
+					summaryParams.topMargin + tpad, summaryParams.rightMargin + rpad,
+					summaryParams.bottomMargin + bpad
+				)
 			}
-			Log.d("onCreate", "${params.topMargin + tpad}")
-			params.setMargins(params.leftMargin + lpad, params.topMargin + tpad,
-				params.rightMargin + rpad, params.bottomMargin + bpad)
-			binding.optionsButton.layoutParams = params
+			binding.activitySummary.layoutParams = summaryParams
+
+			val buttonParams: ViewGroup.MarginLayoutParams = binding.optionsButton.layoutParams as ViewGroup.MarginLayoutParams
+			if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+				buttonParams.setMargins(
+					buttonParams.leftMargin + lpad, buttonParams.topMargin,
+					buttonParams.rightMargin + rpad, buttonParams.bottomMargin + bpad
+				)
+			} else {
+				buttonParams.setMargins(
+					buttonParams.leftMargin + lpad, buttonParams.topMargin + tpad,
+					buttonParams.rightMargin + rpad, buttonParams.bottomMargin + bpad
+				)
+			}
+
+			binding.optionsButton.layoutParams = buttonParams
 
 			insets
 		}

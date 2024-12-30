@@ -37,7 +37,7 @@
     <string name="night_runs">Only Show Night Runs</string>
     <string name="all_runs">Show All Runs</string>
     <string name="activity_summary">View activity summary</string>
-    <string name="show_dots">Show dots</string>
+    <string name="show_dots">Show dots\nWARNING: Very Slow</string>
     <string name="hide_dots">Hide dots</string>
 
     <!-- Activity summary -->
