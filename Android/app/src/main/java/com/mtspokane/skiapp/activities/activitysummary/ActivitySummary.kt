@@ -452,6 +452,7 @@ class ActivitySummary : FragmentActivity() {
 					}
 					map.polylines.add(polyline)
 					polylinePoints.clear()
+					polylinePoints.add(location)
 				}
 			}
 
@@ -522,8 +523,7 @@ class ActivitySummary : FragmentActivity() {
 
 		val activityView = ActivityView(this)
 
-		val isRun = (activitySummaryEntry.mapMarker.icon == R.drawable.ic_chairlift ||
-				activitySummaryEntry.mapMarker.icon == R.drawable.ic_easy ||
+		val isRun = (activitySummaryEntry.mapMarker.icon == R.drawable.ic_easy ||
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_moderate ||
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_difficult)
 
