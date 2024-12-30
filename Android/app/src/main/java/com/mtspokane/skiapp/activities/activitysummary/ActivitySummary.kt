@@ -189,17 +189,18 @@ class ActivitySummary : FragmentActivity() {
 			rpad = systemBars.right
 			bpad = systemBars.bottom
 
+			// For the activity summary the right padding is useless since its always in the center
 			val summaryParams: ViewGroup.MarginLayoutParams = binding.activitySummary.layoutParams as ViewGroup.MarginLayoutParams
 			if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
 				summaryParams.setMargins(
 					summaryParams.leftMargin + lpad,
-					summaryParams.topMargin + tpad, summaryParams.rightMargin + rpad,
+					summaryParams.topMargin + tpad,0,
 					summaryParams.bottomMargin
 				)
 			} else {
 				summaryParams.setMargins(
 					summaryParams.leftMargin + lpad,
-					summaryParams.topMargin + tpad, summaryParams.rightMargin + rpad,
+					summaryParams.topMargin + tpad,0,
 					summaryParams.bottomMargin + bpad
 				)
 			}
@@ -793,7 +794,9 @@ class ActivitySummary : FragmentActivity() {
 
 			googleMap.setOnInfoWindowCloseListener { it.isVisible = false }
 
-			googleMap.setPadding(lpad, 0, rpad, bpad)
+			// The top and left padding are useless to us
+			// because the map is always at the bottom while in portrait and on the right in landscape
+			googleMap.setPadding(0, 0, rpad, bpad)
 		}
 
 		override fun destroy() {
