@@ -55,6 +55,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	var locationEnabled = false
 	private set
 
+	private var manuallyDisabled = false
 	private var isTrackingLocation = false
 	private var locationTrackingButton: MapOptionItem? = null
 
@@ -153,8 +154,9 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	override fun onResume() {
 		super.onResume()
 
-		if (isMapSetup && !isTrackingLocation && ActivityCompat.checkSelfPermission(this,
-				Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+		if (isMapSetup && !manuallyDisabled && !isTrackingLocation &&
+			ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+			== PackageManager.PERMISSION_GRANTED) {
 			launchLocationService()
 		}
 	}
@@ -198,6 +200,8 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 			bindService(serviceIntent, serviceConnection, Context.BIND_NOT_FOREGROUND)
 			startService(serviceIntent)
+		} else {
+			Log.w("launchLocationService", "GPS not enabled")
 		}
 	}
 
@@ -242,6 +246,10 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		if (button.itemEnabled != isTracking) {
 			button.toggleOptionVisibility()
 		}
+	}
+
+	override fun setManuallyDisabled(manuallyDisabled: Boolean) {
+		this.manuallyDisabled = manuallyDisabled
 	}
 
 	companion object {
@@ -316,12 +324,11 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 				val toggleLocationTracking: MapOptionItem = view.findViewById(R.id.toggle_location_tracking)
 				toggleLocationTracking.setOnClickListener {
 					if (isTrackingLocation) {
-						if (skierLocationService != null) {
-							skierLocationService!!.stopSelf()
-						} else {
-							Log.w("onClick", "Unable to stop location tracking")
-						}
+						manuallyDisabled = true
+						skierLocationService?.stopSelf() ?: Log.w("onClick",
+							"Unable to stop location tracking")
 					} else {
+						manuallyDisabled = false
 						launchLocationService()
 					}
 				}
