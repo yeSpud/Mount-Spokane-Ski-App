@@ -3,6 +3,7 @@ package com.mtspokane.skiapp.activities
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -67,6 +68,7 @@ class SkierLocationService : Service(), LocationListener {
 		} else {
 			startForeground(TRACKING_SERVICE_ID, notification)
 		}
+		serviceCallbacks?.setIsTracking(true)
 
 		Log.d("SkierLocationService", "Started foreground service")
 		return START_NOT_STICKY
@@ -129,6 +131,7 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onDestroy has been called!")
 		super.onDestroy()
 
+		serviceCallbacks?.setIsTracking(false)
 		locationManager.removeUpdates(this)
 		notificationManager.cancel(TRACKING_SERVICE_ID)
 
@@ -238,7 +241,10 @@ class SkierLocationService : Service(), LocationListener {
 		val pendingIntent: PendingIntent = createPendingIntent(MapsActivity::class, skiingDate.id)
 		val builder: NotificationCompat.Builder = getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
 			false, R.string.tracking_notice, pendingIntent)
-		builder.setContentText(title)
+			.setContentText(title)
+			.addAction(0, "Stop Tracking", PendingIntent.getBroadcast(this,
+				0, Intent(this, StopTrackingService::class.java),
+				PendingIntent.FLAG_IMMUTABLE))
 
 		if (iconBitmap != null) {
 			builder.setLargeIcon(iconBitmap)
@@ -253,7 +259,7 @@ class SkierLocationService : Service(), LocationListener {
 		return NotificationCompat.Builder(this, channelId)
 			.setSmallIcon(R.drawable.icon_fg)
 			.setShowWhen(showTime)
-			.setContentTitle(this.getString(titleText))
+			.setContentTitle(getString(titleText))
 			.setContentIntent(pendingIntent)
 	}
 
@@ -308,5 +314,17 @@ class SkierLocationService : Service(), LocationListener {
 		fun getInLocation(location: Location): MapMarker?
 
 		fun updateMapMarker(locationString: String)
+
+		fun setIsTracking(isTracking: Boolean)
+
+		fun setManuallyDisabled(manuallyDisabled: Boolean)
+	}
+
+	private inner class StopTrackingService : BroadcastReceiver() {
+		override fun onReceive(context: Context?, intent: Intent?) {
+			serviceCallbacks?.setManuallyDisabled(true) ?: Log.w("onReceive",
+				"Unable to set manually disabled")
+			stopSelf()
+		}
 	}
 }
