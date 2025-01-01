@@ -42,6 +42,9 @@ object Locations {
 					R.drawable.ic_ski_school -> MapMarker(other.name, location, other.icon,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 						Color.GRAY)
+					R.drawable.ic_chairlift -> MapMarker(other.name, location, other.icon,
+						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+						Color.TRANSPARENT)
 					else -> MapMarker(other.name, location, other.icon ?: R.drawable.ic_missing,
 						BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
 						Color.MAGENTA)

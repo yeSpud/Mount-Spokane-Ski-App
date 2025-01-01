@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -14,7 +15,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyThread
@@ -46,6 +46,7 @@ import com.mtspokane.skiapp.databinding.FileSelectionBinding
 import com.mtspokane.skiapp.mapItem.Locations
 import com.mtspokane.skiapp.mapItem.MapMarker
 import com.mtspokane.skiapp.maphandlers.MapHandler
+import com.mtspokane.skiapp.maphandlers.MapOptionItem
 import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 import kotlinx.coroutines.*
@@ -62,6 +63,12 @@ import kotlin.math.roundToInt
 class ActivitySummary : FragmentActivity() {
 
 	private lateinit var binding: ActivitySummaryBinding
+
+	private var lpad = 0
+	private var tpad = 0
+	private var rpad = 0
+	private var bpad = 0
+
 	private var totalRunsNumber = 0
 	private var absoluteMaxSpeed = 0F
 	private var averageSpeedSum = 0F
@@ -72,11 +79,14 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var map: Map
 
+	private var showDots = false
+
 	private lateinit var optionsView: DialogPlus
 
 	private lateinit var databaseDao: SkiingActivityDao
 
 	private var loadedSkiingActivities: List<SkiingActivity> = emptyList()
+	private var loadedMapMarkers: Array<MapMarker> = emptyArray()
 
 	private val exportJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(
 		ActivityResultContracts.CreateDocument(JSON_MIME_TYPE)) {
@@ -168,21 +178,49 @@ class ActivitySummary : FragmentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		enableEdgeToEdge()
-
 		binding = ActivitySummaryBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
 		// Fix edge to edge behavior
-		var lpad = 0
-		var rpad = 0
-		var bpad = 0
 		ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
 			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 			lpad = systemBars.left
+			tpad = systemBars.top
 			rpad = systemBars.right
 			bpad = systemBars.bottom
-			v.setPadding(lpad, systemBars.top, rpad, bpad)
+
+			// For the activity summary the right padding is useless since its always in the center
+			val summaryParams: ViewGroup.MarginLayoutParams = binding.activitySummary.layoutParams as ViewGroup.MarginLayoutParams
+			if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+				summaryParams.setMargins(
+					summaryParams.leftMargin + lpad,
+					summaryParams.topMargin + tpad,0,
+					summaryParams.bottomMargin
+				)
+			} else {
+				summaryParams.setMargins(
+					summaryParams.leftMargin + lpad,
+					summaryParams.topMargin + tpad,0,
+					summaryParams.bottomMargin + bpad
+				)
+			}
+			binding.activitySummary.layoutParams = summaryParams
+
+			val buttonParams: ViewGroup.MarginLayoutParams = binding.optionsButton.layoutParams as ViewGroup.MarginLayoutParams
+			if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+				buttonParams.setMargins(
+					buttonParams.leftMargin + lpad, buttonParams.topMargin,
+					buttonParams.rightMargin + rpad, buttonParams.bottomMargin + bpad
+				)
+			} else {
+				buttonParams.setMargins(
+					buttonParams.leftMargin + lpad, buttonParams.topMargin + tpad,
+					buttonParams.rightMargin + rpad, buttonParams.bottomMargin + bpad
+				)
+			}
+
+			binding.optionsButton.layoutParams = buttonParams
+
 			insets
 		}
 
@@ -202,8 +240,11 @@ class ActivitySummary : FragmentActivity() {
 		// Setup the map handler.
 		map = Map()
 
-		optionsView = DialogPlus.newDialog(this).setAdapter(MapOptionsDialog(layoutInflater,
-			R.layout.activity_map_options, map)).setExpanded(false).create()
+		optionsView = DialogPlus.newDialog(this)
+			.setAdapter(OptionsDialog())
+			.setExpanded(false)
+			.setContentBackgroundResource(R.color.dark_blue)
+			.create()
 
 		binding.optionsButton.setOnClickListener {
 			optionsView.holderView.setPadding(lpad, 0, rpad, bpad)
@@ -332,6 +373,7 @@ class ActivitySummary : FragmentActivity() {
 		binding.averageSpeed.visibility = View.GONE
 
 		container.removeAllViews()
+		loadedMapMarkers = emptyArray()
 		map.clearMap()
 		System.gc()
 	}
@@ -346,17 +388,16 @@ class ActivitySummary : FragmentActivity() {
 
 		lifecycleScope.launch(Dispatchers.Default) {
 
-			var mapMarkers: Array<MapMarker> = arrayOf()
 			var activitySummaryEntries: Array<ActivitySummaryEntry> = arrayOf()
 			val processingJob = launch {
 				Log.d("loadActivities", "Started parsing activity from file")
-				mapMarkers = Array(loadedSkiingActivities.size) { getMapMarker(loadedSkiingActivities[it]) }
-				activitySummaryEntries = parseMapMarkersForMap(mapMarkers)
+				loadedMapMarkers = Array(loadedSkiingActivities.size) { getMapMarker(loadedSkiingActivities[it]) }
+				activitySummaryEntries = parseMapMarkersForMap()
 				Log.d("loadActivities", "Finished parsing activities from file")
 			}
 			processingJob.join()
 
-			val addCirclesJob = launch { addCirclesToMap(mapMarkers) }
+			val addCirclesJob = launch { addPolylinesToMap() }
 			val addActivitiesJob = launch { addActivity(activitySummaryEntries) }
 			joinAll(addCirclesJob, addActivitiesJob)
 
@@ -364,38 +405,128 @@ class ActivitySummary : FragmentActivity() {
 			withContext(Dispatchers.Main) {
 				Toast.makeText(this@ActivitySummary, R.string.done, Toast.LENGTH_SHORT).show()
 				Log.d("loadActivities", "Done! (Adding polyline)")
-				map.addPolylineFromMarker()
 			}
 		}
 	}
 
-	@AnyThread
-	private suspend fun addCirclesToMap(mapMarkers: Array<MapMarker>) = withContext(Dispatchers.Default) {
-		Log.d("loadActivities", "Started adding circles to map")
-		for (mapMarker in mapMarkers) {
-			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
-			val circle = withContext(Dispatchers.Main) {
-				map.googleMap.addCircle { // FIXME this is using too much RAM
-					center(location)
-					strokeColor(mapMarker.circleColor)
-					fillColor(mapMarker.circleColor)
-					clickable(true)
-					radius(3.0)
-					zIndex(50.0F)
-					visible(true)
+	private fun parseMapMarkersForMap(): Array<ActivitySummaryEntry> {
+
+		// Create a place to store all the ActivitySummaryEntries.
+		val arraySummaryEntries = mutableListOf<ActivitySummaryEntry>()
+
+		var startingIndexOffset = 0
+		for (i in 0..loadedMapMarkers.size) {
+			if (loadedMapMarkers[i].name != UNKNOWN_LOCATION) {
+				startingIndexOffset = i
+				break
+			}
+		}
+
+		var startingMapMarker = loadedMapMarkers[startingIndexOffset]
+		var maxSpeed = 0.0F
+		var speedSum = 0.0F
+		var sum = 0
+
+		for (i in startingIndexOffset until loadedMapMarkers.size) {
+			val entry: MapMarker = loadedMapMarkers[i]
+
+			if (entry.name != UNKNOWN_LOCATION) {
+
+				if (entry.name != startingMapMarker.name) {
+
+					val newActivitySummaryEntry = ActivitySummaryEntry(startingMapMarker, maxSpeed,
+						speedSum/sum, entry.skiingActivity.time)
+					arraySummaryEntries.add(newActivitySummaryEntry)
+
+					maxSpeed = 0.0F
+					speedSum = 0.0F
+					sum = 0
+					startingMapMarker = entry
 				}
 			}
-			withContext(Dispatchers.Main) { circle.tag = mapMarker }
+
+			if (entry.skiingActivity.speed > maxSpeed) {
+				maxSpeed = entry.skiingActivity.speed
+			}
+			speedSum += entry.skiingActivity.speed
+			++sum
+		}
+
+		val finalActivitySummary = ActivitySummaryEntry(startingMapMarker, maxSpeed,
+			speedSum/sum, loadedMapMarkers.last().skiingActivity.time)
+		arraySummaryEntries.add(finalActivitySummary)
+
+		return arraySummaryEntries.toTypedArray()
+	}
+
+	@AnyThread
+	private suspend fun addPolylinesToMap() = withContext(Dispatchers.Default) {
+		Log.d("addPolylinesToMap", "Started adding polylines to map")
+		var previousMapMarker: MapMarker? = null
+		val polylinePoints: MutableList<LatLng> = mutableListOf()
+
+		for (mapMarker in loadedMapMarkers) {
+			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
+			polylinePoints.add(location)
+
+			if (previousMapMarker != null) {
+				if (previousMapMarker.color != mapMarker.color) {
+
+					val polyline = withContext(Dispatchers.Main) {
+						map.googleMap.addPolyline {
+							addAll(polylinePoints)
+							color(previousMapMarker!!.color)
+							zIndex(10.0F)
+							geodesic(true)
+							startCap(RoundCap())
+							endCap(RoundCap())
+							clickable(false)
+							width(8.0F)
+							visible(true)
+						}
+					}
+					map.polylines.add(polyline)
+					polylinePoints.clear()
+					polylinePoints.add(location)
+				}
+			}
+
+			previousMapMarker = mapMarker
+		}
+
+		System.gc()
+		Log.d("addPolylinesToMap", "Finished adding circles to map")
+	}
+
+	/**
+	 * WARNING: This runs on the UI thread so it'll freeze the app while adding all the circles
+	 */
+	@AnyThread
+	private suspend fun addCirclesToMap() = withContext(Dispatchers.Main) {
+		Log.d("addCirclesToMap", "Started adding circles to map")
+		for (mapMarker in loadedMapMarkers) {
+			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
+
+			val circle = map.googleMap.addCircle { // FIXME this is using too much RAM & causes too much lag
+				center(location)
+				strokeColor(mapMarker.color)
+				fillColor(mapMarker.color)
+				clickable(true)
+				radius(3.0)
+				zIndex(50.0F)
+				visible(showDots)
+			}
+			circle.tag = mapMarker
 			map.circles.add(circle)
 		}
 
 		System.gc()
-		Log.d("loadActivities", "Finished adding circles to map")
+		Log.d("addCirclesToMap", "Finished adding circles to map")
 	}
 
 	@AnyThread
 	private suspend fun addActivity(activitySummaryEntries: Array<ActivitySummaryEntry>) = withContext(Dispatchers.Main) {
-		Log.d("loadActivities", "Started creating activities view")
+		Log.d("addActivity", "Started creating activities view")
 		for (entry in activitySummaryEntries) {
 			val view: ActivityView = createActivityView(entry)
 			container.addView(view)
@@ -419,7 +550,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		System.gc()
-		Log.d("loadActivities", "Finished creating activities view")
+		Log.d("addActivity", "Finished creating activities view")
 	}
 
 	@UiThread
@@ -427,8 +558,7 @@ class ActivitySummary : FragmentActivity() {
 
 		val activityView = ActivityView(this)
 
-		val isRun = (activitySummaryEntry.mapMarker.icon == R.drawable.ic_chairlift ||
-				activitySummaryEntry.mapMarker.icon == R.drawable.ic_easy ||
+		val isRun = (activitySummaryEntry.mapMarker.icon == R.drawable.ic_easy ||
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_moderate ||
 				activitySummaryEntry.mapMarker.icon == R.drawable.ic_difficult)
 
@@ -492,8 +622,17 @@ class ActivitySummary : FragmentActivity() {
 			return marker
 		}
 
-		if (Locations.previousLocation != null) {
-			return getMapMarker(Locations.previousLocation!!)
+		val previousLocation = Locations.previousLocation
+		if (previousLocation != null) {
+			Log.v("getMapMarker", "Unknown location at ${skiingActivity.latitude}, " +
+					"${skiingActivity.longitude} - falling back to ${previousLocation.latitude}, " +
+					"${previousLocation.longitude}")
+			val previousMapMarker = getMapMarker(previousLocation)
+
+			Log.d("getMapMarker", "Determined ${skiingActivity.latitude}, " +
+					"${skiingActivity.longitude} to be ${previousMapMarker.name}")
+			return MapMarker(previousMapMarker.name, skiingActivity, previousMapMarker.icon,
+				previousMapMarker.markerColor, previousMapMarker.color)
 		}
 
 		Log.w("getMapMarker", "Unable to determine location")
@@ -522,56 +661,6 @@ class ActivitySummary : FragmentActivity() {
 			val timeFormatter = SimpleDateFormat("h:mm:ss", Locale.US)
 			val date = Date(time)
 			return timeFormatter.format(date)
-		}
-
-		fun parseMapMarkersForMap(mapMarkers: Array<MapMarker>): Array<ActivitySummaryEntry> {
-
-			// Create a place to store all the ActivitySummaryEntries.
-			val arraySummaryEntries = mutableListOf<ActivitySummaryEntry>()
-
-			var startingIndexOffset = 0
-			for (i in 0..mapMarkers.size) {
-				if (mapMarkers[i].name != UNKNOWN_LOCATION) {
-					startingIndexOffset = i
-					break
-				}
-			}
-
-			var startingMapMarker = mapMarkers[startingIndexOffset]
-			var maxSpeed = 0.0F
-			var speedSum = 0.0F
-			var sum = 0
-
-			for (i in startingIndexOffset until mapMarkers.size) {
-				val entry: MapMarker = mapMarkers[i]
-
-				if (entry.name != UNKNOWN_LOCATION) {
-
-					if (entry.name != startingMapMarker.name) {
-
-						val newActivitySummaryEntry = ActivitySummaryEntry(startingMapMarker, maxSpeed,
-								speedSum/sum, entry.skiingActivity.time)
-						arraySummaryEntries.add(newActivitySummaryEntry)
-
-						maxSpeed = 0.0F
-						speedSum = 0.0F
-						sum = 0
-						startingMapMarker = entry
-					}
-				}
-
-				if (entry.skiingActivity.speed > maxSpeed) {
-					maxSpeed = entry.skiingActivity.speed
-				}
-				speedSum += entry.skiingActivity.speed
-				++sum
-			}
-
-			val finalActivitySummary = ActivitySummaryEntry(startingMapMarker, maxSpeed,
-					speedSum/sum, mapMarkers.last().skiingActivity.time)
-			arraySummaryEntries.add(finalActivitySummary)
-
-			return arraySummaryEntries.toTypedArray()
 		}
 
 		fun convertJsonToGeoJson(json: JSONObject): JSONObject {
@@ -629,9 +718,7 @@ class ActivitySummary : FragmentActivity() {
 			for (datesWithActivities: SkiingDateWithActivities in dates) {
 
 				// If there are no activities for the date simply don't show it
-				if (datesWithActivities.skiingActivities.isEmpty()) {
-					continue
-				}
+				if (datesWithActivities.skiingActivities.isEmpty()) { continue }
 
 				val textView = TextView(this.context)
 				textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -655,9 +742,9 @@ class ActivitySummary : FragmentActivity() {
 
 		var circles: MutableList<Circle> = mutableListOf()
 
-		private var runMarker: Marker? = null
+		var polylines: MutableList<Polyline> = mutableListOf()
 
-		var polyline: Polyline? = null
+		private var runMarker: Marker? = null
 
 		@SuppressLint("PotentialBehaviorOverride")
         override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
@@ -706,6 +793,10 @@ class ActivitySummary : FragmentActivity() {
 			}
 
 			googleMap.setOnInfoWindowCloseListener { it.isVisible = false }
+
+			// The top and left padding are useless to us
+			// because the map is always at the bottom while in portrait and on the right in landscape
+			googleMap.setPadding(0, 0, rpad, bpad)
 		}
 
 		override fun destroy() {
@@ -713,16 +804,20 @@ class ActivitySummary : FragmentActivity() {
 			clearMap()
 		}
 
-		fun clearMap() {
+		fun removeCircles() {
 			for (circle in circles) {
 				circle.remove()
 			}
 			circles.clear()
+		}
 
-			if (polyline != null) {
-				polyline!!.remove()
-				polyline = null
+		fun clearMap() {
+			removeCircles()
+
+			for (polyline in polylines) {
+				polyline.remove()
 			}
+			polylines.clear()
 		}
 
 		override fun getInfoContents(marker: Marker): View? {
@@ -769,25 +864,39 @@ class ActivitySummary : FragmentActivity() {
 			Log.v("CustomInfoWindow", "getInfoWindow called")
 			return null
 		}
+	}
 
-		@UiThread
-		fun addPolylineFromMarker() {
+	private inner class OptionsDialog : MapOptionsDialog(layoutInflater, R.layout.activity_map_options, map) {
 
-			polyline = googleMap.addPolyline {
+		private var showDotsImage: MapOptionItem? = null
 
-				for (circle in circles) {
-					add(circle.center)
+		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+			val view = super.getView(position, convertView, parent)
+
+			if (showDotsImage != null) {
+				return view
+			}
+
+			val showDotsButton: MapOptionItem? = view.findViewById(R.id.show_circles)
+			if (showDotsButton == null) {
+				Log.w("getView", "Unable to find show dots button")
+				return view
+			}
+
+			showDotsButton.setOnClickListener {
+				showDots = !showDots
+
+				if (showDots) {
+					lifecycleScope.launch { addCirclesToMap() }
+				} else {
+					map.removeCircles()
 				}
 
-				color(getARGB(R.color.yellow))
-				zIndex(10.0F)
-				geodesic(true)
-				startCap(RoundCap())
-				endCap(RoundCap())
-				clickable(false)
-				width(8.0F)
-				visible(true)
+				showDotsButton.toggleOptionVisibility()
 			}
+			showDotsImage = showDotsButton
+
+			return view
 		}
 	}
 }

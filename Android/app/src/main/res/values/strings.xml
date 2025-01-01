@@ -25,17 +25,20 @@
 
     <!-- Menu text -->
     <string name="options_menu">☰</string>
-    <string name="show_chairlifts">Show Chairlifts</string>
-    <string name="hide_chairlifts">Hide Chairlifts</string>
-    <string name="show_beginner">Show Beginner Runs</string>
-    <string name="hide_beginner">Hide Beginner Runs</string>
-    <string name="show_intermediate">Show Intermediate Runs</string>
-    <string name="hide_intermediate">Hide Intermediate Runs</string>
-    <string name="show_advanced">Show Advanced Runs</string>
-    <string name="hide_advanced">Hide Advanced Runs</string>
-    <string name="night_runs">Only Show Night Runs</string>
-    <string name="all_runs">Show All Runs</string>
-    <string name="activity_summary">View activity summary</string>
+    <string name="menu_description">Menu</string>
+    <string name="show_chairlifts">Show\nChairlifts\n</string>
+    <string name="hide_chairlifts">Hide\nChairlifts\n</string>
+    <string name="show_beginner">Show\nBeginner Runs</string>
+    <string name="hide_beginner">Hide\nBeginner\nRuns</string>
+    <string name="show_intermediate">Show\nIntermediate\nRuns</string>
+    <string name="hide_intermediate">Hide\nIntermediate\nRuns</string>
+    <string name="show_advanced">Show\nAdvanced\nRuns</string>
+    <string name="hide_advanced">Hide\nAdvanced\nRuns</string>
+    <string name="night_runs">Only Show\nNight\nRuns</string>
+    <string name="all_runs">Show\nAll\nRuns</string>
+    <string name="activity_summary">View\nactivity\nsummary</string>
+    <string name="show_dots">Show dots\nWARNING:\nVery Slow</string>
+    <string name="hide_dots">Hide dots</string>
 
     <!-- Activity summary -->
     <string name="activity_summary_title">Activity Summary</string>
@@ -62,25 +65,6 @@
     <!-- File selection -->
     <string name="select_file">Select a date</string>
     <string name="cancel">Cancel</string>
-
-    <!-- Debug view -->
-    <string name="debug_view_title">Super Secret Debug View</string>
-    <string name="previous_location_name">Previous location name: %s</string>
-    <string name="previous_location_accuracy">Previous location accuracy: %f meters</string>
-    <string name="previous_location_altitude">Previous location altitude: %f meters\n<i>±%f meters</i></string>
-    <string name="previous_location_latitude">Previous location latitude: %f</string>
-    <string name="previous_location_longitude">Previous location longitude: %f</string>
-    <string name="previous_location_speed">Previous location speed: %f meters/second\n<i>±%f meters/second</i></string>
-    <string name="current_location_name">Current location name: %s</string>
-    <string name="current_location_accuracy">Current location accuracy: %f meters</string>
-    <string name="current_location_altitude">Current location altitude: %f meters\n<i>±%f meters</i></string>
-    <string name="current_location_latitude">Current location latitude: %f</string>
-    <string name="current_location_longitude">Current location longitude: %f</string>
-    <string name="current_location_speed">Current location speed: %f meters/second\n<i>±%f meters/second</i></string>
-    <string name="vertical_direction">Vertical direction: %s</string>
-    <string name="most_likely_chairlift">Most likely chairlift: %s</string>
-    <string name="altitude_confidence">Altitude confidence: %s</string>
-    <string name="speed_confidence">Speed confidence: %s</string>
 
     <!-- Toast text -->
     <string name="bounds_missing">Stopping location tracking due to missing bounds</string>
