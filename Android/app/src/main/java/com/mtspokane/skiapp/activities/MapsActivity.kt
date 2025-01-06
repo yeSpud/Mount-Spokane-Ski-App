@@ -182,6 +182,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
 			val serviceIntent = Intent(this, SkierLocationService::class.java)
+			serviceIntent.action = SkierLocationService.START_TRACKING_INTENT
 
 			// Check if the service has already been started and is running...
 			val activityManager: ActivityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -325,7 +326,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 				toggleLocationTracking.setOnClickListener {
 					if (isTrackingLocation) {
 						manuallyDisabled = true
-						skierLocationService?.stopSelf() ?: Log.w("onClick",
+						skierLocationService?.stopService() ?: Log.w("onClick",
 							"Unable to stop location tracking")
 					} else {
 						manuallyDisabled = false
