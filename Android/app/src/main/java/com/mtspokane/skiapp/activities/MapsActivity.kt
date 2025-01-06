@@ -316,10 +316,20 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 	private inner class OptionsDialog : MapOptionsDialog(layoutInflater, R.layout.main_options, map) {
 
+		private var showTerrainParkButton: MapOptionItem? = null
+
 		private var launchActivitySummaryImage: MapOptionItem? = null
 
 		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 			val view = super.getView(position, convertView, parent)
+
+			if (showTerrainParkButton == null) {
+				val terrainParkButton: MapOptionItem = view.findViewById(R.id.show_terrain_parks)
+				terrainParkButton.setOnClickListener {
+					terrainParkButton.toggleOptionVisibility()
+				}
+				showTerrainParkButton = terrainParkButton
+			}
 
 			if (locationTrackingButton == null) {
 				val toggleLocationTracking: MapOptionItem = view.findViewById(R.id.toggle_location_tracking)
