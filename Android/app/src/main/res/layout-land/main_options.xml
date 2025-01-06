@@ -72,7 +72,7 @@
         app:enabled_menu_title="@string/show_advanced" />
 
     <com.mtspokane.skiapp.maphandlers.MapOptionItem
-        android:id="@+id/show_night_runs"
+        android:id="@+id/show_terrain_parks"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/menu_image_top_margin"
@@ -80,31 +80,31 @@
         android:layout_marginStart="@dimen/menu_edge_margin"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintRight_toLeftOf="@id/show_terrain_parks"
+        app:layout_constraintRight_toLeftOf="@id/show_night_runs"
         app:layout_constraintTop_toBottomOf="@id/show_chairlift"
         app:layout_constraintBottom_toBottomOf="parent"
 
-        app:enabled_menu_icon="@drawable/night"
-        app:enabled_menu_title="@string/night_runs"
-        app:disabled_menu_icon="@drawable/sun"
-        app:disabled_menu_title="@string/all_runs" />
+        app:disabled_menu_icon="@drawable/terrain_park_disabled"
+        app:disabled_menu_title="@string/hide_terrain"
+        app:enabled_menu_icon="@drawable/terrain_park"
+        app:enabled_menu_title="@string/show_terrain" />
 
     <com.mtspokane.skiapp.maphandlers.MapOptionItem
-        android:id="@+id/show_terrain_parks"
+        android:id="@+id/show_night_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/menu_image_top_margin"
         android:layout_marginBottom="@dimen/menu_image_top_margin"
 
         app:layout_constraintRight_toLeftOf="@id/toggle_location_tracking"
-        app:layout_constraintLeft_toRightOf="@id/show_night_runs"
+        app:layout_constraintLeft_toRightOf="@id/show_terrain_parks"
         app:layout_constraintTop_toBottomOf="@id/show_easy_runs"
         app:layout_constraintBottom_toBottomOf="parent"
 
-        app:enabled_menu_icon="@drawable/ic_missing"
-        app:enabled_menu_title="@string/hide_terrain"
-        app:disabled_menu_icon="@drawable/ic_missing"
-        app:disabled_menu_title="@string/show_terrain" />
+        app:enabled_menu_icon="@drawable/night"
+        app:enabled_menu_title="@string/night_runs"
+        app:disabled_menu_icon="@drawable/sun"
+        app:disabled_menu_title="@string/all_runs" />
 
     <com.mtspokane.skiapp.maphandlers.MapOptionItem
         android:id="@+id/toggle_location_tracking"
@@ -114,7 +114,7 @@
         android:layout_marginBottom="@dimen/menu_image_top_margin"
 
         app:layout_constraintRight_toLeftOf="@id/launch_activity_summary"
-        app:layout_constraintLeft_toRightOf="@id/show_terrain_parks"
+        app:layout_constraintLeft_toRightOf="@id/show_night_runs"
         app:layout_constraintTop_toBottomOf="@id/show_moderate_runs"
         app:layout_constraintBottom_toBottomOf="parent"
 
