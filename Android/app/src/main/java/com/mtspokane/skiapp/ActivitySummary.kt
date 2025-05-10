@@ -1,4 +1,4 @@
-package com.mtspokane.skiapp.activities.activitysummary
+package com.mtspokane.skiapp
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
+import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -27,31 +28,20 @@ import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
-import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.maps.android.ktx.addCircle
-import com.google.maps.android.ktx.addMarker
-import com.google.maps.android.ktx.addPolyline
-import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.activities.SkierLocationService
-import com.mtspokane.skiapp.Database
-import com.mtspokane.skiapp.LongAndShortDate
-import com.mtspokane.skiapp.SkiingActivity
-import com.mtspokane.skiapp.SkiingActivityDao
-import com.mtspokane.skiapp.SkiingDateWithActivities
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
 import com.mtspokane.skiapp.databinding.FileSelectionBinding
-import com.mtspokane.skiapp.mapItem.Locations
-import com.mtspokane.skiapp.mapItem.MapMarker
-import com.mtspokane.skiapp.maphandlers.MapHandler
-import com.mtspokane.skiapp.maphandlers.MapOptionItem
-import com.mtspokane.skiapp.maphandlers.MapOptionsDialog
 import com.orhanobut.dialogplus.DialogPlus
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
+import xyz.thespud.skimap.activities.InfoMapActivity
+import xyz.thespud.skimap.activities.InfoMapOptionsDialog
+import xyz.thespud.skimap.mapItem.Locations
+import xyz.thespud.skimap.mapItem.MapMarker
+import xyz.thespud.skimap.services.SkiingNotification
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -64,11 +54,6 @@ class ActivitySummary : FragmentActivity() {
 
 	private lateinit var binding: ActivitySummaryBinding
 
-	private var lpad = 0
-	private var tpad = 0
-	private var rpad = 0
-	private var bpad = 0
-
 	private var totalRunsNumber = 0
 	private var absoluteMaxSpeed = 0F
 	private var averageSpeedSum = 0F
@@ -78,8 +63,6 @@ class ActivitySummary : FragmentActivity() {
 	private lateinit var fileSelectionDialog: FileSelectionDialog
 
 	private lateinit var map: Map
-
-	private var showDots = false
 
 	private lateinit var optionsView: DialogPlus
 
@@ -182,6 +165,10 @@ class ActivitySummary : FragmentActivity() {
 		setContentView(binding.root)
 
 		// Fix edge to edge behavior
+		var lpad = 0
+		var tpad = 0
+		var rpad = 0
+		var bpad = 0
 		ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
 			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 			lpad = systemBars.left
@@ -238,10 +225,12 @@ class ActivitySummary : FragmentActivity() {
 		}
 
 		// Setup the map handler.
-		map = Map()
+		// The top and left padding are useless to us
+		// because the map is always at the bottom while in portrait and on the right in landscape
+		map = Map(0, 0, rpad, bpad)
 
 		optionsView = DialogPlus.newDialog(this)
-			.setAdapter(OptionsDialog())
+			.setAdapter(InfoMapOptionsDialog(map))
 			.setExpanded(false)
 			.setContentBackgroundResource(R.color.dark_blue)
 			.create()
@@ -391,13 +380,16 @@ class ActivitySummary : FragmentActivity() {
 			var activitySummaryEntries: Array<ActivitySummaryEntry> = arrayOf()
 			val processingJob = launch {
 				Log.d("loadActivities", "Started parsing activity from file")
-				loadedMapMarkers = Array(loadedSkiingActivities.size) { getMapMarker(loadedSkiingActivities[it]) }
+				loadedMapMarkers = Array(loadedSkiingActivities.size) {
+					val location = Database.skiingActivityToLocation(loadedSkiingActivities[it])
+					getMapMarker(location)
+				}
 				activitySummaryEntries = parseMapMarkersForMap()
 				Log.d("loadActivities", "Finished parsing activities from file")
 			}
 			processingJob.join()
 
-			val addCirclesJob = launch { addPolylinesToMap() }
+			val addCirclesJob = launch { map.addPolylinesToMap() }
 			val addActivitiesJob = launch { addActivity(activitySummaryEntries) }
 			joinAll(addCirclesJob, addActivitiesJob)
 
@@ -435,7 +427,7 @@ class ActivitySummary : FragmentActivity() {
 				if (entry.name != startingMapMarker.name) {
 
 					val newActivitySummaryEntry = ActivitySummaryEntry(startingMapMarker, maxSpeed,
-						speedSum/sum, entry.skiingActivity.time)
+						speedSum/sum, entry.location.time)
 					arraySummaryEntries.add(newActivitySummaryEntry)
 
 					maxSpeed = 0.0F
@@ -445,83 +437,18 @@ class ActivitySummary : FragmentActivity() {
 				}
 			}
 
-			if (entry.skiingActivity.speed > maxSpeed) {
-				maxSpeed = entry.skiingActivity.speed
+			if (entry.location.speed > maxSpeed) {
+				maxSpeed = entry.location.speed
 			}
-			speedSum += entry.skiingActivity.speed
+			speedSum += entry.location.speed
 			++sum
 		}
 
 		val finalActivitySummary = ActivitySummaryEntry(startingMapMarker, maxSpeed,
-			speedSum/sum, loadedMapMarkers.last().skiingActivity.time)
+			speedSum/sum, loadedMapMarkers.last().location.time)
 		arraySummaryEntries.add(finalActivitySummary)
 
 		return arraySummaryEntries.toTypedArray()
-	}
-
-	@AnyThread
-	private suspend fun addPolylinesToMap() = withContext(Dispatchers.Default) {
-		Log.d("addPolylinesToMap", "Started adding polylines to map")
-		var previousMapMarker: MapMarker? = null
-		val polylinePoints: MutableList<LatLng> = mutableListOf()
-
-		for (mapMarker in loadedMapMarkers) {
-			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
-			polylinePoints.add(location)
-
-			if (previousMapMarker != null) {
-				if (previousMapMarker.color != mapMarker.color) {
-
-					val polyline = withContext(Dispatchers.Main) {
-						map.googleMap.addPolyline {
-							addAll(polylinePoints)
-							color(previousMapMarker!!.color)
-							zIndex(10.0F)
-							geodesic(true)
-							startCap(RoundCap())
-							endCap(RoundCap())
-							clickable(false)
-							width(8.0F)
-							visible(true)
-						}
-					}
-					map.polylines.add(polyline)
-					polylinePoints.clear()
-					polylinePoints.add(location)
-				}
-			}
-
-			previousMapMarker = mapMarker
-		}
-
-		System.gc()
-		Log.d("addPolylinesToMap", "Finished adding circles to map")
-	}
-
-	/**
-	 * WARNING: This runs on the UI thread so it'll freeze the app while adding all the circles
-	 */
-	@AnyThread
-	private suspend fun addCirclesToMap() = withContext(Dispatchers.Main) {
-		Log.d("addCirclesToMap", "Started adding circles to map")
-		for (mapMarker in loadedMapMarkers) {
-			val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
-
-			val circle = map.googleMap.addCircle { // FIXME this is using too much RAM & causes too much lag
-				center(location)
-				strokeColor(mapMarker.color)
-				fillColor(mapMarker.color)
-				clickable(true)
-				radius(3.0)
-				zIndex(50.0F)
-				visible(showDots)
-			}
-			circle.tag = mapMarker
-			map.circles.add(circle)
-		}
-
-		System.gc()
-		Log.d("addCirclesToMap", "Finished adding circles to map")
 	}
 
 	@AnyThread
@@ -591,7 +518,7 @@ class ActivitySummary : FragmentActivity() {
 			activityView.averageSpeed.visibility = View.INVISIBLE
 		}
 
-		activityView.startTime.text = getTimeFromLong(activitySummaryEntry.mapMarker.skiingActivity.time)
+		activityView.startTime.text = getTimeFromLong(activitySummaryEntry.mapMarker.location.time)
 
 		if (activitySummaryEntry.endTime != null) {
 			activityView.endTime.text = getTimeFromLong(activitySummaryEntry.endTime)
@@ -601,9 +528,9 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	@AnyThread
-	private fun getMapMarker(skiingActivity: SkiingActivity): MapMarker {
+	private fun getMapMarker(location: Location): MapMarker {
 
-		Locations.updateLocations(skiingActivity)
+		Locations.updateLocations(location)
 
 		var marker: MapMarker? = Locations.checkIfIOnChairlift(map.startingChairliftTerminals,
 			map.endingChairliftTerminals)
@@ -616,27 +543,28 @@ class ActivitySummary : FragmentActivity() {
 			return marker
 		}
 
-		marker = Locations.checkIfOnRun(map.easyRunsBounds, map.moderateRunsBounds,
-			map.difficultRunsBounds)
+		marker = Locations.checkIfOnRun(map.greenRunBounds, map.blueRunBounds, map.blackRunBounds,
+			map.doubleBlackRunBounds)
 		if (marker != null) {
 			return marker
 		}
 
 		val previousLocation = Locations.previousLocation
 		if (previousLocation != null) {
-			Log.v("getMapMarker", "Unknown location at ${skiingActivity.latitude}, " +
-					"${skiingActivity.longitude} - falling back to ${previousLocation.latitude}, " +
+			Log.v("getMapMarker", "Unknown location at ${location.latitude}, " +
+					"${location.longitude} - falling back to ${previousLocation.latitude}, " +
 					"${previousLocation.longitude}")
 			val previousMapMarker = getMapMarker(previousLocation)
 
-			Log.d("getMapMarker", "Determined ${skiingActivity.latitude}, " +
-					"${skiingActivity.longitude} to be ${previousMapMarker.name}")
-			return MapMarker(previousMapMarker.name, skiingActivity, previousMapMarker.icon,
+			Log.d("getMapMarker", "Determined ${location.latitude}, " +
+					"${location.longitude} to be ${previousMapMarker.name}")
+			return MapMarker(previousMapMarker.name, location, previousMapMarker.icon,
 				previousMapMarker.markerColor, previousMapMarker.color)
 		}
 
 		Log.w("getMapMarker", "Unable to determine location")
-		return MapMarker(UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
+		return MapMarker(
+			UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
 			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
 	}
 
@@ -738,165 +666,56 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private inner class Map : MapHandler(this@ActivitySummary), GoogleMap.InfoWindowAdapter {
-
-		var circles: MutableList<Circle> = mutableListOf()
-
-		var polylines: MutableList<Polyline> = mutableListOf()
-
-		private var runMarker: Marker? = null
+	private inner class Map(lpad: Int, tpad: Int, rpad: Int, bpad: Int) : InfoMapActivity(
+		this@ActivitySummary, lpad, tpad, rpad, bpad,
+		CameraPosition.Builder().target(LatLng(47.92517834073426, -117.10480503737926)).tilt(45F).bearing(317.50552F).zoom(14.414046F).build(),
+		LatLngBounds(LatLng(47.912728, -117.133402), LatLng(47.943674, -117.092470)),
+		R.raw.lifts, R.raw.easy, R.raw.moderate, R.raw.difficult, null,
+		R.raw.starting_lift_polygons, R.raw.ending_lift_polygons, R.raw.easy_polygons,
+		R.raw.moderate_polygons, R.raw.difficult_polygons, null, R.raw.other) {
 
 		@SuppressLint("PotentialBehaviorOverride")
         override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
+			super.additionalCallback
 
 			val skiingDateWithActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(
 				Database.getTodaysDate())
 			if (skiingDateWithActivities != null) {
 				loadedSkiingActivities = skiingDateWithActivities.skiingActivities
-				if (intent.hasExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
-					val dateId = intent.getIntExtra(SkierLocationService.ACTIVITY_SUMMARY_LAUNCH_DATE, 0)
+				if (intent.hasExtra(SkiingNotification.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
+					val dateId = intent.getIntExtra(SkiingNotification.ACTIVITY_SUMMARY_LAUNCH_DATE, 0)
 					loadedSkiingActivities = databaseDao.getActivitiesByDateId(dateId)
 
 					val notificationManager: NotificationManager = activity.getSystemService(Context.NOTIFICATION_SERVICE)
 							as NotificationManager
-					notificationManager.cancel(SkierLocationService.ACTIVITY_SUMMARY_ID)
+					notificationManager.cancel(SkiingNotification.ACTIVITY_SUMMARY_ID)
 				}
 
 				drawLoadedSkiingActivities()
 			}
+		}
 
-			googleMap.setOnCircleClickListener {
-
-				googleMap.setInfoWindowAdapter(this)
-
-				val mapMarker = it.tag as MapMarker
-				val location = LatLng(mapMarker.skiingActivity.latitude, mapMarker.skiingActivity.longitude)
-
-				if (runMarker == null) {
-					runMarker = googleMap.addMarker {
-						position(location)
-						icon(mapMarker.markerColor)
-						title(mapMarker.name)
-						zIndex(99.0F)
-						visible(true)
-					}
-				} else {
-					runMarker!!.position = location
-					runMarker!!.setIcon(mapMarker.markerColor)
-					runMarker!!.title = mapMarker.name
-					runMarker!!.isVisible = true
+		override fun getOtherIcon(name: String): Int? {
+			Log.d("getOtherIcon", "Getting icon for $name")
+			val icon: Int? = when (name) {
+				"Lodge 1" -> R.drawable.ic_lodge
+				"Lodge 2" -> R.drawable.ic_lodge
+				"Yurt" -> R.drawable.ic_yurt
+				"Vista House" -> R.drawable.ic_vista_house
+				"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
+				"Lodge 1 Parking Lot" -> R.drawable.ic_parking
+				"Lodge 2 Parking Lot" -> R.drawable.ic_parking
+				"Tubing Area" -> R.drawable.ic_missing // Todo Tubing area icon
+				"Ski School" -> R.drawable.ic_ski_school
+				"Learning Area" -> R.drawable.ic_ski_school
+				"Top of 1, 6", "Top of 2", "Top of 3", "Top of 4", "Top of 5" -> R.drawable.ic_chairlift
+				else -> {
+					Log.w("getOtherIcon", "$name does not have an icon")
+					null
 				}
-
-				runMarker!!.isVisible = true
-				runMarker!!.tag = mapMarker
-				runMarker!!.showInfoWindow()
 			}
 
-			googleMap.setOnInfoWindowCloseListener { it.isVisible = false }
-
-			// The top and left padding are useless to us
-			// because the map is always at the bottom while in portrait and on the right in landscape
-			googleMap.setPadding(0, 0, rpad, bpad)
-		}
-
-		override fun destroy() {
-			super.destroy()
-			clearMap()
-		}
-
-		fun removeCircles() {
-			for (circle in circles) {
-				circle.remove()
-			}
-			circles.clear()
-		}
-
-		fun clearMap() {
-			removeCircles()
-
-			for (polyline in polylines) {
-				polyline.remove()
-			}
-			polylines.clear()
-		}
-
-		override fun getInfoContents(marker: Marker): View? {
-			Log.v("CustomInfoWindow", "getInfoContents called")
-
-			if (marker.tag !is MapMarker) {
-				return null
-			}
-
-			val markerView: View = layoutInflater.inflate(R.layout.info_window, null)
-			val name: TextView = markerView.findViewById(R.id.marker_name)
-
-			val markerInfo: MapMarker = marker.tag as MapMarker
-			name.text = markerInfo.name
-
-			val altitude: TextView = markerView.findViewById(R.id.marker_altitude)
-
-			// Convert from meters to feet.
-			val altitudeConversion = 3.280839895f
-
-			try {
-				altitude.text = getString(R.string.marker_altitude,
-					(markerInfo.skiingActivity.altitude * altitudeConversion).roundToInt())
-			} catch (e: IllegalArgumentException) {
-				altitude.text = getString(R.string.marker_altitude, 0)
-			}
-
-			val speed: TextView = markerView.findViewById(R.id.marker_speed)
-
-			// Convert from meters per second to miles per hour.
-			val speedConversion = 0.44704f
-
-			try {
-				speed.text = getString(R.string.marker_speed,
-						(markerInfo.skiingActivity.speed / speedConversion).roundToInt())
-			} catch (e: IllegalArgumentException) {
-				speed.text = getString(R.string.marker_speed, 0)
-			}
-
-			return markerView
-		}
-
-		override fun getInfoWindow(marker: Marker): View? {
-			Log.v("CustomInfoWindow", "getInfoWindow called")
-			return null
-		}
-	}
-
-	private inner class OptionsDialog : MapOptionsDialog(layoutInflater, R.layout.activity_map_options, map) {
-
-		private var showDotsImage: MapOptionItem? = null
-
-		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-			val view = super.getView(position, convertView, parent)
-
-			if (showDotsImage != null) {
-				return view
-			}
-
-			val showDotsButton: MapOptionItem? = view.findViewById(R.id.show_circles)
-			if (showDotsButton == null) {
-				Log.w("getView", "Unable to find show dots button")
-				return view
-			}
-
-			showDotsButton.setOnClickListener {
-				showDots = !showDots
-
-				if (showDots) {
-					lifecycleScope.launch { addCirclesToMap() }
-				} else {
-					map.removeCircles()
-				}
-
-				showDotsButton.toggleOptionVisibility()
-			}
-			showDotsImage = showDotsButton
-
-			return view
+			return icon
 		}
 	}
 }

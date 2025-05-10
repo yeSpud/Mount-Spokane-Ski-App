@@ -1,5 +1,7 @@
 package com.mtspokane.skiapp
 
+import android.location.Location
+import android.os.Build
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -88,6 +90,23 @@ abstract class Database : RoomDatabase() {
 		fun getLongDateFromLong(date: Long): String {
 			val dateFormat = SimpleDateFormat("LLLL dd yyyy", Locale.US)
 			return dateFormat.format(date)
+		}
+
+		fun skiingActivityToLocation(skiingActivity: SkiingActivity): Location {
+			val location = Location("")
+			location.accuracy = skiingActivity.accuracy
+			location.altitude = skiingActivity.altitude
+			location.latitude = skiingActivity.latitude
+			location.longitude = skiingActivity.longitude
+			location.speed = skiingActivity.speed
+			location.time = location.time
+
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				location.verticalAccuracyMeters = skiingActivity.altitudeAccuracy ?: 0F
+				location.speedAccuracyMetersPerSecond = skiingActivity.speedAccuracy ?: 0F
+			}
+
+			return location
 		}
 	}
 }

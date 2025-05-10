@@ -1,12 +1,12 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = '2.1.0'
+    ext.kotlin_version = '2.1.20'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.3'
+        classpath 'com.android.tools.build:gradle:8.9.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1"
 
@@ -16,9 +16,9 @@ buildscript {
 }
 
 ext {
-    maps_ktx_version = '5.1.1'
-    coroutine_version = '1.10.1'
-    room_version = '2.6.1'
+    maps_ktx_version = '5.2.0'
+    coroutine_version = '1.10.2'
+    room_version = '2.7.1'
 }
 
 tasks.register('clean', Delete) {

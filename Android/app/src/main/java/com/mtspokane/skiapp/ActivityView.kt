@@ -1,12 +1,11 @@
-package com.mtspokane.skiapp.activities.activitysummary
+package com.mtspokane.skiapp
 
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.mapItem.MapMarker
+import xyz.thespud.skimap.mapItem.MapMarker
 
 class ActivityView : ConstraintLayout {
 
