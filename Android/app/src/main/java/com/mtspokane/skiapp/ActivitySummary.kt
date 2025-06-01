@@ -49,6 +49,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.roundToInt
+import androidx.core.net.toUri
+import xyz.thespud.skimap.mapItem.SkiRuns
 
 class ActivitySummary : FragmentActivity() {
 
@@ -224,10 +226,22 @@ class ActivitySummary : FragmentActivity() {
 			actionBar!!.setDisplayShowTitleEnabled(true)
 		}
 
+		// Load the map polylines and polygons
+		val skiRuns = SkiRuns(R.raw.other)
+		skiRuns.liftsPolyline = R.raw.lifts
+		skiRuns.greenRunPolylines = R.raw.easy
+		skiRuns.blueRunPolylines = R.raw.moderate
+		skiRuns.blackRunPolylines = R.raw.difficult
+		skiRuns.startingLiftBounds = R.raw.starting_lift_polygons
+		skiRuns.endingLiftPolylines = R.raw.ending_lift_polygons
+		skiRuns.greenRunBounds = R.raw.easy_polygons
+		skiRuns.blueRunBounds = R.raw.moderate_polygons
+		skiRuns.blackRunBounds = R.raw.difficult_polygons
+
 		// Setup the map handler.
 		// The top and left padding are useless to us
 		// because the map is always at the bottom while in portrait and on the right in landscape
-		map = Map(0, 0, rpad, bpad)
+		map = Map(0, 0, rpad, bpad, skiRuns)
 
 		optionsView = DialogPlus.newDialog(this)
 			.setAdapter(InfoMapOptionsDialog(map))
@@ -277,7 +291,7 @@ class ActivitySummary : FragmentActivity() {
 				writeToShareFile("My Skiing Activity.geojson", geojson, GEOJSON_MIME_TYPE) // TODO Change my name
 			}
 			R.id.privacy_policy -> {
-				val uri = Uri.parse("https://thespud.xyz/mount-spokane-ski-app/privacy/")
+				val uri = "https://thespud.xyz/mount-spokane-ski-app/privacy/".toUri()
 				val intent = Intent(Intent.ACTION_VIEW, uri)
 				startActivity(intent)
 			}
@@ -367,7 +381,7 @@ class ActivitySummary : FragmentActivity() {
 		System.gc()
 	}
 
-	fun drawLoadedSkiingActivities()  {
+	fun drawLoadedSkiingActivities() {
 
 		clearScreen()
 		if (loadedSkiingActivities.isEmpty()) { return }
@@ -407,7 +421,7 @@ class ActivitySummary : FragmentActivity() {
 		val arraySummaryEntries = mutableListOf<ActivitySummaryEntry>()
 
 		var startingIndexOffset = 0
-		for (i in 0..loadedMapMarkers.size) {
+		for (i in loadedMapMarkers.indices) {
 			if (loadedMapMarkers[i].name != UNKNOWN_LOCATION) {
 				startingIndexOffset = i
 				break
@@ -532,25 +546,23 @@ class ActivitySummary : FragmentActivity() {
 
 		Locations.updateLocations(location)
 
-		var marker: MapMarker? = Locations.checkIfIOnChairlift(map.startingChairliftTerminals,
-			map.endingChairliftTerminals)
+		var marker: MapMarker? = Locations.checkIfIOnChairlift(map)
 		if (marker != null) {
 			return marker
 		}
 
-		marker = Locations.checkIfOnOther(map.otherBounds)
+		marker = Locations.checkIfOnOther(map)
 		if (marker != null) {
 			return marker
 		}
 
-		marker = Locations.checkIfOnRun(map.greenRunBounds, map.blueRunBounds, map.blackRunBounds,
-			map.doubleBlackRunBounds)
+		marker = Locations.checkIfOnRun(map)
 		if (marker != null) {
 			return marker
 		}
 
 		val previousLocation = Locations.previousLocation
-		if (previousLocation != null) {
+		if (previousLocation != null && (previousLocation.latitude != location.latitude && previousLocation.longitude != location.longitude)) {
 			Log.v("getMapMarker", "Unknown location at ${location.latitude}, " +
 					"${location.longitude} - falling back to ${previousLocation.latitude}, " +
 					"${previousLocation.longitude}")
@@ -634,9 +646,9 @@ class ActivitySummary : FragmentActivity() {
 
 		fun showDialog() {
 
-			val binding: FileSelectionBinding = FileSelectionBinding.inflate(this.layoutInflater)
+			val binding: FileSelectionBinding = FileSelectionBinding.inflate(layoutInflater)
 
-			val alertDialogBuilder = Builder(this.context)
+			val alertDialogBuilder = Builder(context)
 			alertDialogBuilder.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
 			alertDialogBuilder.setView(binding.root)
 
@@ -648,7 +660,7 @@ class ActivitySummary : FragmentActivity() {
 				// If there are no activities for the date simply don't show it
 				if (datesWithActivities.skiingActivities.isEmpty()) { continue }
 
-				val textView = TextView(this.context)
+				val textView = TextView(context)
 				textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
 						ViewGroup.LayoutParams.WRAP_CONTENT)
 				textView.text = datesWithActivities.skiingDate.longDate
@@ -666,13 +678,11 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	private inner class Map(lpad: Int, tpad: Int, rpad: Int, bpad: Int) : InfoMapActivity(
+	private inner class Map(lpad: Int, tpad: Int, rpad: Int, bpad: Int, skiRuns: SkiRuns) : InfoMapActivity(
 		this@ActivitySummary, lpad, tpad, rpad, bpad,
 		CameraPosition.Builder().target(LatLng(47.92517834073426, -117.10480503737926)).tilt(45F).bearing(317.50552F).zoom(14.414046F).build(),
 		LatLngBounds(LatLng(47.912728, -117.133402), LatLng(47.943674, -117.092470)),
-		R.raw.lifts, R.raw.easy, R.raw.moderate, R.raw.difficult, null,
-		R.raw.starting_lift_polygons, R.raw.ending_lift_polygons, R.raw.easy_polygons,
-		R.raw.moderate_polygons, R.raw.difficult_polygons, null, R.raw.other) {
+		skiRuns) {
 
 		@SuppressLint("PotentialBehaviorOverride")
         override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {

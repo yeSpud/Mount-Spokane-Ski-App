@@ -21,8 +21,8 @@ android {
         versionName "$versionNameDate"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        targetSdk 35
-        minSdk 22
+        targetSdk 36
+        minSdk 27
 
         ksp {
             arg('room.schemaLocation', "$projectDir/schemas")
@@ -61,7 +61,7 @@ android {
         viewBinding true
         buildConfig true
     }
-    compileSdk 35
+    compileSdk 36
     dependenciesInfo {
         includeInBundle true
         includeInApk true

@@ -100,12 +100,8 @@ abstract class Database : RoomDatabase() {
 			location.longitude = skiingActivity.longitude
 			location.speed = skiingActivity.speed
 			location.time = location.time
-
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				location.verticalAccuracyMeters = skiingActivity.altitudeAccuracy ?: 0F
-				location.speedAccuracyMetersPerSecond = skiingActivity.speedAccuracy ?: 0F
-			}
-
+			location.verticalAccuracyMeters = skiingActivity.altitudeAccuracy ?: 0F
+			location.speedAccuracyMetersPerSecond = skiingActivity.speedAccuracy ?: 0F
 			return location
 		}
 	}

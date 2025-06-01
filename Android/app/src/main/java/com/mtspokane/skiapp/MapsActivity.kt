@@ -13,8 +13,6 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.GridLayout
-import android.widget.GridView
-import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.ActivityCompat
@@ -31,6 +29,7 @@ import com.orhanobut.dialogplus.DialogPlus
 import xyz.thespud.skimap.activities.LiveMapActivity
 import xyz.thespud.skimap.activities.LiveMapOptionsDialog
 import xyz.thespud.skimap.activities.MapOptionItem
+import xyz.thespud.skimap.mapItem.SkiRuns
 import xyz.thespud.skimap.services.SkiingNotification
 import java.util.Date
 
@@ -97,8 +96,20 @@ class MapsActivity : FragmentActivity() {
 		}
 		skiingDate = skiingDateAndActivities.skiingDate
 
+		// Load the map polylines and polygons
+		val skiRuns = SkiRuns(R.raw.other)
+		skiRuns.liftsPolyline = R.raw.lifts
+		skiRuns.greenRunPolylines = R.raw.easy
+		skiRuns.blueRunPolylines = R.raw.moderate
+		skiRuns.blackRunPolylines = R.raw.difficult
+		skiRuns.startingLiftBounds = R.raw.starting_lift_polygons
+		skiRuns.endingLiftPolylines = R.raw.ending_lift_polygons
+		skiRuns.greenRunBounds = R.raw.easy_polygons
+		skiRuns.blueRunBounds = R.raw.moderate_polygons
+		skiRuns.blackRunBounds = R.raw.difficult_polygons
+
 		// Setup the map handler.
-		map = Map(lpad, tpad, rpad, bpad)
+		map = Map(lpad, tpad, rpad, bpad, skiRuns)
 
 		optionsView = DialogPlus.newDialog(this)
 			.setAdapter(OptionsDialog())
@@ -147,16 +158,15 @@ class MapsActivity : FragmentActivity() {
 		}
 	}
 
-	private inner class Map(leftPadding: Int, topPadding: Int, rightPadding: Int, bottomPadding: Int):
+	private inner class Map(leftPadding: Int, topPadding: Int, rightPadding: Int, bottomPadding: Int,
+	                        skiRuns: SkiRuns):
 		LiveMapActivity(
 			this@MapsActivity,
 			leftPadding, topPadding, rightPadding, bottomPadding,
 			CameraPosition.Builder().target(LatLng(47.92517834073426,
 				-117.10480503737926)).tilt(45F).bearing(317.50552F).zoom(14.414046F).build(),
 			LatLngBounds(LatLng(47.912728, -117.133402), LatLng(47.943674, -117.092470)),
-			R.raw.lifts, R.raw.easy, R.raw.moderate, R.raw.difficult, null,
-			R.raw.starting_lift_polygons, R.raw.ending_lift_polygons, R.raw.easy_polygons,
-			R.raw.moderate_polygons, R.raw.difficult_polygons, null, R.raw.other) {
+			skiRuns) {
 
 			override fun getOtherIcon(name: String): Int? {
 				Log.d("getOtherIcon", "Getting icon for $name")
@@ -200,6 +210,15 @@ class MapsActivity : FragmentActivity() {
 
 			databaseDao.addSkiingActivity(skiingActivity)
 		}
+
+		override fun onTrackingStopped() {
+
+			val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+			val notification = SkiingNotification.createActivityNotification(this@MapsActivity,
+				ActivitySummary::class, R.drawable.ic_launcher_foreground, skiingDate.longDate)
+			notificationManager.notify(SkiingNotification.ACTIVITY_SUMMARY_ID, notification)
+		}
+
 	}
 
 	private inner class OptionsDialog : LiveMapOptionsDialog(map) {
