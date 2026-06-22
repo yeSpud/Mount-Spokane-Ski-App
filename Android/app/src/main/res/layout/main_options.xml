@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:background="@color/dark_blue">
 
-    <xyz.thespud.skimap.activities.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_chairlift"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -21,7 +21,7 @@
         app:disabled_menu_icon="@drawable/chairlift_disabled"
         app:disabled_menu_title="@string/hide_chairlifts" />
 
-    <xyz.thespud.skimap.activities.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_easy_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -36,7 +36,7 @@
         app:disabled_menu_icon="@drawable/easy_disabled"
         app:disabled_menu_title="@string/hide_beginner" />
 
-    <xyz.thespud.skimap.activities.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_moderate_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -51,7 +51,7 @@
         app:disabled_menu_icon="@drawable/moderate_disabled"
         app:disabled_menu_title="@string/hide_intermediate" />
 
-    <xyz.thespud.skimap.activities.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_difficult_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -65,7 +65,7 @@
         app:disabled_menu_icon="@drawable/difficult_disabled"
         app:disabled_menu_title="@string/hide_advanced" />
 
-    <xyz.thespud.skimap.activities.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_terrain_parks"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -83,7 +83,7 @@
         app:enabled_menu_icon="@drawable/terrain_park"
         app:enabled_menu_title="@string/show_terrain" />
 
-    <xyz.thespud.skimap.activities.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_night_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -100,7 +100,7 @@
         app:disabled_menu_icon="@drawable/sun"
         app:disabled_menu_title="@string/all_runs" />
 
-    <xyz.thespud.skimap.activities.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/toggle_location_tracking"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -117,7 +117,7 @@
         app:disabled_menu_icon="@drawable/ic_play"
         app:disabled_menu_title="@string/start_tracking" />
 
-    <xyz.thespud.skimap.activities.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/launch_activity_summary"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
