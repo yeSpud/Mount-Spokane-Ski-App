@@ -107,7 +107,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine_version"
 
     // Spuds Ski Map
-    implementation "xyz.thespud:spuds-ski-map:2026.06.16-1"
+    implementation "xyz.thespud:spuds-ski-map:2026.06.22"
 
     // Room (database library)
     implementation "androidx.room:room-runtime:$room_version"
