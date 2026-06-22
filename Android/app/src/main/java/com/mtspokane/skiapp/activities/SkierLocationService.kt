@@ -58,17 +58,47 @@ class SkierLocationService : Service(), LocationListener {
 	private lateinit var skiingDate: SkiingDate
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-		Log.v("SkierLocationService", "onStartCommand called!")
+		val tag = "SkierLocationService"
+		Log.v(tag, "onStartCommand called!")
 		super.onStartCommand(intent, flags, startId)
 
-		val notification: Notification = createPersistentNotification("", null)
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-			startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
-		} else {
-			startForeground(TRACKING_SERVICE_ID, notification)
+		if (intent == null) {
+			Log.w(tag, "SkierLocationService started without intent")
+			return START_NOT_STICKY
 		}
 
-		Log.d("SkierLocationService", "Started foreground service")
+		val action = intent.action
+		if (action == null) {
+			Log.w(tag, "SkierLocationService intent missing action")
+			return START_NOT_STICKY
+		}
+		Log.v(tag, action)
+
+		when (action) {
+			START_TRACKING_INTENT -> {
+				Log.d(tag, "Starting foreground service")
+
+				val notification: Notification = createPersistentNotification("", null)
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+					startForeground(TRACKING_SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+				} else {
+					startForeground(TRACKING_SERVICE_ID, notification)
+				}
+				serviceCallbacks?.setIsTracking(true)
+			}
+			STOP_TRACKING_INTENT -> {
+				Log.d(tag, "Stopping foreground service")
+
+				serviceCallbacks?.setManuallyDisabled(true) ?: Log.w(
+					tag,
+					"Unable to set manually disabled"
+				)
+
+				stopService()
+			}
+			else -> Log.w(tag, "Unknown intent action: $action")
+		}
+
 		return START_NOT_STICKY
 	}
 
@@ -129,6 +159,7 @@ class SkierLocationService : Service(), LocationListener {
 		Log.v("SkierLocationService", "onDestroy has been called!")
 		super.onDestroy()
 
+		serviceCallbacks?.setIsTracking(false)
 		locationManager.removeUpdates(this)
 		notificationManager.cancel(TRACKING_SERVICE_ID)
 
@@ -152,11 +183,10 @@ class SkierLocationService : Service(), LocationListener {
 
 		// If we are not on the mountain stop the tracking.
 		if (!localServiceCallback.isInBounds(location)) {
-			Toast.makeText(this, R.string.out_of_bounds,
-				Toast.LENGTH_LONG).show()
+			Toast.makeText(this, R.string.out_of_bounds, Toast.LENGTH_LONG).show()
 			notificationManager.cancel(TRACKING_SERVICE_ID)
 			Log.d("SkierLocationService", "Stopping location tracking service")
-			stopSelf()
+			stopService()
 			return
 		}
 
@@ -236,9 +266,15 @@ class SkierLocationService : Service(), LocationListener {
 
 	private fun createPersistentNotification(title: String, iconBitmap: Bitmap?): Notification {
 		val pendingIntent: PendingIntent = createPendingIntent(MapsActivity::class, skiingDate.id)
+		val stopIntent = Intent(this, SkierLocationService::class.java)
+		stopIntent.action = STOP_TRACKING_INTENT
+
 		val builder: NotificationCompat.Builder = getNotificationBuilder(TRACKING_SERVICE_CHANNEL_ID,
 			false, R.string.tracking_notice, pendingIntent)
-		builder.setContentText(title)
+			.setContentText(title)
+			.addAction(0, "Stop Tracking", PendingIntent.getService(this,
+				0, stopIntent,
+				PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE))
 
 		if (iconBitmap != null) {
 			builder.setLargeIcon(iconBitmap)
@@ -253,8 +289,18 @@ class SkierLocationService : Service(), LocationListener {
 		return NotificationCompat.Builder(this, channelId)
 			.setSmallIcon(R.drawable.icon_fg)
 			.setShowWhen(showTime)
-			.setContentTitle(this.getString(titleText))
+			.setContentTitle(getString(titleText))
 			.setContentIntent(pendingIntent)
+	}
+
+	fun stopService() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			stopForeground(STOP_FOREGROUND_REMOVE)
+		} else {
+			@Suppress("DEPRECATION")
+			stopForeground(true)
+		}
+		stopSelf()
 	}
 
 	override fun onBind(intent: Intent?): IBinder? {
@@ -279,6 +325,10 @@ class SkierLocationService : Service(), LocationListener {
 		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
 
 		const val ACTIVITY_SUMMARY_LAUNCH_DATE = "activitySummaryLaunchDate"
+
+		const val STOP_TRACKING_INTENT = "com.mtspokane.skiapp.SkierLocationService.Stop"
+
+		const val START_TRACKING_INTENT = "com.mtspokane.skiapp.SkierLocationService.Start"
 
 		/**
 		 * @author https://studiofreya.com/2018/08/15/android-notification-large-icon-from-vector-xml/
@@ -308,5 +358,9 @@ class SkierLocationService : Service(), LocationListener {
 		fun getInLocation(location: Location): MapMarker?
 
 		fun updateMapMarker(locationString: String)
+
+		fun setIsTracking(isTracking: Boolean)
+
+		fun setManuallyDisabled(manuallyDisabled: Boolean)
 	}
 }

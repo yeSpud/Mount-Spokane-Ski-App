@@ -17,10 +17,8 @@ import android.os.Process
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.core.app.ActivityCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
@@ -57,6 +55,10 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	var locationEnabled = false
 	private set
 
+	private var manuallyDisabled = false
+	private var isTrackingLocation = false
+	private var locationTrackingButton: MapOptionItem? = null
+
 	private lateinit var optionsView: DialogPlus
 
 	private val serviceConnection = object : ServiceConnection {
@@ -66,12 +68,14 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 			skierLocationService = binder.getService()
 			bound = true
 			skierLocationService!!.setCallbacks(this@MapsActivity)
+			setIsTracking(true)
 		}
 
 		override fun onServiceDisconnected(name: ComponentName?) {
 			skierLocationService!!.setCallbacks(null)
 			unbindService(this)
 			skierLocationService = null
+			setIsTracking(false)
 			bound = false
 		}
 	}
@@ -140,6 +144,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		if (bound) {
 			skierLocationService!!.setCallbacks(null)
 			unbindService(serviceConnection)
+			skierLocationService = null
 			bound = false
 		}
 
@@ -149,7 +154,8 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 	override fun onResume() {
 		super.onResume()
 
-		if (isMapSetup && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+		if (isMapSetup && !manuallyDisabled && !isTrackingLocation &&
+			ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
 			== PackageManager.PERMISSION_GRANTED) {
 			launchLocationService()
 		}
@@ -176,6 +182,7 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
 			val serviceIntent = Intent(this, SkierLocationService::class.java)
+			serviceIntent.action = SkierLocationService.START_TRACKING_INTENT
 
 			// Check if the service has already been started and is running...
 			val activityManager: ActivityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -194,6 +201,8 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 			bindService(serviceIntent, serviceConnection, Context.BIND_NOT_FOREGROUND)
 			startService(serviceIntent)
+		} else {
+			Log.w("launchLocationService", "GPS not enabled")
 		}
 	}
 
@@ -229,6 +238,19 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 		if (Locations.currentLocation != null) {
 			map.updateMarkerLocation(Locations.currentLocation!!)
 		}
+	}
+
+	override fun setIsTracking(isTracking: Boolean) {
+		isTrackingLocation = isTracking
+
+		val button = locationTrackingButton ?: return
+		if (button.itemEnabled != isTracking) {
+			button.toggleOptionVisibility()
+		}
+	}
+
+	override fun setManuallyDisabled(manuallyDisabled: Boolean) {
+		this.manuallyDisabled = manuallyDisabled
 	}
 
 	companion object {
@@ -294,26 +316,49 @@ class MapsActivity : FragmentActivity(), SkierLocationService.ServiceCallbacks {
 
 	private inner class OptionsDialog : MapOptionsDialog(layoutInflater, R.layout.main_options, map) {
 
+		private var showTerrainParkButton: MapOptionItem? = null
+
 		private var launchActivitySummaryImage: MapOptionItem? = null
 
 		override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 			val view = super.getView(position, convertView, parent)
 
-			if (launchActivitySummaryImage != null) {
-				return view
+			if (showTerrainParkButton == null) {
+				val terrainParkButton: MapOptionItem = view.findViewById(R.id.show_terrain_parks)
+				terrainParkButton.setOnClickListener {
+					terrainParkButton.toggleOptionVisibility()
+				}
+				showTerrainParkButton = terrainParkButton
 			}
 
-			val activitySummaryImage: MapOptionItem? = view.findViewById(R.id.launch_activity_summary)
-			if (activitySummaryImage == null) {
-				Log.w("getView", "Unable to find activity summary launcher")
-				return view
+			if (locationTrackingButton == null) {
+				val toggleLocationTracking: MapOptionItem = view.findViewById(R.id.toggle_location_tracking)
+				toggleLocationTracking.setOnClickListener {
+					if (isTrackingLocation) {
+						manuallyDisabled = true
+						skierLocationService?.stopService() ?: Log.w("onClick",
+							"Unable to stop location tracking")
+					} else {
+						manuallyDisabled = false
+						launchLocationService()
+					}
+				}
+
+				if (toggleLocationTracking.itemEnabled != isTrackingLocation) {
+					toggleLocationTracking.toggleOptionVisibility()
+				}
+
+				locationTrackingButton = toggleLocationTracking
 			}
 
-			activitySummaryImage.setOnClickListener {
-				optionsView.dismiss()
-				startActivity(Intent(this@MapsActivity, ActivitySummary::class.java))
+			if (launchActivitySummaryImage == null) {
+				val activitySummaryImage: MapOptionItem = view.findViewById(R.id.launch_activity_summary)
+				activitySummaryImage.setOnClickListener {
+					optionsView.dismiss()
+					startActivity(Intent(this@MapsActivity, ActivitySummary::class.java))
+				}
+				launchActivitySummaryImage = activitySummaryImage
 			}
-			launchActivitySummaryImage = activitySummaryImage
 
 			return view
 		}
