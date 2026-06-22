@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
 	<name>Chairlifts Polylines</name>
+	<open>1</open>
 	<Placemark>
 		<name>Chair 1: Vista Cruiser</name>
-		<styleUrl>#failed711</styleUrl>
+		<styleUrl>#failed7110</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -46,7 +47,7 @@
 	<Placemark>
 		<name>Chair 5: Beginner&apos;s Luck</name>
 		<description>night run</description>
-		<styleUrl>#failed340</styleUrl>
+		<styleUrl>#failed3400</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -86,4 +87,5 @@
 			</coordinates>
 		</LineString>
 	</Placemark>
+	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.7.1155"></atom:link>
 </kml>

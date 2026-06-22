@@ -196,7 +196,7 @@ class MapsActivity : FragmentActivity() {
 		skiAreaObjects.blueRunPolylines = R.raw.moderate
 		skiAreaObjects.blackRunPolylines = R.raw.difficult
 		skiAreaObjects.chairliftBounds = R.raw.lift_polygons
-		skiAreaObjects.chairliftTerminals = R.raw.lift
+		skiAreaObjects.chairliftTerminals = R.raw.lift_terminals
 		skiAreaObjects.greenRunBounds = R.raw.easy_polygons
 		skiAreaObjects.blueRunBounds = R.raw.moderate_polygons
 		skiAreaObjects.blackRunBounds = R.raw.difficult_polygons
