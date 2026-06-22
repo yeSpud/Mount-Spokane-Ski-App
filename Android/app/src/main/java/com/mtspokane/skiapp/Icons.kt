@@ -3,7 +3,7 @@ package com.mtspokane.skiapp
 import android.util.Log
 import xyz.thespud.skimap.locationmanager.CustomIcons
 
-interface Icons : CustomIcons {
+class Icons : CustomIcons {
 
 	override fun getOtherIcon(name: String): Int {
 		Log.d("getOtherIcon", "Getting icon for $name")

@@ -1,7 +1,6 @@
 package com.mtspokane.skiapp
 
 import android.location.Location
-import android.os.Build
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database

@@ -1,13 +1,9 @@
 package com.mtspokane.skiapp
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.Color
-import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -26,9 +22,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isNotEmpty
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
-import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.mtspokane.skiapp.databinding.ActivitySummaryBinding
@@ -38,10 +32,6 @@ import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
 import xyz.thespud.skimap.activities.InfoMapActivity
-import xyz.thespud.skimap.activities.InfoMapOptionsDialog
-import xyz.thespud.skimap.mapItem.Locations
-import xyz.thespud.skimap.mapItem.MapMarker
-import xyz.thespud.skimap.services.SkiingNotification
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -50,7 +40,11 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.roundToInt
 import androidx.core.net.toUri
-import xyz.thespud.skimap.mapItem.SkiRuns
+import androidx.lifecycle.lifecycleScope
+import xyz.thespud.skimap.dialogs.InfoMapOptionsDialog
+import xyz.thespud.skimap.locationmanager.SkiAreaObjects
+import xyz.thespud.skimap.mapItem.InfoMapMarker
+import xyz.thespud.skimap.mapItem.SkiRun
 
 class ActivitySummary : FragmentActivity() {
 
@@ -60,18 +54,13 @@ class ActivitySummary : FragmentActivity() {
 	private var absoluteMaxSpeed = 0F
 	private var averageSpeedSum = 0F
 
-	private lateinit var container: LinearLayout
-
 	private lateinit var fileSelectionDialog: FileSelectionDialog
 
-	private lateinit var map: Map
+	private lateinit var map: InfoMapActivity
 
 	private lateinit var optionsView: DialogPlus
 
 	private lateinit var databaseDao: SkiingActivityDao
-
-	private var loadedSkiingActivities: List<SkiingActivity> = emptyList()
-	private var loadedMapMarkers: Array<MapMarker> = emptyArray()
 
 	private val exportJsonCallback: ActivityResultLauncher<String> = registerForActivityResult(
 		ActivityResultContracts.CreateDocument(JSON_MIME_TYPE)) {
@@ -163,20 +152,19 @@ class ActivitySummary : FragmentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
+		// Be sure to show the action bar.
+		if (actionBar != null) { actionBar!!.setDisplayShowTitleEnabled(true) }
+
 		binding = ActivitySummaryBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
 		// Fix edge to edge behavior
-		var lpad = 0
-		var tpad = 0
-		var rpad = 0
-		var bpad = 0
-		ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+		ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
 			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-			lpad = systemBars.left
-			tpad = systemBars.top
-			rpad = systemBars.right
-			bpad = systemBars.bottom
+			val lpad = systemBars.left
+			val tpad = systemBars.top
+			val rpad = systemBars.right
+			val bpad = systemBars.bottom
 
 			// For the activity summary the right padding is useless since its always in the center
 			val summaryParams: ViewGroup.MarginLayoutParams = binding.activitySummary.layoutParams as ViewGroup.MarginLayoutParams
@@ -210,38 +198,45 @@ class ActivitySummary : FragmentActivity() {
 
 			binding.optionsButton.layoutParams = buttonParams
 
+			binding.optionsButton.setOnClickListener {
+				optionsView.holderView.setPadding(lpad, 0, rpad, bpad)
+				optionsView.show()
+			}
+
 			insets
 		}
 
-		container = binding.container
-
-		val database = Room.databaseBuilder(this, Database::class.java, Database.NAME)
-			.allowMainThreadQueries().build()
-		databaseDao = database.skiingActivityDao()
-
 		fileSelectionDialog = FileSelectionDialog()
 
-		// Be sure to show the action bar.
-		if (actionBar != null) {
-			actionBar!!.setDisplayShowTitleEnabled(true)
-		}
-
 		// Load the map polylines and polygons
-		val skiRuns = SkiRuns(R.raw.other)
-		skiRuns.liftsPolyline = R.raw.lifts
-		skiRuns.greenRunPolylines = R.raw.easy
-		skiRuns.blueRunPolylines = R.raw.moderate
-		skiRuns.blackRunPolylines = R.raw.difficult
-		skiRuns.startingLiftBounds = R.raw.starting_lift_polygons
-		skiRuns.endingLiftPolylines = R.raw.ending_lift_polygons
-		skiRuns.greenRunBounds = R.raw.easy_polygons
-		skiRuns.blueRunBounds = R.raw.moderate_polygons
-		skiRuns.blackRunBounds = R.raw.difficult_polygons
+		val skiAreaObjects = SkiAreaObjects(R.raw.bounds)
+		skiAreaObjects.chairliftsPolylines = R.raw.lifts
+		skiAreaObjects.greenRunPolylines = R.raw.easy
+		skiAreaObjects.blueRunPolylines = R.raw.moderate
+		skiAreaObjects.blackRunPolylines = R.raw.difficult
+		skiAreaObjects.chairliftBounds = R.raw.lift_polygons
+		skiAreaObjects.chairliftTerminals = R.raw.lift
+		skiAreaObjects.greenRunBounds = R.raw.easy_polygons
+		skiAreaObjects.blueRunBounds = R.raw.moderate_polygons
+		skiAreaObjects.blackRunBounds = R.raw.difficult_polygons
+		skiAreaObjects.other = R.raw.other
+
+		val cameraPosition = CameraPosition.Builder()
+			.target(LatLng(47.92517834073426, -117.10480503737926))
+			.tilt(45F)
+			.bearing(317.50552F)
+			.zoom(14.414046F).build()
+
+		val cameraBounds = LatLngBounds(LatLng(47.912728, -117.133402), LatLng(47.943674, -117.092470))
 
 		// Setup the map handler.
 		// The top and left padding are useless to us
 		// because the map is always at the bottom while in portrait and on the right in landscape
-		map = Map(0, 0, rpad, bpad, skiRuns)
+		map = InfoMapActivity(this, binding.activityMap, cameraPosition, cameraBounds, skiAreaObjects, Icons())
+
+		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
+		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
+		mapFragment.getMapAsync(map)
 
 		optionsView = DialogPlus.newDialog(this)
 			.setAdapter(InfoMapOptionsDialog(map))
@@ -249,14 +244,16 @@ class ActivitySummary : FragmentActivity() {
 			.setContentBackgroundResource(R.color.dark_blue)
 			.create()
 
-		binding.optionsButton.setOnClickListener {
-			optionsView.holderView.setPadding(lpad, 0, rpad, bpad)
-			optionsView.show()
-		}
+		val database = Room.databaseBuilder(this, Database::class.java, Database.NAME)
+			.allowMainThreadQueries().build()
+		databaseDao = database.skiingActivityDao()
 
-		// Obtain the SupportMapFragment and get notified when the map is ready to be used.
-		val mapFragment = supportFragmentManager.findFragmentById(R.id.activity_map) as SupportMapFragment
-		mapFragment.getMapAsync(map)
+		// Stop showing the activity notification
+		val notificationManager: NotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+		notificationManager.cancel(ACTIVITY_SUMMARY_ID)
+
+		val dateId = intent.getIntExtra(ACTIVITY_SUMMARY_LAUNCH_DATE, 0)
+		loadActivities(dateId)
 	}
 
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -269,8 +266,8 @@ class ActivitySummary : FragmentActivity() {
 		val shareMenu: MenuItem = menu.findItem(R.id.share)
 		val exportMenu: MenuItem = menu.findItem(R.id.export)
 
-		shareMenu.isEnabled = container.isNotEmpty()
-		exportMenu.isEnabled = container.isNotEmpty()
+		shareMenu.isEnabled = binding.container.isNotEmpty()
+		exportMenu.isEnabled = binding.container.isNotEmpty()
 
 		return super.onPrepareOptionsMenu(menu)
 	}
@@ -312,9 +309,7 @@ class ActivitySummary : FragmentActivity() {
 			tmpFile.delete()
 		}
 
-		openFileOutput(filename, Context.MODE_PRIVATE).use {
-			it.write(jsonToWrite.toString(4).toByteArray())
-		}
+		openFileOutput(filename, MODE_PRIVATE).use { it.write(jsonToWrite.toString(4).toByteArray()) }
 
 		val providerString = "${packageName}.provider"
 		Log.v("shareFIle", "Provider string: $providerString")
@@ -330,28 +325,29 @@ class ActivitySummary : FragmentActivity() {
 
 	private fun convertSkiingActivitiesToJson(): JSONObject {
 
-		if (loadedSkiingActivities.isEmpty()) {
+		if (map.loadedSkiRuns.isEmpty()) {
 			val emptyObject = JSONObject()
 			emptyObject.put(Database.getTodaysDate(), JSONArray())
 			return emptyObject
 		}
 
-		val date = Database.getLongDateFromLong(loadedSkiingActivities[0].time)
+		val date = Database.getLongDateFromLong(map.loadedSkiRuns[0].startTime)
 
 		val jsonArray = JSONArray()
-		for (skiingActivity in loadedSkiingActivities) {
+		for (skiingActivity in map.loadedSkiRuns) {
+			for (location in skiingActivity.locations) {
+				val activityObject = JSONObject()
+				activityObject.put(ACCURACY, location.accuracy)
+				activityObject.put(ALTITUDE, location.altitude)
+				activityObject.put(ALTITUDE_ACCURACY, location.verticalAccuracyMeters)
+				activityObject.put(LATITUDE, location.latitude)
+				activityObject.put(LONGITUDE, location.longitude)
+				activityObject.put(SPEED, location.speed)
+				activityObject.put(SPEED_ACCURACY, location.speedAccuracyMetersPerSecond)
+				activityObject.put(TIME, location.time)
 
-			val activityObject = JSONObject()
-			activityObject.put(ACCURACY, skiingActivity.accuracy)
-			activityObject.put(ALTITUDE, skiingActivity.altitude)
-			activityObject.put(ALTITUDE_ACCURACY, skiingActivity.altitudeAccuracy)
-			activityObject.put(LATITUDE, skiingActivity.latitude)
-			activityObject.put(LONGITUDE, skiingActivity.longitude)
-			activityObject.put(SPEED, skiingActivity.speed)
-			activityObject.put(SPEED_ACCURACY, skiingActivity.speedAccuracy)
-			activityObject.put(TIME, skiingActivity.time)
-
-			jsonArray.put(activityObject)
+				jsonArray.put(activityObject)
+			}
 		}
 
 		val jsonObject = JSONObject()
@@ -375,37 +371,48 @@ class ActivitySummary : FragmentActivity() {
 		averageSpeedSum = 0F
 		binding.averageSpeed.visibility = View.GONE
 
-		container.removeAllViews()
-		loadedMapMarkers = emptyArray()
+		binding.container.removeAllViews()
 		map.clearMap()
-		System.gc()
+
+		map.locationManager?.resetLocations()
 	}
 
-	fun drawLoadedSkiingActivities() {
-
+	fun loadActivities(dateId: Int) {
+		val tag = "loadActivities"
 		clearScreen()
-		if (loadedSkiingActivities.isEmpty()) { return }
+
+		if (dateId == 0) { return }
 
 		val loadingToast: Toast = Toast.makeText(this, R.string.computing_location, Toast.LENGTH_LONG)
 		loadingToast.show()
 
+		val activites = databaseDao.getActivitiesByDateId(dateId)
+
+		if (activites.isEmpty()) { return }
+
 		lifecycleScope.launch(Dispatchers.Default) {
 
-			var activitySummaryEntries: Array<ActivitySummaryEntry> = arrayOf()
 			val processingJob = launch {
-				Log.d("loadActivities", "Started parsing activity from file")
-				loadedMapMarkers = Array(loadedSkiingActivities.size) {
-					val location = Database.skiingActivityToLocation(loadedSkiingActivities[it])
-					getMapMarker(location)
+				Log.d(tag, "Started parsing activity from file")
+
+				val locationManager = map.locationManager
+				if (locationManager == null) {
+					Log.w(tag, "Location manager is null!")
+					return@launch
 				}
-				activitySummaryEntries = parseMapMarkersForMap()
+
+				val mapMarkers = mutableListOf<InfoMapMarker>()
+				for (skiingActivity in activites) {
+					val location = Database.skiingActivityToLocation(skiingActivity)
+					val mapMarker = locationManager.getMapMarker(location)
+					mapMarkers.add(mapMarker)
+				}
+				map.loadSkiRuns(mapMarkers)
+
+				addActivity()
 				Log.d("loadActivities", "Finished parsing activities from file")
 			}
 			processingJob.join()
-
-			val addCirclesJob = launch { map.addPolylinesToMap() }
-			val addActivitiesJob = launch { addActivity(activitySummaryEntries) }
-			joinAll(addCirclesJob, addActivitiesJob)
 
 			loadingToast.cancel()
 			withContext(Dispatchers.Main) {
@@ -415,6 +422,7 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
+	/*
 	private fun parseMapMarkersForMap(): Array<ActivitySummaryEntry> {
 
 		// Create a place to store all the ActivitySummaryEntries.
@@ -463,14 +471,14 @@ class ActivitySummary : FragmentActivity() {
 		arraySummaryEntries.add(finalActivitySummary)
 
 		return arraySummaryEntries.toTypedArray()
-	}
+	}*/
 
 	@AnyThread
-	private suspend fun addActivity(activitySummaryEntries: Array<ActivitySummaryEntry>) = withContext(Dispatchers.Main) {
+	private suspend fun addActivity() = withContext(Dispatchers.Main) {
 		Log.d("addActivity", "Started creating activities view")
-		for (entry in activitySummaryEntries) {
-			val view: ActivityView = createActivityView(entry)
-			container.addView(view)
+		for (skiRun in map.loadedSkiRuns) {
+			val view: ActivityView = createActivityView(skiRun)
+			binding.container.addView(view)
 		}
 
 		binding.totalRuns.text = getString(R.string.total_runs, totalRunsNumber)
@@ -479,14 +487,14 @@ class ActivitySummary : FragmentActivity() {
 		try {
 			binding.maxSpeed.text = getString(R.string.max_speed, absoluteMaxSpeed.roundToInt())
 			binding.maxSpeed.visibility = View.VISIBLE
-		} catch (e: IllegalArgumentException) {
+		} catch (_: IllegalArgumentException) {
 			binding.maxSpeed.visibility = View.GONE
 		}
 
 		try {
 			binding.averageSpeed.text = getString(R.string.average_speed, (averageSpeedSum/totalRunsNumber).roundToInt())
 			binding.averageSpeed.visibility = View.VISIBLE
-		} catch (e: IllegalArgumentException) {
+		} catch (_: IllegalArgumentException) {
 			binding.averageSpeed.visibility = View.GONE
 		}
 
@@ -495,31 +503,29 @@ class ActivitySummary : FragmentActivity() {
 	}
 
 	@UiThread
-	private fun createActivityView(activitySummaryEntry: ActivitySummaryEntry): ActivityView {
-
+	private fun createActivityView(skiRun: SkiRun): ActivityView {
 		val activityView = ActivityView(this)
 
-		val isRun = (activitySummaryEntry.mapMarker.icon == R.drawable.ic_easy ||
-				activitySummaryEntry.mapMarker.icon == R.drawable.ic_moderate ||
-				activitySummaryEntry.mapMarker.icon == R.drawable.ic_difficult)
+		val isRun = (skiRun.icon == xyz.thespud.skimap.R.drawable.ic_chairlift ||
+				skiRun.icon == xyz.thespud.skimap.R.drawable.ic_green ||
+				skiRun.icon == xyz.thespud.skimap.R.drawable.ic_blue ||
+				skiRun.icon == xyz.thespud.skimap.R.drawable.ic_black)
 
-		activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this,
-			activitySummaryEntry.mapMarker.icon))
-
-		activityView.title.text = activitySummaryEntry.mapMarker.name
+		activityView.icon.setImageDrawable(AppCompatResources.getDrawable(this, skiRun.icon))
+		activityView.title.text = skiRun.name
 
 		// Convert from meters per second to miles per hour.
 		val conversion = 0.44704f
 
 		if (isRun) {
 
-			val maxSpeed = (activitySummaryEntry.maxSpeed / conversion)
+			val maxSpeed = (skiRun.maxSpeed / conversion)
 			activityView.maxSpeed.text = getString(R.string.max_speed, maxSpeed.roundToInt())
 
-			val averageSpeed = (activitySummaryEntry.averageSpeed / conversion)
+			val averageSpeed = (skiRun.averageSpeed / conversion)
 			activityView.averageSpeed.text = getString(R.string.average_speed, averageSpeed.roundToInt())
 
-			if (activitySummaryEntry.mapMarker.icon != R.drawable.ic_chairlift) {
+			if (skiRun.icon != xyz.thespud.skimap.R.drawable.ic_chairlift) {
 				if (maxSpeed > absoluteMaxSpeed) {
 					absoluteMaxSpeed = maxSpeed
 				}
@@ -532,61 +538,16 @@ class ActivitySummary : FragmentActivity() {
 			activityView.averageSpeed.visibility = View.INVISIBLE
 		}
 
-		activityView.startTime.text = getTimeFromLong(activitySummaryEntry.mapMarker.location.time)
-
-		if (activitySummaryEntry.endTime != null) {
-			activityView.endTime.text = getTimeFromLong(activitySummaryEntry.endTime)
-		}
+		activityView.startTime.text = getTimeFromLong(skiRun.startTime)
+		activityView.endTime.text = getTimeFromLong(skiRun.endTime)
 
 		return activityView
-	}
-
-	@AnyThread
-	private fun getMapMarker(location: Location): MapMarker {
-
-		Locations.updateLocations(location)
-
-		var marker: MapMarker? = Locations.checkIfIOnChairlift(map)
-		if (marker != null) {
-			return marker
-		}
-
-		marker = Locations.checkIfOnOther(map)
-		if (marker != null) {
-			return marker
-		}
-
-		marker = Locations.checkIfOnRun(map)
-		if (marker != null) {
-			return marker
-		}
-
-		val previousLocation = Locations.previousLocation
-		if (previousLocation != null && (previousLocation.latitude != location.latitude && previousLocation.longitude != location.longitude)) {
-			Log.v("getMapMarker", "Unknown location at ${location.latitude}, " +
-					"${location.longitude} - falling back to ${previousLocation.latitude}, " +
-					"${previousLocation.longitude}")
-			val previousMapMarker = getMapMarker(previousLocation)
-
-			Log.d("getMapMarker", "Determined ${location.latitude}, " +
-					"${location.longitude} to be ${previousMapMarker.name}")
-			return MapMarker(previousMapMarker.name, location, previousMapMarker.icon,
-				previousMapMarker.markerColor, previousMapMarker.color)
-		}
-
-		Log.w("getMapMarker", "Unable to determine location")
-		return MapMarker(
-			UNKNOWN_LOCATION, Locations.currentLocation!!, R.drawable.ic_missing,
-			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA), Color.MAGENTA)
 	}
 
 	companion object {
 
 		const val JSON_MIME_TYPE = "application/json"
-
 		const val GEOJSON_MIME_TYPE = "application/geojson"
-
-		const val UNKNOWN_LOCATION = "Unknown Location"
 
 		private const val ACCURACY = "acc"
 		private const val ALTITUDE = "alt"
@@ -596,6 +557,10 @@ class ActivitySummary : FragmentActivity() {
 		private const val SPEED = "speed"
 		private const val SPEED_ACCURACY = "speedacc"
 		private const val TIME = "time"
+
+		const val ACTIVITY_SUMMARY_LAUNCH_DATE = "xyz.thespud.mtspokane.date"
+		const val ACTIVITY_SUMMARY_CHANNEL_ID = "skiAppProgress"
+		const val ACTIVITY_SUMMARY_ID = 5887
 
 		fun getTimeFromLong(time: Long): String {
 			val timeFormatter = SimpleDateFormat("h:mm:ss", Locale.US)
@@ -666,8 +631,7 @@ class ActivitySummary : FragmentActivity() {
 				textView.text = datesWithActivities.skiingDate.longDate
 				textView.textSize = 25.0F
 				textView.setOnClickListener {
-					loadedSkiingActivities = datesWithActivities.skiingActivities
-					drawLoadedSkiingActivities()
+					loadActivities(datesWithActivities.skiingDate.id)
 					dialog.dismiss()
 				}
 
@@ -678,11 +642,10 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
+
+	/*
 	private inner class Map(lpad: Int, tpad: Int, rpad: Int, bpad: Int, skiRuns: SkiRuns) : InfoMapActivity(
-		this@ActivitySummary, lpad, tpad, rpad, bpad,
-		CameraPosition.Builder().target(LatLng(47.92517834073426, -117.10480503737926)).tilt(45F).bearing(317.50552F).zoom(14.414046F).build(),
-		LatLngBounds(LatLng(47.912728, -117.133402), LatLng(47.943674, -117.092470)),
-		skiRuns) {
+		this@ActivitySummary, lpad, tpad, rpad, bpad, skiRuns) {
 
 		@SuppressLint("PotentialBehaviorOverride")
         override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
@@ -704,28 +667,5 @@ class ActivitySummary : FragmentActivity() {
 				drawLoadedSkiingActivities()
 			}
 		}
-
-		override fun getOtherIcon(name: String): Int? {
-			Log.d("getOtherIcon", "Getting icon for $name")
-			val icon: Int? = when (name) {
-				"Lodge 1" -> R.drawable.ic_lodge
-				"Lodge 2" -> R.drawable.ic_lodge
-				"Yurt" -> R.drawable.ic_yurt
-				"Vista House" -> R.drawable.ic_vista_house
-				"Ski Patrol Building" -> R.drawable.ic_ski_patrol_icon
-				"Lodge 1 Parking Lot" -> R.drawable.ic_parking
-				"Lodge 2 Parking Lot" -> R.drawable.ic_parking
-				"Tubing Area" -> R.drawable.ic_missing // Todo Tubing area icon
-				"Ski School" -> R.drawable.ic_ski_school
-				"Learning Area" -> R.drawable.ic_ski_school
-				"Top of 1, 6", "Top of 2", "Top of 3", "Top of 4", "Top of 5" -> R.drawable.ic_chairlift
-				else -> {
-					Log.w("getOtherIcon", "$name does not have an icon")
-					null
-				}
-			}
-
-			return icon
-		}
-	}
+	}*/
 }

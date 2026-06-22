@@ -5,7 +5,6 @@ import android.util.AttributeSet
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import xyz.thespud.skimap.mapItem.MapMarker
 
 class ActivityView : ConstraintLayout {
 
@@ -38,5 +37,3 @@ class ActivityView : ConstraintLayout {
         endTime = findViewById(R.id.end_time)
     }
 }
-
-data class ActivitySummaryEntry(val mapMarker: MapMarker, val maxSpeed: Float, val averageSpeed: Float, val endTime: Long?)
