@@ -422,57 +422,6 @@ class ActivitySummary : FragmentActivity() {
 		}
 	}
 
-	/*
-	private fun parseMapMarkersForMap(): Array<ActivitySummaryEntry> {
-
-		// Create a place to store all the ActivitySummaryEntries.
-		val arraySummaryEntries = mutableListOf<ActivitySummaryEntry>()
-
-		var startingIndexOffset = 0
-		for (i in loadedMapMarkers.indices) {
-			if (loadedMapMarkers[i].name != UNKNOWN_LOCATION) {
-				startingIndexOffset = i
-				break
-			}
-		}
-
-		var startingMapMarker = loadedMapMarkers[startingIndexOffset]
-		var maxSpeed = 0.0F
-		var speedSum = 0.0F
-		var sum = 0
-
-		for (i in startingIndexOffset until loadedMapMarkers.size) {
-			val entry: MapMarker = loadedMapMarkers[i]
-
-			if (entry.name != UNKNOWN_LOCATION) {
-
-				if (entry.name != startingMapMarker.name) {
-
-					val newActivitySummaryEntry = ActivitySummaryEntry(startingMapMarker, maxSpeed,
-						speedSum/sum, entry.location.time)
-					arraySummaryEntries.add(newActivitySummaryEntry)
-
-					maxSpeed = 0.0F
-					speedSum = 0.0F
-					sum = 0
-					startingMapMarker = entry
-				}
-			}
-
-			if (entry.location.speed > maxSpeed) {
-				maxSpeed = entry.location.speed
-			}
-			speedSum += entry.location.speed
-			++sum
-		}
-
-		val finalActivitySummary = ActivitySummaryEntry(startingMapMarker, maxSpeed,
-			speedSum/sum, loadedMapMarkers.last().location.time)
-		arraySummaryEntries.add(finalActivitySummary)
-
-		return arraySummaryEntries.toTypedArray()
-	}*/
-
 	@AnyThread
 	private suspend fun addActivity() = withContext(Dispatchers.Main) {
 		Log.d("addActivity", "Started creating activities view")
@@ -641,31 +590,4 @@ class ActivitySummary : FragmentActivity() {
 			dialog.show()
 		}
 	}
-
-
-	/*
-	private inner class Map(lpad: Int, tpad: Int, rpad: Int, bpad: Int, skiRuns: SkiRuns) : InfoMapActivity(
-		this@ActivitySummary, lpad, tpad, rpad, bpad, skiRuns) {
-
-		@SuppressLint("PotentialBehaviorOverride")
-        override val additionalCallback: OnMapReadyCallback = OnMapReadyCallback {
-			super.additionalCallback
-
-			val skiingDateWithActivities = databaseDao.getSkiingDateWithActivitiesByShortDate(
-				Database.getTodaysDate())
-			if (skiingDateWithActivities != null) {
-				loadedSkiingActivities = skiingDateWithActivities.skiingActivities
-				if (intent.hasExtra(SkiingNotification.ACTIVITY_SUMMARY_LAUNCH_DATE)) {
-					val dateId = intent.getIntExtra(SkiingNotification.ACTIVITY_SUMMARY_LAUNCH_DATE, 0)
-					loadedSkiingActivities = databaseDao.getActivitiesByDateId(dateId)
-
-					val notificationManager: NotificationManager = activity.getSystemService(Context.NOTIFICATION_SERVICE)
-							as NotificationManager
-					notificationManager.cancel(SkiingNotification.ACTIVITY_SUMMARY_ID)
-				}
-
-				drawLoadedSkiingActivities()
-			}
-		}
-	}*/
 }
