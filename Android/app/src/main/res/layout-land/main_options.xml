@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:background="@color/dark_blue">
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_chairlift"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -21,7 +21,7 @@
         app:enabled_menu_icon="@drawable/ic_chairlift"
         app:enabled_menu_title="@string/show_chairlifts" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_easy_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -37,7 +37,7 @@
         app:enabled_menu_icon="@drawable/ic_easy"
         app:enabled_menu_title="@string/show_beginner" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_moderate_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -53,7 +53,7 @@
         app:enabled_menu_icon="@drawable/ic_moderate"
         app:enabled_menu_title="@string/show_intermediate" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_difficult_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -71,7 +71,7 @@
         app:enabled_menu_icon="@drawable/ic_difficult"
         app:enabled_menu_title="@string/show_advanced" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_terrain_parks"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -89,7 +89,7 @@
         app:enabled_menu_icon="@drawable/terrain_park"
         app:enabled_menu_title="@string/show_terrain" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_night_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -106,7 +106,7 @@
         app:disabled_menu_icon="@drawable/sun"
         app:disabled_menu_title="@string/all_runs" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/toggle_location_tracking"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -123,7 +123,7 @@
         app:disabled_menu_icon="@drawable/ic_play"
         app:disabled_menu_title="@string/start_tracking" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/launch_activity_summary"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
 	<name>Difficult Polylines</name>
+	<open>1</open>
 	<Placemark>
 		<name>Teakettle</name>
 		<styleUrl>#failed224</styleUrl>
@@ -23,7 +24,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Elbow</name>
-		<styleUrl>#failed131</styleUrl>
+		<styleUrl>#failed1311</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -33,7 +34,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Hourglass</name>
-		<styleUrl>#failed66</styleUrl>
+		<styleUrl>#failed661</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -43,7 +44,7 @@
 	</Placemark>
 	<Placemark>
 		<name>South Meadows</name>
-		<styleUrl>#failed233</styleUrl>
+		<styleUrl>#failed2330</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -53,7 +54,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Powder Shoot</name>
-		<styleUrl>#failed8</styleUrl>
+		<styleUrl>#failed811</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -73,7 +74,7 @@
 	</Placemark>
 	<Placemark>
 		<name>No Alibi</name>
-		<styleUrl>#failed101</styleUrl>
+		<styleUrl>#failed1010</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -83,7 +84,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Al&apos;s Alley</name>
-		<styleUrl>#failed181</styleUrl>
+		<styleUrl>#failed18110</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -93,7 +94,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Upper Siesta</name>
-		<styleUrl>#failed91</styleUrl>
+		<styleUrl>#failed911</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -153,7 +154,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Smuggler&apos;s Notch</name>
-		<styleUrl>#failed9</styleUrl>
+		<styleUrl>#failed910</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -164,7 +165,7 @@
 	<Placemark>
 		<name>Two Face</name>
 		<description>night run</description>
-		<styleUrl>#failed19</styleUrl>
+		<styleUrl>#failed190</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -194,7 +195,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Gates Park</name>
-		<styleUrl>#failed299</styleUrl>
+		<styleUrl>#failed2990</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -246,7 +247,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Lu&apos;s Laine</name>
-		<styleUrl>#failed30</styleUrl>
+		<styleUrl>#failed303</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -260,13 +261,13 @@
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
-				-117.1057799615248,47.93372138715223,0 -117.1053270383402,47.93435679014472,0 -117.101356328425,47.94022316263808,0 -117.1011726997778,47.94046236640043,0
+				-117.1064604779208,47.93246636946024,0 -117.1063332004018,47.93286566894391,0 -117.1059918396638,47.93341670257234,0 -117.1053270383402,47.93435679014472,0 -117.101356328425,47.94022316263808,0 -117.1011726997778,47.94046236640043,0
 			</coordinates>
 		</LineString>
 	</Placemark>
 	<Placemark>
 		<name>Skid Road</name>
-		<styleUrl>#failed284</styleUrl>
+		<styleUrl>#failed2840</styleUrl>
 		<LineString>
 			<tessellate>1</tessellate>
 			<coordinates>
@@ -304,4 +305,5 @@
 			</coordinates>
 		</LineString>
 	</Placemark>
+	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.7.1155"></atom:link>
 </kml>

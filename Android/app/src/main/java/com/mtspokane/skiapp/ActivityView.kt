@@ -1,12 +1,10 @@
-package com.mtspokane.skiapp.activities.activitysummary
+package com.mtspokane.skiapp
 
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.mtspokane.skiapp.R
-import com.mtspokane.skiapp.mapItem.MapMarker
 
 class ActivityView : ConstraintLayout {
 
@@ -39,5 +37,3 @@ class ActivityView : ConstraintLayout {
         endTime = findViewById(R.id.end_time)
     }
 }
-
-data class ActivitySummaryEntry(val mapMarker: MapMarker, val maxSpeed: Float, val averageSpeed: Float, val endTime: Long?)

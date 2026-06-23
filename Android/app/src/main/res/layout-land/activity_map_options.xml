@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:background="@color/dark_blue">
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_chairlift"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -20,7 +20,7 @@
         app:enabled_menu_icon="@drawable/ic_chairlift"
         app:enabled_menu_title="@string/show_chairlifts" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_easy_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
         app:enabled_menu_icon="@drawable/ic_easy"
         app:enabled_menu_title="@string/show_beginner" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_moderate_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -50,7 +50,7 @@
         app:enabled_menu_icon="@drawable/ic_moderate"
         app:enabled_menu_title="@string/show_intermediate" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_difficult_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -65,7 +65,7 @@
         app:enabled_menu_icon="@drawable/ic_difficult"
         app:enabled_menu_title="@string/show_advanced" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_night_runs"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"
@@ -80,7 +80,7 @@
         app:enabled_menu_icon="@drawable/night"
         app:enabled_menu_title="@string/night_runs" />
 
-    <com.mtspokane.skiapp.maphandlers.MapOptionItem
+    <xyz.thespud.skimap.dialogs.MapOptionItem
         android:id="@+id/show_circles"
         android:layout_width="@dimen/menu_image_size"
         android:layout_height="wrap_content"

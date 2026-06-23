@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
 	<name>Chairlift Polygons</name>
+	<open>1</open>
 	<Placemark>
 		<name>Chair 1: Vista Cruiser</name>
-		<styleUrl>#failed1</styleUrl>
+		<styleUrl>#failed50</styleUrl>
 		<Polygon>
 			<tessellate>1</tessellate>
 			<outerBoundaryIs>
@@ -17,7 +18,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Chair 2: Illuminator</name>
-		<styleUrl>#failed4</styleUrl>
+		<styleUrl>#failed157</styleUrl>
 		<Polygon>
 			<tessellate>1</tessellate>
 			<outerBoundaryIs>
@@ -31,7 +32,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Chair 3: Parkway Express</name>
-		<styleUrl>#failed</styleUrl>
+		<styleUrl>#failed197</styleUrl>
 		<Polygon>
 			<tessellate>1</tessellate>
 			<outerBoundaryIs>
@@ -45,7 +46,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Chair 4: Hidden Treasure</name>
-		<styleUrl>#failed17</styleUrl>
+		<styleUrl>#failed205</styleUrl>
 		<Polygon>
 			<tessellate>1</tessellate>
 			<outerBoundaryIs>
@@ -59,7 +60,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Chair 5: Beginner&apos;s Luck</name>
-		<styleUrl>#failed5</styleUrl>
+		<styleUrl>#failed368</styleUrl>
 		<Polygon>
 			<tessellate>1</tessellate>
 			<outerBoundaryIs>
@@ -73,7 +74,7 @@
 	</Placemark>
 	<Placemark>
 		<name>Chair 6: Northwood</name>
-		<styleUrl>#failed2</styleUrl>
+		<styleUrl>#failed361</styleUrl>
 		<Polygon>
 			<tessellate>1</tessellate>
 			<outerBoundaryIs>
@@ -87,16 +88,17 @@
 	</Placemark>
 	<Placemark>
 		<name>Magic Carpet</name>
-		<styleUrl>#failed18</styleUrl>
+		<styleUrl>#failed325</styleUrl>
 		<Polygon>
 			<tessellate>1</tessellate>
 			<outerBoundaryIs>
 				<LinearRing>
 					<coordinates>
-						-117.0954844560002,47.92142614074483,0 -117.0954861450927,47.9214336259019,0 -117.0956896339067,47.92142369728854,0 -117.0959034865601,47.92140742071736,0 -117.0959047300639,47.92139305856138,0 -117.0957385328598,47.92140290076451,0 -117.095498523952,47.9214221526134,0 -117.0954844560002,47.92142614074483,0
+						-117.0954844560002,47.92142614074482,0 -117.0954861450927,47.9214336259019,0 -117.0956896339067,47.92142369728854,0 -117.0959034865601,47.92140742071736,0 -117.0959047300639,47.92139305856138,0 -117.0957385328598,47.92140290076451,0 -117.095498523952,47.9214221526134,0 -117.0954844560002,47.92142614074482,0
 					</coordinates>
 				</LinearRing>
 			</outerBoundaryIs>
 		</Polygon>
 	</Placemark>
+	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.7.1155"></atom:link>
 </kml>
